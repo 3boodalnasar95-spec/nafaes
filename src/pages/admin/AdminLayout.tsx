@@ -2,10 +2,13 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, ShoppingCart, Package, Users,
   DollarSign, Settings, LogOut, Menu, X,
-  Bell
+  Bell, Warehouse, Receipt, BarChart3, Database
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { getNotifications } from '@/lib/db-operations';
+import { useEffect, useState as useStateReact } from 'react';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -13,17 +16,38 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notifications, setNotifications] = useStateReact<any[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const menuItems = [
     { path: '/admin', icon: LayoutDashboard, label: 'لوحة التحكم', exact: true },
-    { path: '/admin/orders', icon: ShoppingCart, label: 'الطلبات', badge: true },
+    { path: '/admin/orders', icon: ShoppingCart, label: 'الطلبات' },
     { path: '/admin/products', icon: Package, label: 'المنتجات' },
+    { path: '/admin/inventory', icon: Warehouse, label: 'المخزون' },
     { path: '/admin/customers', icon: Users, label: 'العملاء' },
+    { path: '/admin/invoices', icon: Receipt, label: 'الفواتير' },
     { path: '/admin/accounting', icon: DollarSign, label: 'المحاسبة' },
+    { path: '/admin/reports', icon: BarChart3, label: 'التقارير' },
     { path: '/admin/settings', icon: Settings, label: 'الإعدادات' },
   ];
+
+  // Load notifications
+  useEffect(() => {
+    const loadNotifications = async () => {
+      const data = await getNotifications();
+      setNotifications(data.slice(0, 10));
+    };
+    loadNotifications();
+    
+    // Refresh every 30 seconds
+    const interval = setInterval(loadNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   const isActive = (path: string, exact?: boolean) => {
     if (exact) return location.pathname === path;
@@ -31,6 +55,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   const handleLogout = () => {
+    logout();
     navigate('/');
   };
 
@@ -78,6 +103,21 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </Link>
             );
           })}
+          
+          {/* Seed Products - Dev Tool */}
+          <Link
+            to="/admin/seed"
+            onClick={() => setSidebarOpen(false)}
+            className={cn(
+              "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors border border-dashed border-[#C9A96E]/50",
+              isActive('/admin/seed')
+                ? "bg-[#C9A96E] text-white border-transparent"
+                : "text-[#C9A96E] hover:bg-[#C9A96E]/10 border-[#C9A96E]/30"
+            )}
+          >
+            <Database className="w-5 h-5" />
+            <span>إضافة المنتجات</span>
+          </Link>
         </nav>
 
         {/* Bottom Actions */}
@@ -87,7 +127,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-[#888] hover:bg-[#333] hover:text-white transition-colors"
           >
             <LogOut className="w-5 h-5" />
-            <span>العودة للموقع</span>
+            <span>تسجيل الخروج</span>
           </button>
         </div>
       </aside>
@@ -107,6 +147,55 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </div>
           
           <div className="flex items-center gap-3">
+            {/* Notifications Bell */}
+            <div className="relative">
+              <button 
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative p-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl hover:bg-[#F5F0E8] transition-colors"
+              >
+                <Bell className="w-5 h-5 text-[#6B6B6B]" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+              
+              {showNotifications && (
+                <div className="absolute left-0 top-full mt-2 w-80 bg-white rounded-xl border border-[#E8E0D5] shadow-2xl z-50 max-h-96 overflow-y-auto">
+                  <div className="p-4 border-b border-[#E8E0D5] sticky top-0 bg-white">
+                    <h3 className="font-bold text-[#1A1A1A]">الإشعارات</h3>
+                  </div>
+                  <div>
+                    {notifications.length === 0 ? (
+                      <div className="p-8 text-center text-[#6B6B6B]">
+                        <Bell className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                        <p>لا توجد إشعارات</p>
+                      </div>
+                    ) : (
+                      notifications.map(notif => (
+                        <div 
+                          key={notif.id} 
+                          className={`p-4 border-b border-[#E8E0D5] last:border-0 hover:bg-[#FAF8F5] cursor-pointer ${
+                            !notif.read ? 'bg-[#C9A96E]/5' : ''
+                          }`}
+                        >
+                          <p className="font-medium text-[#1A1A1A] text-sm">{notif.title}</p>
+                          <p className="text-sm text-[#6B6B6B] mt-1 whitespace-pre-line">{notif.message}</p>
+                          <p className="text-xs text-[#C9A96E] mt-2">
+                            {new Date(notif.created_at).toLocaleDateString('ar-SA', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            
             <a
               href="https://wa.me/96566377312"
               target="_blank"
