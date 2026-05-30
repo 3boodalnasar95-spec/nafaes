@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Eye, Check, X, MessageCircle, Download, Package, Phone, MapPin } from 'lucide-react';
 import { useOrders, Order } from '@/contexts/OrderContext';
@@ -219,24 +219,6 @@ export default function AdminOrders() {
                         <span className="text-[#6B6B6B]">x{item.quantity}</span>
                       </div>
                     ))}
-                  </div>
-                </div>
-
-                {/* Summary */}
-                <div className="flex flex-wrap gap-4 py-4 border-t border-[#E8E0D5]">
-                  <div className="text-sm">
-                    <span className="text-[#6B6B6B]">المجموع:</span>
-                    <span className="font-medium text-[#1A1A1A] mr-2">{formatPrice(order.subtotal)}</span>
-                  </div>
-                  <div className="text-sm">
-                    <span className="text-[#6B6B6B]">التوصيل:</span>
-                    <span className="font-medium text-[#1A1A1A] mr-2">{formatPrice(order.deliveryFee)}</span>
-                  </div>
-                  <div className="text-sm">
-                    <span className="text-[#6B6B6B]">الدفع:</span>
-                    <span className="font-medium text-[#1A1A1A] mr-2">
-                      {order.paymentMethod === 'cash' ? 'كاش' : 'رابط'}
-                    </span>
                   </div>
                 </div>
 

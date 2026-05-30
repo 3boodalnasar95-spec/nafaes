@@ -1,7 +1,28 @@
-import { InvoiceData } from './pdfGenerator';
+export interface InvoiceData {
+  orderNumber: string;
+  date: string;
+  customerName: string;
+  customerPhone: string;
+  governorate: string;
+  area: string;
+  address: string;
+  notes: string;
+  paymentMethod: 'cash' | 'link';
+  items: {
+    nameAr: string;
+    nameEn: string;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+  }[];
+  subtotal: number;
+  deliveryFee: number;
+  total: number;
+}
 
-export function generateWhatsAppMessage(data: InvoiceData): string {
-  const paymentMethodText = data.paymentMethod === 'cash' 
+// Generate FIXED WhatsApp message for customer - customer cannot edit
+export function generateFixedWhatsAppMessage(orderData: InvoiceData): string {
+  const paymentMethodText = orderData.paymentMethod === 'cash' 
     ? '💵 كاش عند الاستلام' 
     : '💳 رابط دفع إلكتروني';
 
@@ -11,26 +32,26 @@ export function generateWhatsAppMessage(data: InvoiceData): string {
   message += `━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
   
   message += `📋 ═══ طلب جديد ═══ 📋\n\n`;
-  message += `🔢 رقم الطلب: ${data.orderNumber}\n`;
-  message += `📅 التاريخ: ${data.date}\n`;
+  message += `🔢 رقم الطلب: ${orderData.orderNumber}\n`;
+  message += `📅 التاريخ: ${orderData.date}\n`;
   
   message += `\n━━━━━━━━━━━━━━━━━━━━━━━\n`;
   message += `   👤 بيانات العميل\n`;
   message += `━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-  message += `👤 الاسم: ${data.customerName}\n`;
-  message += `📞 الهاتف: +965 ${data.customerPhone}\n`;
-  message += `📍 المحافظة: ${data.governorate}\n`;
-  message += `📍 المنطقة: ${data.area}\n`;
-  message += `🏠 العنوان: ${data.address}\n`;
-  if (data.notes) {
-    message += `📝 ملاحظات: ${data.notes}\n`;
+  message += `👤 الاسم: ${orderData.customerName}\n`;
+  message += `📞 الهاتف: +965 ${orderData.customerPhone}\n`;
+  message += `📍 المحافظة: ${orderData.governorate}\n`;
+  message += `📍 المنطقة: ${orderData.area}\n`;
+  message += `🏠 العنوان: ${orderData.address}\n`;
+  if (orderData.notes) {
+    message += `📝 ملاحظات: ${orderData.notes}\n`;
   }
   
   message += `\n━━━━━━━━━━━━━━━━━━━━━━━\n`;
   message += `   🛒 تفاصيل المنتجات\n`;
   message += `━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
   
-  data.items.forEach((item, index) => {
+  orderData.items.forEach((item, index) => {
     message += `${index + 1}. ${item.nameAr}\n`;
     message += `   📦 ${item.nameEn}\n`;
     message += `   الكمية: ${item.quantity} × ${item.unitPrice.toFixed(3)} د.ك\n`;
@@ -38,12 +59,12 @@ export function generateWhatsAppMessage(data: InvoiceData): string {
   });
   
   message += `━━━━━━━━━━━━━━━━━━━━━━━\n`;
-  message += `   💰 ملخص الطلب\n`;
+  message += `   💰 ملخص الفاتورة\n`;
   message += `━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-  message += `📦 المجموع الفرعي: ${data.subtotal.toFixed(3)} د.ك\n`;
-  message += `🚚 رسوم التوصيل: ${data.deliveryFee.toFixed(3)} د.ك\n`;
+  message += `📦 المجموع الفرعي: ${orderData.subtotal.toFixed(3)} د.ك\n`;
+  message += `🚚 رسوم التوصيل: ${orderData.deliveryFee.toFixed(3)} د.ك\n`;
   message += `━━━━━━━━━━━━━━━━━━━━━━━\n`;
-  message += `💵 الإجمالي النهائي: ${data.total.toFixed(3)} د.ك\n`;
+  message += `💵 الإجمالي النهائي: ${orderData.total.toFixed(3)} د.ك\n`;
   message += `━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
   
   message += `💳 طريقة الدفع: ${paymentMethodText}\n\n`;
@@ -57,28 +78,14 @@ export function generateWhatsAppMessage(data: InvoiceData): string {
   return encodeURIComponent(message);
 }
 
-export function generateAdminWhatsAppMessage(data: InvoiceData): string {
-  let message = `🔔 *إشعار طلب جديد - NAFAES*\n\n`;
-  message += `━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-  message += `📋 رقم الطلب: *${data.orderNumber}*\n`;
-  message += `📅 التاريخ: ${data.date}\n\n`;
-  message += `👤 العميل: ${data.customerName}\n`;
-  message += `📞 الهاتف: +965 ${data.customerPhone}\n`;
-  message += `📍 العنوان: ${data.area} - ${data.address}\n\n`;
-  message += `🛒 المنتجات (${data.items.length}):\n`;
-  data.items.forEach((item, index) => {
-    message += `  ${index + 1}. ${item.nameAr} x${item.quantity}\n`;
-  });
-  message += `\n💰 الإجمالي: *${data.total.toFixed(3)} د.ك*\n`;
-  message += `💳 الدفع: ${data.paymentMethod === 'cash' ? 'كاش' : 'رابط'}\n\n`;
-  message += `━━━━━━━━━━━━━━━━━━━━━━━\n`;
-  
-  return encodeURIComponent(message);
+// Admin message with more details
+export function generateAdminWhatsAppMessage(orderData: InvoiceData): string {
+  return generateFixedWhatsAppMessage(orderData);
 }
 
-export const WHATSAPP_ADMIN_NUMBER = '96566377312';
-export const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_ADMIN_NUMBER}`;
+export const WHATSAPP_NUMBER = '96566377312';
+export const WHATSAPP_BASE_LINK = `https://wa.me/${WHATSAPP_NUMBER}`;
 
 export function getWhatsAppLink(message: string): string {
-  return `${WHATSAPP_LINK}?text=${message}`;
+  return `${WHATSAPP_BASE_LINK}?text=${message}`;
 }

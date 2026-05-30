@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Instagram, MessageCircle, Settings } from 'lucide-react';
+import { Instagram, MessageCircle } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -39,10 +39,6 @@ export default function Footer() {
               <li><Link to="/products" className="text-[#888] hover:text-white text-sm transition-colors">المنتجات</Link></li>
               <li><Link to="/cart" className="text-[#888] hover:text-white text-sm transition-colors">السلة</Link></li>
               <li><Link to="/contact" className="text-[#888] hover:text-white text-sm transition-colors">تواصل معنا</Link></li>
-              <li><Link to="/admin" className="text-[#888] hover:text-white text-sm transition-colors flex items-center gap-1 mt-2 pt-2 border-t border-[#333]">
-                <Settings className="w-3 h-3" />
-                لوحة التحكم
-              </Link></li>
             </ul>
           </div>
 

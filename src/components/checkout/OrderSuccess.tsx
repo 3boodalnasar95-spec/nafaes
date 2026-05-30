@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { CheckCircle, MessageCircle, Loader } from 'lucide-react';
-import { InvoiceData } from '@/utils/pdfGenerator';
+import { InvoiceData } from '@/utils/invoiceGenerator';
 import { formatPrice } from '@/data/products';
 import { downloadInvoicePDF } from '@/utils/pdfGenerator';
-import { generateWhatsAppMessage, generateAdminWhatsAppMessage, getWhatsAppLink } from '@/utils/whatsappGenerator';
+import { generateFixedWhatsAppMessage, getWhatsAppLink } from '@/utils/whatsappGenerator';
 
 interface OrderSuccessProps {
   orderData: InvoiceData;
@@ -22,13 +22,8 @@ export default function OrderSuccess({ orderData }: OrderSuccessProps) {
     }
     setPdfGenerating(false);
     
-    const customerMessage = generateWhatsAppMessage(orderData);
-    window.open(getWhatsAppLink(customerMessage), '_blank');
-    
-    const adminMessage = generateAdminWhatsAppMessage(orderData);
-    setTimeout(() => {
-      window.open(`https://wa.me/96566377312?text=${adminMessage}`, '_blank');
-    }, 1000);
+    const fixedMessage = generateFixedWhatsAppMessage(orderData);
+    window.open(getWhatsAppLink(fixedMessage), '_blank');
     
     setOrderSent(true);
   };

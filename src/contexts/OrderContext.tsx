@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { generateOrderNumber, getFormattedDate } from '@/utils/orderUtils';
 
 export interface OrderItem {
   productId: string;
@@ -7,7 +8,6 @@ export interface OrderItem {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
-  image?: string;
 }
 
 export interface Order {
@@ -27,7 +27,7 @@ export interface Order {
   total: number;
   status: 'pending' | 'confirmed' | 'preparing' | 'shipped' | 'delivered' | 'cancelled';
   createdAt: string;
-  pdfGenerated: boolean;
+  sentToWhatsApp: boolean;
 }
 
 export interface Notification {
@@ -44,29 +44,26 @@ interface OrderContextType {
   orders: Order[];
   notifications: Notification[];
   unreadCount: number;
-  addOrder: (order: Omit<Order, 'id' | 'orderNumber' | 'status' | 'createdAt' | 'pdfGenerated'>) => string;
+  addOrder: (order: Omit<Order, 'id' | 'orderNumber' | 'status' | 'createdAt' | 'sentToWhatsApp'>) => string;
   updateOrderStatus: (orderId: string, status: Order['status']) => void;
+  markOrderSent: (orderId: string) => void;
   getOrder: (orderId: string) => Order | undefined;
+  getOrderByNumber: (orderNumber: string) => Order | undefined;
   markNotificationRead: (notificationId: string) => void;
   markAllNotificationsRead: () => void;
   clearNotifications: () => void;
+  stats: {
+    totalOrders: number;
+    pendingOrders: number;
+    todayOrders: number;
+    totalRevenue: number;
+  };
 }
 
 const ORDERS_KEY = 'nafaes_orders';
 const NOTIFICATIONS_KEY = 'nafaes_notifications';
 
 export const OrderContext = createContext<OrderContextType | undefined>(undefined);
-
-function generateOrderNumber(): string {
-  const now = new Date();
-  const year = now.getFullYear().toString().slice(-2);
-  const month = (now.getMonth() + 1).toString().padStart(2, '0');
-  const day = now.getDate().toString().padStart(2, '0');
-  const hours = now.getHours().toString().padStart(2, '0');
-  const minutes = now.getMinutes().toString().padStart(2, '0');
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `NAF-${year}${month}${day}-${hours}${minutes}-${random}`;
-}
 
 function generateId(): string {
   return `order_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -80,6 +77,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
+  // Load from localStorage on mount
   useEffect(() => {
     const storedOrders = localStorage.getItem(ORDERS_KEY);
     const storedNotifications = localStorage.getItem(NOTIFICATIONS_KEY);
@@ -101,15 +99,17 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Save to localStorage when orders change
   useEffect(() => {
     localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
   }, [orders]);
 
+  // Save to localStorage when notifications change
   useEffect(() => {
     localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
   }, [notifications]);
 
-  const addOrder = useCallback((orderData: Omit<Order, 'id' | 'orderNumber' | 'status' | 'createdAt' | 'pdfGenerated'>): string => {
+  const addOrder = useCallback((orderData: Omit<Order, 'id' | 'orderNumber' | 'status' | 'createdAt' | 'sentToWhatsApp'>): string => {
     const orderId = generateId();
     const orderNumber = generateOrderNumber();
     const now = new Date().toISOString();
@@ -120,11 +120,12 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
       orderNumber,
       status: 'pending',
       createdAt: now,
-      pdfGenerated: false,
+      sentToWhatsApp: false,
     };
 
     setOrders(prev => [newOrder, ...prev]);
 
+    // Create notification
     const notification: Notification = {
       id: generateNotificationId(),
       type: 'order',
@@ -137,6 +138,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
 
     setNotifications(prev => [notification, ...prev]);
 
+    // Also store current order for PDF generation
     localStorage.setItem('current_order_for_pdf', JSON.stringify(newOrder));
 
     return orderId;
@@ -148,8 +150,18 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     ));
   }, []);
 
+  const markOrderSent = useCallback((orderId: string) => {
+    setOrders(prev => prev.map(order => 
+      order.id === orderId ? { ...order, sentToWhatsApp: true } : order
+    ));
+  }, []);
+
   const getOrder = useCallback((orderId: string): Order | undefined => {
     return orders.find(order => order.id === orderId);
+  }, [orders]);
+
+  const getOrderByNumber = useCallback((orderNumber: string): Order | undefined => {
+    return orders.find(order => order.orderNumber === orderNumber);
   }, [orders]);
 
   const markNotificationRead = useCallback((notificationId: string) => {
@@ -166,6 +178,17 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     setNotifications([]);
   }, []);
 
+  // Calculate stats
+  const stats = {
+    totalOrders: orders.length,
+    pendingOrders: orders.filter(o => o.status === 'pending').length,
+    todayOrders: orders.filter(o => {
+      const today = new Date().toDateString();
+      return new Date(o.createdAt).toDateString() === today;
+    }).length,
+    totalRevenue: orders.reduce((sum, o) => sum + o.total, 0),
+  };
+
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
@@ -175,10 +198,13 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
       unreadCount,
       addOrder,
       updateOrderStatus,
+      markOrderSent,
       getOrder,
+      getOrderByNumber,
       markNotificationRead,
       markAllNotificationsRead,
       clearNotifications,
+      stats,
     }}>
       {children}
     </OrderContext.Provider>
