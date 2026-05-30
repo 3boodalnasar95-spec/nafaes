@@ -2,19 +2,12 @@ import { Link } from 'react-router-dom';
 import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, MessageCircle } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import Layout from '../components/Layout';
-import { formatPrice, deliveryFee, whatsappLink } from '../data/products';
+import { formatPrice, whatsappLink } from '../data/products';
 
 export default function Cart() {
   const { cartItems, removeFromCart, updateQuantity, clearCart, cartTotal } = useStore();
 
   const subtotal = cartTotal();
-  const total = subtotal + deliveryFee;
-
-  // Generate WhatsApp message for cart
-  const whatsappMessage = `مرحباً، أرغب بالطلب من NAFAES:\n\n${cartItems.map((item, i) => {
-    const sizeInfo = item.selectedSize ? ` (${item.selectedSize})` : '';
-    return `${i + 1}. ${item.product.name_ar}${sizeInfo} (x${item.quantity})`;
-  }).join('\n')}\n\nالإجمالي: ${formatPrice(total)}\n\nشكراً`;
 
   if (cartItems.length === 0) {
     return (
@@ -39,6 +32,10 @@ export default function Cart() {
     );
   }
 
+  const whatsappMessage = `مرحباً، أرغب بالطلب من NAFAES:\n\n${cartItems.map((item, i) => {
+    return `${i + 1}. ${item.product.name_ar} (x${item.quantity})`;
+  }).join('\n')}\n\nالإجمالي: ${formatPrice(subtotal)}\n\nشكراً`;
+
   return (
     <Layout>
       <section className="bg-gradient-to-b from-[#F5F0E8] to-[#FAF8F5] py-12">
@@ -51,17 +48,18 @@ export default function Cart() {
       <section className="py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Cart Items */}
             <div className="lg:col-span-2 space-y-4">
               {cartItems.map((item) => (
-                <div key={`${item.product.id}-${item.selectedSize || 'default'}`} className="bg-white rounded-xl border border-[#E8E0D5] p-4 flex flex-col sm:flex-row gap-4">
-                  <Link to={`/product/${item.product.id}`} className="flex-shrink-0">
-                    <div className="w-full sm:w-28 h-28 bg-[#F5F0E8] rounded-lg flex items-center justify-center overflow-hidden p-2">
+                <div key={item.product.id} className="bg-white rounded-xl border border-[#E8E0D5] p-4 flex flex-col sm:flex-row gap-4">
+                  <Link to={`/products/${item.product.id}`} className="flex-shrink-0">
+                    <div className="w-24 h-24 bg-[#F5F0E8] rounded-lg flex items-center justify-center p-2">
                       <img
                         src={item.product.image}
                         alt={item.product.name_ar}
                         className="w-full h-full object-contain"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = `https://via.placeholder.com/200x200/F5F0E8/C9A96E?text=${encodeURIComponent(item.product.name_en)}`;
+                          (e.target as HTMLImageElement).src = '';
                         }}
                       />
                     </div>
@@ -69,14 +67,9 @@ export default function Cart() {
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <Link to={`/product/${item.product.id}`} className="text-[#1A1A1A] font-bold text-lg hover:text-[#C9A96E]">
+                        <Link to={`/products/${item.product.id}`} className="text-[#1A1A1A] font-bold text-lg hover:text-[#C9A96E]">
                           {item.product.name_ar}
                         </Link>
-                        {item.selectedSize && (
-                          <span className="inline-block bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded-full mr-2">
-                            {item.selectedSize}
-                          </span>
-                        )}
                         <p className="text-[#6B6B6B] text-sm">{item.product.name_en}</p>
                       </div>
                       <button onClick={() => removeFromCart(item.product.id)} className="p-2 text-[#6B6B6B] hover:text-red-500">
@@ -95,9 +88,6 @@ export default function Cart() {
                       </div>
                       <div className="text-left">
                         <p className="text-[#C9A96E] font-bold text-xl">{formatPrice(item.product.price * item.quantity)}</p>
-                        {item.quantity > 1 && (
-                          <p className="text-[#6B6B6B] text-sm">{formatPrice(item.product.price)} لكل وحدة</p>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -108,6 +98,7 @@ export default function Cart() {
               </button>
             </div>
 
+            {/* Order Summary */}
             <div>
               <div className="bg-white rounded-xl border border-[#E8E0D5] p-6 sticky top-24">
                 <h3 className="text-xl font-bold text-[#1A1A1A] mb-6">ملخص الطلب</h3>
@@ -116,14 +107,14 @@ export default function Cart() {
                     <span>المجموع الفرعي</span>
                     <span>{formatPrice(subtotal)}</span>
                   </div>
-                  <div className="flex justify-between text-[#6B6B6B]">
+                  <div className="flex justify-between text-[#6B6B6B] p-3 bg-blue-50 rounded-lg text-sm">
                     <span>رسوم التوصيل</span>
-                    <span>{formatPrice(deliveryFee)}</span>
+                    <span>تُحسب عند اختيار المنطقة</span>
                   </div>
                 </div>
                 <div className="flex justify-between items-center py-4 border-t border-[#E8E0D5] mb-6">
                   <span className="text-[#1A1A1A] font-bold text-lg">الإجمالي</span>
-                  <span className="text-[#C9A96E] font-bold text-2xl">{formatPrice(total)}</span>
+                  <span className="text-[#C9A96E] font-bold text-2xl">{formatPrice(subtotal)}</span>
                 </div>
                 <Link to="/checkout" className="w-full flex items-center justify-center gap-2 bg-[#1A1A1A] hover:bg-[#C9A96E] text-white font-semibold py-4 rounded-xl transition-colors mb-3">
                   إتمام الطلب

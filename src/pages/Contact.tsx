@@ -32,20 +32,6 @@ export default function Contact() {
               </div>
             </a>
 
-            {/* Instagram */}
-            <a
-              href="https://instagram.com/nafaes.q8"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-4 bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F77729] hover:opacity-90 text-white font-bold text-xl py-8 px-6 rounded-2xl mb-6 transition-opacity shadow-lg hover:shadow-xl"
-            >
-              <Instagram className="w-10 h-10" />
-              <div className="text-right">
-                <span className="block text-lg">تابعونا على إنستغرام</span>
-                <span className="text-2xl font-bold">@nafaes.q8</span>
-              </div>
-            </a>
-
             {/* Info Card */}
             <div className="bg-white rounded-2xl border border-[#E8E0D5] p-8 text-center">
               <div className="w-16 h-16 mx-auto mb-4 bg-[#C9A96E]/10 rounded-full flex items-center justify-center">
@@ -54,7 +40,7 @@ export default function Contact() {
               <h2 className="text-2xl font-bold text-[#1A1A1A] mb-4">NAFAES | نفائس</h2>
               <p className="text-[#6B6B6B] mb-4">Luxury Home Fragrance</p>
               <p className="text-[#6B6B6B]">
-                أجهزة تعطير | معطرات أعواد | هدايا عطرية
+                أجهزة تعطير | زيوت عطرية | هدايا عطرية
               </p>
             </div>
           </div>
