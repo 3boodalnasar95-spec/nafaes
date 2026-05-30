@@ -53,7 +53,7 @@ export default function ProductDetails() {
   };
 
   const whatsappMessage = selectedFlavor 
-    ? `أرغب بطلب منتج ${product.name_en} - ${product.name_ar} مع نكهة ${deviceFlavors.find(f => f.id === selectedFlavor)?.name_ar || ''}، السعر ${formatPrice(product.price)} + ${formatPrice(deviceFlavors.find(f => f.id === selectedFlavor)?.price || 0)} النكهة.`
+    ? `أرغب بطلب منتج ${product.name_en} - ${product.name_ar} مع زيت ${deviceFlavors.find(f => f.id === selectedFlavor)?.name_ar || ''}، السعر ${formatPrice(product.price)} + ${formatPrice(deviceFlavors.find(f => f.id === selectedFlavor)?.price || 0)} الزيت.`
     : `أرغب بطلب منتج ${product.name_en} - ${product.name_ar}، السعر ${formatPrice(product.price)}.`;
 
   return (
@@ -108,10 +108,10 @@ export default function ProductDetails() {
                 <div className="mb-8">
                   <h3 className="text-lg font-bold text-[#1A1A1A] mb-4 flex items-center gap-2">
                     <Droplets className="w-5 h-5 text-[#C9A96E]" />
-                    اختر النكهة (اختياري)
+                    اختر الزيت العطري (اختياري)
                   </h3>
                   <p className="text-sm text-[#6B6B6B] mb-4">
-                    يمكنك إضافة بطارية معطرة بالنكهة التي تفضلها
+                    يمكنك إضافة زيت عطري بالنكهة التي تفضلها
                   </p>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {deviceFlavors.map((flavor) => (
@@ -149,7 +149,7 @@ export default function ProductDetails() {
                           {deviceFlavors.find(f => f.id === selectedFlavor)?.name_ar}
                         </p>
                         <p className="text-sm text-[#6B6B6B]">
-                          بطارية معطرة ستُضاف للسلة
+                          زيت عطري سيُضاف للسلة
                         </p>
                       </div>
                       <span className="text-[#C9A96E] font-bold">

@@ -40,10 +40,10 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
         
-        {/* Category Badge */}
+        {/* Category Badge - Changed to زيوت عطرية */}
         {product.category === 'flavor' && (
           <div className="absolute top-3 right-3 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-            بطارية معطرة
+            زيوت عطرية
           </div>
         )}
         {product.category === 'gift' && (
