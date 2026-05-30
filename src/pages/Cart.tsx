@@ -10,6 +10,9 @@ export default function Cart() {
   const subtotal = cartTotal();
   const total = subtotal + deliveryFee;
 
+  // Generate WhatsApp message for cart
+  const whatsappMessage = `مرحباً، أرغب بالطلب من NAFAES:\n\n${cartItems.map((item, i) => `${i + 1}. ${item.product.name_ar} (x${item.quantity})`).join('\n')}\n\nالإجمالي: ${formatPrice(total)}\n\nشكراً`;
+
   if (cartItems.length === 0) {
     return (
       <Layout>
@@ -118,7 +121,7 @@ export default function Cart() {
                   إتمام الطلب
                   <ArrowRight className="w-5 h-5" />
                 </Link>
-                <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BD5A] text-white font-semibold py-4 rounded-xl transition-colors">
+                <a href={`${whatsappLink}?text=${encodeURIComponent(whatsappMessage)}`} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BD5A] text-white font-semibold py-4 rounded-xl transition-colors">
                   <MessageCircle className="w-5 h-5" />
                   إتمام عبر واتساب
                 </a>

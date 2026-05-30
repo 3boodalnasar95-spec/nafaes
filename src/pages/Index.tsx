@@ -5,7 +5,7 @@ import ProductCard from '../components/ProductCard';
 import { products } from '../data/products';
 
 export default function Index() {
-  const featuredProducts = products.slice(0, 3);
+  const featuredProducts = products.slice(0, 4);
 
   const features = [
     { icon: Star, title: 'منتجات مختارة بعناية', description: 'نختار لكم أفضل المنتجات العطرية' },
@@ -15,12 +15,12 @@ export default function Index() {
   ];
 
   const instagramPosts = [
-    { id: 1, title: 'مرحبًا بكم في نفائس', text: 'فخامة المكان تبدأ من رائحته. في نفائس، نختار لكم منتجات عطرية راقية.' },
-    { id: 2, title: 'إيلان 360 نوماد', text: 'جهاز تعطير ذكي قابل للشحن، يمنحك رفاهية متنقلة.', price: '49 د.ك' },
-    { id: 3, title: 'إيلان 360 برايم', text: 'جهاز تعطير كهربائي بتصميم فاخر، مثالي للمنازل والمكاتب.', price: '42 د.ك' },
-    { id: 4, title: 'نوار ماجستيه', text: 'جهاز تعطير احترافي بشاشة LCD للمساحات الراقية.', price: '59 د.ك' },
-    { id: 5, title: 'فورست ريزيرف', text: 'طقم هدايا عطري فاخر يجمع بين الديفيوزر والشمعة.', price: '13.900 د.ك' },
-    { id: 6, title: 'أمبر سانتال', text: 'معطر أعواد فاخر برائحة دافئة وخشبية.', price: '10.900 د.ك' },
+    { id: 1, title: 'إيلان 360 نوماد', text: 'جهاز تعطير ذكي قابل للشحن', price: '49 د.ك' },
+    { id: 2, title: 'إيلان 360 برايم', text: 'جهاز تعطير كهربائي', price: '42 د.ك' },
+    { id: 3, title: 'نوار ماجستيه', text: 'جهاز احترافي بشاشة LCD', price: '59 د.ك' },
+    { id: 4, title: 'بلاك عود', text: 'رائحة عود فاخرة', price: '10.9 د.ك' },
+    { id: 5, title: 'روز مسك', text: 'مزيج رومانسي', price: '10.9 د.ك' },
+    { id: 6, title: 'سانتال فانيلا', text: 'دفء الفانيليا', price: '10.9 د.ك' },
   ];
 
   return (
@@ -100,7 +100,7 @@ export default function Index() {
             <h2 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-4">منتجاتنا المميزة</h2>
             <p className="text-[#6B6B6B]">اكتشف مجموعتنا المختارة من منتجات التعطير الفاخرة</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {featuredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
@@ -127,7 +127,7 @@ export default function Index() {
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <div className="bg-white px-6 py-3 rounded-full text-[#1A1A1A]">
-                <span className="font-bold text-[#C9A96E]">5+</span> منتجات فاخرة
+                <span className="font-bold text-[#C9A96E]">15+</span> منتجات فاخرة
               </div>
               <div className="bg-white px-6 py-3 rounded-full text-[#1A1A1A]">
                 <span className="font-bold text-[#C9A96E]">2</span> د.ك توصيل
