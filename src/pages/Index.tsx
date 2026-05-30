@@ -2,10 +2,28 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Star, Award, Truck, CreditCard, Instagram, MessageCircle } from 'lucide-react';
 import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
-import { products } from '../data/products';
+import { products as localProducts } from '../data/products';
+import { getProducts } from '@/lib/db-operations';
+import { useState, useEffect } from 'react';
 
 export default function Index() {
-  const featuredProducts = products.slice(0, 3);
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    setLoading(true);
+    const products = await getProducts();
+    if (products.length > 0) {
+      setFeaturedProducts(products.slice(0, 3));
+    } else {
+      setFeaturedProducts(localProducts.slice(0, 3));
+    }
+    setLoading(false);
+  };
 
   const features = [
     { icon: Star, title: 'منتجات مختارة بعناية', description: 'نختار لكم أفضل المنتجات العطرية' },
@@ -100,20 +118,27 @@ export default function Index() {
             <h2 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-4">منتجاتنا المميزة</h2>
             <p className="text-[#6B6B6B]">اكتشف مجموعتنا المختارة من منتجات التعطير الفاخرة</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-          <div className="text-center mt-10">
-            <Link
-              to="/products"
-              className="inline-flex items-center gap-2 text-[#C9A96E] hover:text-[#1A1A1A] font-medium transition-colors border border-[#C9A96E] hover:bg-[#C9A96E] hover:text-white px-6 py-3 rounded-xl"
-            >
-              عرض جميع المنتجات
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
-          </div>
+          
+          {loading ? (
+            <div className="text-center py-12 text-[#6B6B6B]">جاري تحميل المنتجات...</div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {featuredProducts.map((product) => (
+                  <ProductCard key={product.id || product.name_en} product={product} />
+                ))}
+              </div>
+              <div className="text-center mt-10">
+                <Link
+                  to="/products"
+                  className="inline-flex items-center gap-2 text-[#C9A96E] hover:text-[#1A1A1A] font-medium transition-colors border border-[#C9A96E] hover:bg-[#C9A96E] hover:text-white px-6 py-3 rounded-xl"
+                >
+                  عرض جميع المنتجات
+                  <ArrowLeft className="w-4 h-4" />
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       </section>
 
@@ -123,7 +148,7 @@ export default function Index() {
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-6">عن نفائس</h2>
             <p className="text-[#6B6B6B] text-lg leading-relaxed mb-8">
-              في نفائس، نؤمن بأن الروائح имеют تأثير كبير على mood والمزاج. لهذا نقدم لكم مجموعة مختارة من أجهزة التعطير الذكية، معطرات الأعواد، وأطقم الهدايا العطرية التي تضفي على مساحاتكم لمسة من الفخامة والأناقة.
+              في نفائس، نؤمن بأن الروائح تؤثر على المزاج. لهذا نقدم لكم مجموعة مختارة من أجهزة التعطير الذكية، معطرات الأعواد، وأطقم الهدايا العطرية التي تضفي على مساحاتكم لمسة من الفخامة والأناقة.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <div className="bg-white px-6 py-3 rounded-full text-[#1A1A1A]">

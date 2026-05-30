@@ -3,45 +3,77 @@ import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
-import { products as localProducts, type Product } from '../data/products';
+import { products as localProducts, Product } from '../data/products';
+import { getProducts } from '@/lib/db-operations';
 
 export default function Products() {
+  const [dbProducts, setDbProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'price-asc' | 'price-desc' | 'name'>('name');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
 
   useEffect(() => {
     filterAndSortProducts();
-  }, [search, selectedCategory, sortBy]);
+  }, [search, selectedCategory, sortBy, dbProducts]);
 
-  const allProducts = localProducts;
+  const loadProducts = async () => {
+    setLoading(true);
+    const products = await getProducts();
+    if (products.length > 0) {
+      // Map database products to local Product interface
+      const mappedProducts: Product[] = products.map(p => ({
+        id: p.id,
+        name_ar: p.name_ar,
+        name_en: p.name_en,
+        type: p.type || 'devices',
+        price: p.price,
+        shortDescription: p.specs?.['الوصف'] || p.features?.[0] || '',
+        fullDescription: p.features?.join(' | ') || '',
+        specs: p.specs || {},
+        features: p.features || [],
+        image: p.images?.[0] || '',
+        images: p.images || [],
+      }));
+      setDbProducts(mappedProducts);
+    } else {
+      setDbProducts(localProducts);
+    }
+    setLoading(false);
+  };
+
+  const allProducts = dbProducts.length > 0 ? dbProducts : localProducts;
 
   const filterAndSortProducts = () => {
     let result = [...allProducts];
     
     if (search) {
       result = result.filter(p => 
-        p.name_ar.includes(search) || 
-        p.name_en.toLowerCase().includes(search.toLowerCase()) ||
-        p.type.toLowerCase().includes(search.toLowerCase())
+        p.name_ar?.includes(search) || 
+        p.name_en?.toLowerCase().includes(search.toLowerCase()) ||
+        p.type?.toLowerCase().includes(search.toLowerCase())
       );
     }
     
     if (selectedCategory !== 'all') {
-      result = result.filter(p => p.type.includes(selectedCategory));
+      result = result.filter(p => p.type?.toLowerCase().includes(selectedCategory.toLowerCase()));
     }
     
     switch (sortBy) {
       case 'price-asc':
-        result.sort((a, b) => a.price - b.price);
+        result.sort((a, b) => (a.price || 0) - (b.price || 0));
         break;
       case 'price-desc':
-        result.sort((a, b) => b.price - a.price);
+        result.sort((a, b) => (b.price || 0) - (a.price || 0));
         break;
       case 'name':
       default:
-        result.sort((a, b) => a.name_ar.localeCompare(b.name_ar));
+        result.sort((a, b) => (a.name_ar || '').localeCompare(b.name_ar || ''));
     }
     
     setFilteredProducts(result);
@@ -109,10 +141,10 @@ export default function Products() {
           </div>
 
           <div className="mb-4 text-[#6B6B6B] text-sm">
-            تم العثور على {filteredProducts.length} منتج
+            {loading ? 'جاري التحميل...' : `تم العثور على ${filteredProducts.length} منتج`}
           </div>
 
-          {filteredProducts.length === 0 ? (
+          {filteredProducts.length === 0 && !loading ? (
             <div className="text-center py-16">
               <h3 className="text-xl font-bold text-[#1A1A1A] mb-2">لا توجد نتائج</h3>
               <p className="text-[#6B6B6B] mb-4">جرب البحث بكلمات مختلفة</p>
@@ -125,8 +157,8 @@ export default function Products() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+              {filteredProducts.map((product, index) => (
+                <ProductCard key={product.id || index} product={product} />
               ))}
             </div>
           )}

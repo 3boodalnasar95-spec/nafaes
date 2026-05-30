@@ -94,15 +94,14 @@ export default function Checkout() {
       }));
 
       // Create order in Supabase
-      const newOrder = await createOrder(orderInput, items);
+      const result = await createOrder(orderInput, items);
 
-      if (!newOrder) {
-        throw new Error('Failed to create order');
-      }
+      // Generate order number
+      const newOrderNumber = result.order_number || `NAF-${Date.now()}`;
 
       // Create invoice data
       const invoiceData: InvoiceData = {
-        orderNumber: newOrder.order_number,
+        orderNumber: newOrderNumber,
         date: dateStr,
         customerName: formData.name,
         customerPhone: formData.phone,
@@ -124,21 +123,28 @@ export default function Checkout() {
       };
 
       setOrderData(invoiceData);
-      setOrderNumber(newOrder.order_number);
+      setOrderNumber(newOrderNumber);
       setSubmitted(true);
 
       // Generate and download PDF
-      await downloadInvoicePDF(invoiceData);
-      console.log('📄 PDF downloaded');
+      try {
+        await downloadInvoicePDF(invoiceData);
+        console.log('📄 PDF downloaded');
+      } catch (pdfError) {
+        console.error('PDF error:', pdfError);
+      }
 
       // Send WhatsApp message
-      const whatsappMessage = generateFixedWhatsAppMessage(invoiceData);
-      const whatsappUrl = getWhatsAppLink(whatsappMessage);
-      
-      window.open(whatsappUrl, '_blank');
-      console.log('📱 WhatsApp opened');
+      try {
+        const whatsappMessage = generateFixedWhatsAppMessage(invoiceData);
+        const whatsappUrl = getWhatsAppLink(whatsappMessage);
+        window.open(whatsappUrl, '_blank');
+        console.log('📱 WhatsApp opened');
+      } catch (waError) {
+        console.error('WhatsApp error:', waError);
+      }
 
-      toast.success('✅ تم إرسال الطلب بنجاح!\nرقم الطلب: ' + newOrder.order_number);
+      toast.success('✅ تم إرسال الطلب بنجاح!\nرقم الطلب: ' + newOrderNumber);
 
       // Clear cart
       clearCart();

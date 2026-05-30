@@ -112,7 +112,156 @@ export interface Settings {
   min_order_amount: number;
 }
 
+// ==================== PRODUCTS ====================
+
+export async function getProducts(): Promise<Product[]> {
+  if (!isSupabaseConfigured || !supabase) {
+    console.log('Supabase not configured, returning empty products');
+    return [];
+  }
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: true });
+    if (error) {
+      console.error('Error fetching products:', error);
+      return [];
+    }
+    return data || [];
+  } catch (err) {
+    console.error('Exception fetching products:', err);
+    return [];
+  }
+}
+
+export async function getProduct(id: string): Promise<Product | null> {
+  if (!isSupabaseConfigured || !supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error) return null;
+    return data;
+  } catch (err) {
+    console.error('Exception fetching product:', err);
+    return null;
+  }
+}
+
+export async function createProduct(productData: Partial<Product>): Promise<Product | null> {
+  if (!isSupabaseConfigured || !supabase) return null;
+  try {
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+      .from('products')
+      .insert({ 
+        ...productData, 
+        created_at: now, 
+        updated_at: now,
+        is_active: true,
+        slug: productData.name_en?.toLowerCase().replace(/\s+/g, '-'),
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    console.error('Exception creating product:', err);
+    return null;
+  }
+}
+
+export async function updateProduct(id: string, updates: Partial<Product>): Promise<boolean> {
+  if (!isSupabaseConfigured || !supabase) return false;
+  try {
+    const { error } = await supabase
+      .from('products')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id);
+    return !error;
+  } catch (err) {
+    console.error('Exception updating product:', err);
+    return false;
+  }
+}
+
+export async function deleteProduct(id: string): Promise<boolean> {
+  if (!isSupabaseConfigured || !supabase) return false;
+  try {
+    const { error } = await supabase
+      .from('products')
+      .update({ is_active: false })
+      .eq('id', id);
+    return !error;
+  } catch (err) {
+    console.error('Exception deleting product:', err);
+    return false;
+  }
+}
+
+export async function logInventoryChange(productId: string, type: 'in' | 'out' | 'adjustment', quantity: number, reason: string): Promise<boolean> {
+  if (!isSupabaseConfigured || !supabase) return false;
+  try {
+    const { error } = await supabase.from('inventory_logs').insert({
+      product_id: productId,
+      type,
+      quantity,
+      reason,
+      created_by: 'admin',
+      created_at: new Date().toISOString(),
+    });
+    if (!error) {
+      const products = await getProducts();
+      const product = products.find(p => p.id === productId);
+      if (product) {
+        const newStock = type === 'in' 
+          ? product.stock_quantity + quantity 
+          : type === 'out' 
+            ? product.stock_quantity - quantity 
+            : quantity;
+        await updateProduct(productId, { stock_quantity: Math.max(0, newStock) });
+      }
+    }
+    return !error;
+  } catch (err) {
+    console.error('Exception logging inventory:', err);
+    return false;
+  }
+}
+
+export async function getInventoryLogs(productId: string): Promise<any[]> {
+  if (!isSupabaseConfigured || !supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('inventory_logs')
+      .select('*')
+      .eq('product_id', productId)
+      .order('created_at', { ascending: false })
+      .limit(20);
+    if (error) return [];
+    return data || [];
+  } catch (err) {
+    console.error('Exception fetching inventory logs:', err);
+    return [];
+  }
+}
+
 // ==================== ORDERS ====================
+
+function generateOrderNumber(): string {
+  const now = new Date();
+  const year = now.getFullYear().toString().slice(-2);
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
+  const day = now.getDate().toString().padStart(2, '0');
+  const hours = now.getHours().toString().padStart(2, '0');
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  return `NAF-${year}${month}${day}-${hours}${minutes}-${random}`;
+}
 
 export async function getOrders(): Promise<Order[]> {
   if (!isSupabaseConfigured || !supabase) {
@@ -124,7 +273,10 @@ export async function getOrders(): Promise<Order[]> {
       .from('orders')
       .select(`*, order_items (*)`)
       .order('created_at', { ascending: false });
-    if (error) { console.error('Error fetching orders:', error); return []; }
+    if (error) {
+      console.error('Error fetching orders:', error);
+      return [];
+    }
     return data || [];
   } catch (err) {
     console.error('Exception fetching orders:', err);
@@ -149,16 +301,37 @@ export async function getOrder(id: string): Promise<Order | null> {
 }
 
 export async function createOrder(
-  orderData: { customer_name: string; customer_phone: string; governorate: string; area: string; area_id: string; address: string; notes: string; payment_method: 'cash' | 'link'; subtotal: number; delivery_fee: number; total: number },
-  items: { product_id: string; product_name_ar: string; product_name_en: string; quantity: number; unit_price: number; total_price: number }[]
-): Promise<Order | null> {
+  orderData: { 
+    customer_name: string; 
+    customer_phone: string; 
+    governorate: string; 
+    area: string; 
+    area_id: string; 
+    address: string; 
+    notes: string; 
+    payment_method: 'cash' | 'link'; 
+    subtotal: number; 
+    delivery_fee: number; 
+    total: number;
+  },
+  items: { 
+    product_id: string; 
+    product_name_ar: string; 
+    product_name_en: string; 
+    quantity: number; 
+    unit_price: number; 
+    total_price: number 
+  }[]
+): Promise<{ success: boolean; order_number?: string; error?: string }> {
   if (!isSupabaseConfigured || !supabase) {
-    console.log('Supabase not configured, cannot create order');
-    return null;
+    console.log('Supabase not configured, order not saved to database');
+    return { success: false, error: 'Database not configured' };
   }
+  
   try {
     const orderNumber = generateOrderNumber();
     const now = new Date().toISOString();
+    
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
@@ -181,106 +354,59 @@ export async function createOrder(
       })
       .select()
       .single();
-    if (orderError) { console.error('Error creating order:', orderError); return null; }
+      
+    if (orderError) {
+      console.error('Error creating order:', orderError);
+      return { success: false, error: orderError.message };
+    }
+    
     if (items.length > 0) {
       const orderItems = items.map(item => ({
-        order_id: order.id, product_id: item.product_id, product_name_ar: item.product_name_ar,
-        product_name_en: item.product_name_en, quantity: item.quantity,
-        unit_price: item.unit_price, total_price: item.total_price, created_at: now,
+        order_id: order.id,
+        product_id: item.product_id,
+        product_name_ar: item.product_name_ar,
+        product_name_en: item.product_name_en,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: item.total_price,
+        created_at: now,
       }));
-      await supabase.from('order_items').insert(orderItems);
+      
+      const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
+      if (itemsError) {
+        console.error('Error creating order items:', itemsError);
+      }
     }
+    
+    // Create notification
     await createNotification({
-      type: 'order', title: '🛒 طلب جديد!',
+      type: 'order',
+      title: '🛒 طلب جديد!',
       message: `طلب من: ${orderData.customer_name}\nالهاتف: +965 ${orderData.customer_phone}\nالمنطقة: ${orderData.area}\nالإجمالي: ${orderData.total.toFixed(3)} د.ك\nالمنتجات: ${items.length}`,
-      order_id: order.id, read: false,
+      order_id: order.id,
+      read: false,
     });
-    console.log('Order created successfully:', order.id);
-    return { ...order, order_items: items.map((item, i) => ({ ...item, id: `item_${i}`, order_id: order.id, created_at: now })) };
+    
+    console.log('✅ Order created successfully:', order.id);
+    return { success: true, order_number: orderNumber };
+    
   } catch (err) {
     console.error('Exception creating order:', err);
-    return null;
+    return { success: false, error: (err as Error).message };
   }
 }
 
 export async function updateOrderStatus(id: string, status: Order['status']): Promise<boolean> {
   if (!isSupabaseConfigured || !supabase) return false;
   try {
-    const { error } = await supabase.from('orders').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
+    const { error } = await supabase
+      .from('orders')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', id);
     return !error;
   } catch (err) {
     console.error('Exception updating order:', err);
     return false;
-  }
-}
-
-// ==================== PRODUCTS ====================
-
-export async function getProducts(): Promise<Product[]> {
-  if (!isSupabaseConfigured || !supabase) return [];
-  try {
-    const { data, error } = await supabase.from('products').select('*').eq('is_active', true).order('name_ar');
-    if (error) { console.error('Error fetching products:', error); return []; }
-    return data || [];
-  } catch (err) {
-    console.error('Exception fetching products:', err);
-    return [];
-  }
-}
-
-export async function createProduct(productData: Partial<Product>): Promise<Product | null> {
-  if (!isSupabaseConfigured || !supabase) return null;
-  try {
-    const now = new Date().toISOString();
-    const { data, error } = await supabase.from('products').insert({ ...productData, created_at: now, updated_at: now }).select().single();
-    if (error) throw error;
-    return data;
-  } catch (err) {
-    console.error('Exception creating product:', err);
-    return null;
-  }
-}
-
-export async function updateProduct(id: string, updates: Partial<Product>): Promise<boolean> {
-  if (!isSupabaseConfigured || !supabase) return false;
-  try {
-    const { error } = await supabase.from('products').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id);
-    return !error;
-  } catch (err) {
-    console.error('Exception updating product:', err);
-    return false;
-  }
-}
-
-export async function logInventoryChange(productId: string, type: 'in' | 'out' | 'adjustment', quantity: number, reason: string): Promise<boolean> {
-  if (!isSupabaseConfigured || !supabase) return false;
-  try {
-    const { error } = await supabase.from('inventory_logs').insert({
-      product_id: productId, type, quantity, reason, created_by: 'admin', created_at: new Date().toISOString(),
-    });
-    if (!error) {
-      const product = await getProducts().then(p => p.find(pr => pr.id === productId));
-      if (product) {
-        const newStock = type === 'in' ? product.stock_quantity + quantity : type === 'out' ? product.stock_quantity - quantity : quantity;
-        await updateProduct(productId, { stock_quantity: Math.max(0, newStock) });
-      }
-    }
-    return !error;
-  } catch (err) {
-    console.error('Exception logging inventory:', err);
-    return false;
-  }
-}
-
-export async function getInventoryLogs(productId: string): Promise<any[]> {
-  if (!isSupabaseConfigured || !supabase) return [];
-  try {
-    const { data, error } = await supabase.from('inventory_logs').select('*').eq('product_id', productId).order('created_at', { ascending: false }).limit(20);
-    if (error) return [];
-    return data || [];
-  } catch (err) {
-    console.error('Exception fetching inventory logs:', err);
-    return [];
   }
 }
 
@@ -289,7 +415,10 @@ export async function getInventoryLogs(productId: string): Promise<any[]> {
 export async function getCustomers(): Promise<Customer[]> {
   if (!isSupabaseConfigured || !supabase) return [];
   try {
-    const { data, error } = await supabase.from('customers').select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('customers')
+      .select('*')
+      .order('created_at', { ascending: false });
     if (error) return [];
     return data || [];
   } catch (err) {
@@ -302,7 +431,15 @@ export async function createCustomer(customerData: { name: string; phone: string
   if (!isSupabaseConfigured || !supabase) return null;
   try {
     const now = new Date().toISOString();
-    const { data, error } = await supabase.from('customers').insert({ ...customerData, created_at: now, updated_at: now }).select().single();
+    const { data, error } = await supabase
+      .from('customers')
+      .insert({ 
+        ...customerData, 
+        created_at: now, 
+        updated_at: now 
+      })
+      .select()
+      .single();
     if (error) throw error;
     return data;
   } catch (err) {
@@ -311,8 +448,20 @@ export async function createCustomer(customerData: { name: string; phone: string
   }
 }
 
-export async function getCustomerStats(customerId: string): Promise<{ totalOrders: number; totalSpent: number; avgOrderValue: number; lastOrder: string | null; ordersByStatus: Record<string, number> }> {
-  return { totalOrders: 0, totalSpent: 0, avgOrderValue: 0, lastOrder: null, ordersByStatus: {} };
+export async function getCustomerStats(customerId: string): Promise<{
+  totalOrders: number;
+  totalSpent: number;
+  avgOrderValue: number;
+  lastOrder: string | null;
+  ordersByStatus: Record<string, number>;
+}> {
+  return { 
+    totalOrders: 0, 
+    totalSpent: 0, 
+    avgOrderValue: 0, 
+    lastOrder: null, 
+    ordersByStatus: {} 
+  };
 }
 
 // ==================== INVOICES ====================
@@ -320,7 +469,10 @@ export async function getCustomerStats(customerId: string): Promise<{ totalOrder
 export async function getInvoices(): Promise<Invoice[]> {
   if (!isSupabaseConfigured || !supabase) return [];
   try {
-    const { data, error } = await supabase.from('invoices').select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('invoices')
+      .select('*')
+      .order('created_at', { ascending: false });
     if (error) return [];
     return data || [];
   } catch (err) {
@@ -347,7 +499,13 @@ export async function getTransactions(filters?: { type?: string; date_from?: str
   }
 }
 
-export async function createTransaction(transactionData: { type: 'income' | 'expense'; category: string; amount: number; description: string; date: string }): Promise<boolean> {
+export async function createTransaction(transactionData: {
+  type: 'income' | 'expense';
+  category: string;
+  amount: number;
+  description: string;
+  date: string;
+}): Promise<boolean> {
   if (!isSupabaseConfigured || !supabase) return false;
   try {
     const { error } = await supabase.from('transactions').insert(transactionData);
@@ -363,7 +521,11 @@ export async function createTransaction(transactionData: { type: 'income' | 'exp
 export async function getNotifications(): Promise<Notification[]> {
   if (!isSupabaseConfigured || !supabase) return [];
   try {
-    const { data, error } = await supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(50);
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(50);
     if (error) return [];
     return data || [];
   } catch (err) {
@@ -375,7 +537,10 @@ export async function getNotifications(): Promise<Notification[]> {
 export async function createNotification(notification: Omit<Notification, 'id' | 'created_at'>): Promise<boolean> {
   if (!isSupabaseConfigured || !supabase) return false;
   try {
-    const { error } = await supabase.from('notifications').insert({ ...notification, created_at: new Date().toISOString() });
+    const { error } = await supabase.from('notifications').insert({
+      ...notification,
+      created_at: new Date().toISOString(),
+    });
     return !error;
   } catch (err) {
     console.error('Exception creating notification:', err);
@@ -386,7 +551,10 @@ export async function createNotification(notification: Omit<Notification, 'id' |
 export async function markNotificationRead(id: string): Promise<boolean> {
   if (!isSupabaseConfigured || !supabase) return false;
   try {
-    const { error } = await supabase.from('notifications').update({ read: true }).eq('id', id);
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('id', id);
     return !error;
   } catch (err) {
     console.error('Exception marking notification:', err);
@@ -397,7 +565,10 @@ export async function markNotificationRead(id: string): Promise<boolean> {
 export async function markAllNotificationsRead(): Promise<boolean> {
   if (!isSupabaseConfigured || !supabase) return false;
   try {
-    const { error } = await supabase.from('notifications').update({ read: true }).eq('read', false);
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('read', false);
     return !error;
   } catch (err) {
     console.error('Exception marking all notifications:', err);
@@ -446,14 +617,24 @@ export async function updateSettings(settings: Record<string, string>): Promise<
 
 // ==================== REPORTS ====================
 
-export async function getSalesReport(startDate: string, endDate: string): Promise<{ daily: any[]; byStatus: Record<string, number>; topProducts: any[] }> {
+export async function getSalesReport(startDate: string, endDate: string): Promise<{
+  daily: { date: string; orders: number; revenue: number }[];
+  byStatus: Record<string, number>;
+  topProducts: { name: string; quantity: number; revenue: number }[];
+}> {
   if (!isSupabaseConfigured || !supabase) return { daily: [], byStatus: {}, topProducts: [] };
   try {
-    const { data, error } = await supabase.from('orders').select('*').gte('created_at', startDate).lte('created_at', endDate);
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .gte('created_at', startDate)
+      .lte('created_at', endDate);
     if (error) return { daily: [], byStatus: {}, topProducts: [] };
+    
     const orders = data || [];
     const byStatus: Record<string, number> = {};
     orders.forEach(o => { byStatus[o.status] = (byStatus[o.status] || 0) + 1; });
+    
     return { daily: [], byStatus, topProducts: [] };
   } catch (err) {
     console.error('Exception fetching sales report:', err);
@@ -465,40 +646,56 @@ export async function exportOrders(format: 'csv' | 'json'): Promise<string> {
   const orders = await getOrders();
   if (format === 'json') return JSON.stringify(orders, null, 2);
   const headers = 'Order Number,Customer Name,Phone,Area,Total,Status,Date\n';
-  const rows = orders.map(o => `${o.order_number},${o.customer_name},${o.customer_phone},${o.area},${o.total},${o.status},${o.created_at}`).join('\n');
+  const rows = orders.map(o => 
+    `${o.order_number},${o.customer_name},${o.customer_phone},${o.area},${o.total},${o.status},${o.created_at}`
+  ).join('\n');
   return headers + rows;
 }
 
 // ==================== HELPERS ====================
 
-function generateOrderNumber(): string {
-  const now = new Date();
-  const year = now.getFullYear().toString().slice(-2);
-  const month = (now.getMonth() + 1).toString().padStart(2, '0');
-  const day = now.getDate().toString().padStart(2, '0');
-  const hours = now.getHours().toString().padStart(2, '0');
-  const minutes = now.getMinutes().toString().padStart(2, '0');
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-  return `NAF-${year}${month}${day}-${hours}${minutes}-${random}`;
-}
-
 export { formatPrice };
+
 export function getFormattedDate(): string {
-  return new Date().toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return new Date().toLocaleDateString('ar-SA', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 }
 
 // ==================== DASHBOARD STATS ====================
 
-export async function getDashboardStats(): Promise<{ totalOrders: number; pendingOrders: number; todayOrders: number; totalRevenue: number; unreadNotifications: number }> {
-  if (!isSupabaseConfigured || !supabase) return { totalOrders: 0, pendingOrders: 0, todayOrders: 0, totalRevenue: 0, unreadNotifications: 0 };
+export async function getDashboardStats(): Promise<{
+  totalOrders: number;
+  pendingOrders: number;
+  todayOrders: number;
+  totalRevenue: number;
+  unreadNotifications: number;
+}> {
+  if (!isSupabaseConfigured || !supabase) {
+    return { 
+      totalOrders: 0, 
+      pendingOrders: 0, 
+      todayOrders: 0, 
+      totalRevenue: 0, 
+      unreadNotifications: 0 
+    };
+  }
+  
   try {
     const today = new Date().toISOString().split('T')[0];
+    
     const [ordersResult, notificationsResult] = await Promise.all([
       supabase.from('orders').select('total, status, created_at'),
       supabase.from('notifications').select('id').eq('read', false),
     ]);
+    
     const orders = ordersResult.data || [];
     const notifications = notificationsResult.data || [];
+    
     return {
       totalOrders: orders.length,
       pendingOrders: orders.filter(o => o.status === 'pending').length,
@@ -508,6 +705,12 @@ export async function getDashboardStats(): Promise<{ totalOrders: number; pendin
     };
   } catch (err) {
     console.error('Exception getting dashboard stats:', err);
-    return { totalOrders: 0, pendingOrders: 0, todayOrders: 0, totalRevenue: 0, unreadNotifications: 0 };
+    return { 
+      totalOrders: 0, 
+      pendingOrders: 0, 
+      todayOrders: 0, 
+      totalRevenue: 0, 
+      unreadNotifications: 0 
+    };
   }
 }

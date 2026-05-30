@@ -1,5 +1,17 @@
 import { create } from 'zustand';
-import { Product } from '../data/products';
+
+interface Product {
+  id: string;
+  name_ar: string;
+  name_en: string;
+  type: string;
+  price: number;
+  shortDescription?: string;
+  fullDescription?: string;
+  specs?: Record<string, string>;
+  features?: string[];
+  image?: string;
+}
 
 interface StoreState {
   cartItems: { product: Product; quantity: number }[];

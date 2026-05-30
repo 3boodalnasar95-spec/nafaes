@@ -288,7 +288,7 @@ export default function AdminDashboard() {
                   <div>
                     <p className="font-bold text-[#1A1A1A]">{order.order_number}</p>
                     <p className="text-sm text-[#6B6B6B]">{order.customer_name} - {order.customer_phone}</p>
-                    <p className="text-xs text-[#6B6B6B]">{order.order_items?.length || 0} منتجات | {order.area}</p>
+                    <p className="text-xs text-[#6B6B6B]">{(order.order_items?.length || 0)} منتجات | {order.area}</p>
                   </div>
                 </div>
                 
