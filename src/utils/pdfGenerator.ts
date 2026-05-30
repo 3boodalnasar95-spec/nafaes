@@ -66,7 +66,7 @@ export async function downloadInvoicePDF(orderData: InvoiceData): Promise<void> 
     '<p style="margin:3px 0;color:#C9A96E;font-size:10px;">واتساب: 66377312 | @nafaes.q8</p></div>' +
 
     '<div style="background:linear-gradient(135deg,#C9A96E,#D4AF37);color:white;padding:12px 20px;border-radius:8px;text-align:center;margin-bottom:15px;">' +
-    '<h2 style="margin:0;font-size:20px;font-weight:bold;">فاتورة ضريبية | TAX INVOICE</h2></div>' +
+    '<h2 style="margin:0;font-size:20px;font-weight:bold;">🧾 فاتورة | INVOICE</h2></div>' +
 
     '<div style="display:flex;gap:15px;margin-bottom:15px;">' +
     '<div style="flex:1;background:#FAF8F5;padding:12px;border-radius:8px;border:2px solid #C9A96E;">' +
