@@ -1,17 +1,11 @@
 import { create } from 'zustand';
-import { Product } from '@/data/products';
-
-interface CartItem {
-  product: Product;
-  quantity: number;
-  selectedSize?: string;
-}
+import { Product } from '../data/products';
 
 interface StoreState {
-  cartItems: CartItem[];
-  addToCart: (product: Product, selectedSize?: string) => void;
-  removeFromCart: (productId: string, selectedSize?: string) => void;
-  updateQuantity: (productId: string, quantity: number, selectedSize?: string) => void;
+  cartItems: { product: Product; quantity: number }[];
+  addToCart: (product: Product) => void;
+  removeFromCart: (productId: string) => void;
+  updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
   cartTotal: () => number;
 }
@@ -19,40 +13,35 @@ interface StoreState {
 export const useStore = create<StoreState>((set, get) => ({
   cartItems: [],
   
-  addToCart: (product, selectedSize) => {
+  addToCart: (product) => {
     const { cartItems } = get();
-    const itemKey = selectedSize ? `${product.id}-${selectedSize}` : product.id;
-    const existingItemIndex = cartItems.findIndex(
-      (item) => (selectedSize ? `${item.product.id}-${item.selectedSize}` : item.product.id) === itemKey
-    );
+    const existingItem = cartItems.find((item) => item.product.id === product.id);
     
-    if (existingItemIndex >= 0) {
+    if (existingItem) {
       set({
-        cartItems: cartItems.map((item, index) =>
-          index === existingItemIndex ? { ...item, quantity: item.quantity + 1 } : item
+        cartItems: cartItems.map((item) =>
+          item.product.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
         ),
       });
     } else {
-      set({ cartItems: [...cartItems, { product, quantity: 1, selectedSize }] });
+      set({ cartItems: [...cartItems, { product, quantity: 1 }] });
     }
   },
   
-  removeFromCart: (productId, selectedSize) =>
+  removeFromCart: (productId) =>
     set((state) => ({
-      cartItems: state.cartItems.filter((item) => 
-        item.product.id !== productId || item.selectedSize !== selectedSize
-      ),
+      cartItems: state.cartItems.filter((item) => item.product.id !== productId),
     })),
   
-  updateQuantity: (productId, quantity, selectedSize) => {
+  updateQuantity: (productId, quantity) => {
     if (quantity <= 0) {
-      get().removeFromCart(productId, selectedSize);
+      get().removeFromCart(productId);
     } else {
       set((state) => ({
         cartItems: state.cartItems.map((item) =>
-          (item.product.id === productId && item.selectedSize === selectedSize)
-            ? { ...item, quantity }
-            : item
+          item.product.id === productId ? { ...item, quantity } : item
         ),
       }));
     }

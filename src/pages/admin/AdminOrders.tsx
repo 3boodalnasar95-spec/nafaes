@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Eye, Check, X, MessageCircle, Download, Package, Phone, MapPin } from 'lucide-react';
 import { useOrders, Order } from '@/contexts/OrderContext';
-import { formatPrice } from '@/data';
+import { formatPrice } from '@/data/products';
 import { downloadInvoicePDF } from '@/utils/pdfGenerator';
 import { generateAdminWhatsAppMessage, getWhatsAppLink } from '@/utils/whatsappGenerator';
 import AdminLayout from './AdminLayout';

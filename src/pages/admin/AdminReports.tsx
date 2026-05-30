@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import { getSalesReport, getTransactions, getOrders, exportOrders } from '@/lib/db-operations';
-import { formatPrice } from '@/data';
+import { formatPrice } from '@/data/products';
 import type { Transaction } from '@/types/database';
 
 export default function AdminReports() {

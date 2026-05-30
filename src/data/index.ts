@@ -1,2 +1,0 @@
-export { categories } from './categories';
-export { products, localProducts, deliveryFee, whatsappNumber, whatsappLink, formatPrice, generateOrderNumber, generateWhatsAppMessage, kuwaitGovernorates, kuwaitAreas, getAreasByGovernorate, getAreaById, type Product, type CartItem, type Order, type KuwaitArea, type Governorate } from './products';

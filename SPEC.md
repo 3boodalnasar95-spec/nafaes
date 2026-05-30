@@ -1,4 +1,4 @@
-# NAFAES | نفائس - متجر العطور والهدايا العطرية الفاخرة
+# NAFAES | نفائس - متجر العطور والهدايا العطرية
 
 ## 1. Concept & Vision
 
@@ -36,7 +36,7 @@
 
 ### Pages - Customer
 1. **الصفحة الرئيسية** - Hero, featured products, about, Instagram posts
-2. **صفحة المنتجات** - Grid display with all products, category filters
+2. **صفحة المنتجات** - Grid display with all products
 3. **تفاصيل المنتج** - Full product info, add to cart
 4. **سلة التسوق** - Cart items, summary
 5. **إتمام الطلب** - Customer form, WhatsApp integration
@@ -45,14 +45,20 @@
 ### Pages - Admin Panel
 1. **لوحة التحكم** - Dashboard with stats, alerts, quick actions
 2. **المنتجات** - CRUD products, stock management
-3. **الطلبات** - Order management, status updates
+3. **المخزون** - Inventory tracking, low stock alerts
+4. **الطلبات** - Order management, status updates
+5. **الفواتير** - Invoice management, printing
+6. **العملاء** - Customer database
+7. **المحاسبة** - Income/expense tracking, reports
+8. **الإعدادات** - Store settings
+
+### Floating Elements
+- WhatsApp floating button (bottom-left)
 
 ## 4. Features & Interactions
 
 ### Customer Features
-- تصفح المنتجات بالتصميم الفاخر
-- فلترة حسب الفئة (4 فئات)
-- البحث في المنتجات
+- تصفح المنتجات بتصميم فاخر
 - إضافة للسلة مع تنبيهات
 - إتمام الطلب عبر واتساب
 - معلومات التواصل
@@ -61,50 +67,28 @@
 - لوحة تحكم شاملة مع إحصائيات
 - إدارة المنتجات والمخزون
 - إدارة الطلبات وتتبع الحالات
+- نظام محاسبة متكامل
+- إدارة العملاء
+- إنشاء وطباعة الفواتير
+- تقارير وإحصائيات متقدمة
 
 ### WhatsApp Integration
 - رقم الواتساب: 66377312
 - رابط: https://wa.me/96566377312
 - رسالة منظمة تتضمن جميع بيانات الطلب
 
-## 5. Products (16 Product)
+## 5. Products
 
-### قسم الأجهزة الكهربائية الفواحة (3 منتجات)
-| المنتج | السعر |
-|--------|-------|
-| إيلان 360 نوماد (ELAN 360 NOMAD) | 49 د.ك |
-| إيلان 360 برايم (ELAN 360 PRIME) | 42 د.ك |
-| نوار ماجستيه (NOIR MAJESTÉ) | 59 د.ك |
-
-### قسم الزيوت العطرية (11 منتج)
-| المنتج | السعر |
-|--------|-------|
-| بلاك عود (BLACK OUD) | 10.900 د.ك |
-| روز مسك (ROSE MUSK) | 10.900 د.ك |
-| سانتال فانيلا (SANTAL VANILLA) | 10.900 د.ك |
-| أوشن بريز (OCEAN BREEZE) | 10.900 د.ك |
-| نايت عود (NIGHT OUD) | 10.900 د.ك |
-| أمبر وودز (AMBER WOODS) | 10.900 د.ك |
-| عود رويال (OUD ROYAL) | 10.900 د.ك |
-| ميستيك (MYSTIQUE) | 10.900 د.ك |
-| عربي عود (ARABIAN OUD) | 10.900 د.ك |
-| وايت مسك (WHITE MUSK) | 10.900 د.ك |
-| فريش لينن (FRESH LINEN) | 10.900 د.ك |
-
-### قسم الفواحات العطرية (1 منتج)
-| المنتج | السعر |
-|--------|-------|
-| أمبر سانتال (AMBER SANTAL) | 10.900 د.ك |
-
-### قسم طقم الهدايا (1 منتج)
-| المنتج | السعر |
-|--------|-------|
-| فورست ريزيرف (FOREST RESERVE) | 13.900 د.ك |
+1. **ELAN 360 NOMAD** - جهاز تعطير ذكي قابل للشحن - 49 د.ك
+2. **ELAN 360 PRIME** - جهاز تعطير كهربائي - 42 د.ك
+3. **NOIR MAJESTÉ** - جهاز تعطير احترافي بشاشة LCD - 59 د.ك
+4. **FOREST RESERVE** - طقم هدايا عطري فاخر - 13.900 د.ك
+5. **AMBER SANTAL** - معطر أعواد فاخر - 10.900 د.ك
 
 ## 6. Technical Approach
 
 ### Frontend
-- React 19 + TypeScript
+- React + TypeScript
 - React Router for navigation
 - Zustand for state management (cart)
 - Tailwind CSS for styling
@@ -112,51 +96,109 @@
 - Lucide React for icons
 - Responsive design (mobile-first)
 - shadcn/ui components
-- TanStack Query for data fetching
 
-### Images Structure
-```
-public/images/
-├── logo.png (اللوقو)
-├── devices/
-│   ├── elan-nomad.png
-│   ├── elan-prime.png
-│   └── noir-majeste.png
-├── oils/
-│   ├── black-oud.png
-│   ├── rose-musk.png
-│   ├── santal-vanilla.png
-│   ├── ocean-breeze.png
-│   ├── night-oud.png
-│   ├── amber-woods.png
-│   ├── oud-royal.png
-│   ├── mystique.png
-│   ├── arabian-oud.png
-│   ├── white-musk.png
-│   └── fresh-linen.png
-├── reed/
-│   └── amber-santal.png
-└── gifts/
-    └── forest-reserve.png
-```
+### Backend (Supabase)
+- PostgreSQL database
+- Row Level Security (RLS)
+- Real-time subscriptions ready
+
+### Database Schema
+
+#### customers
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID | Primary key |
+| name | TEXT | Customer name |
+| phone | TEXT | Phone number |
+| area | TEXT | Delivery area |
+| address | TEXT | Full address |
+| email | TEXT | Email (optional) |
+| notes | TEXT | Notes |
+| created_at | TIMESTAMP | Creation date |
+
+#### products
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID | Primary key |
+| name_ar | TEXT | Arabic name |
+| name_en | TEXT | English name |
+| type | TEXT | Product type |
+| price | DECIMAL | Selling price |
+| cost_price | DECIMAL | Cost price |
+| stock_quantity | INTEGER | Current stock |
+| min_stock_level | INTEGER | Low stock alert level |
+| is_active | BOOLEAN | Active status |
+| sku | TEXT | Stock keeping unit |
+| specs | JSONB | Specifications |
+| features | TEXT[] | Features array |
+
+#### orders
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID | Primary key |
+| order_number | TEXT | Unique order number |
+| customer_id | UUID | FK to customers |
+| subtotal | DECIMAL | Items total |
+| delivery_fee | DECIMAL | Delivery fee |
+| total | DECIMAL | Grand total |
+| status | TEXT | Order status |
+| payment_method | TEXT | cash/link |
+| payment_status | TEXT | Payment status |
+
+#### order_items
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID | Primary key |
+| order_id | UUID | FK to orders |
+| product_id | UUID | FK to products |
+| quantity | INTEGER | Quantity |
+| unit_price | DECIMAL | Price per unit |
+| total_price | DECIMAL | Line total |
+
+#### invoices
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID | Primary key |
+| invoice_number | TEXT | Unique invoice number |
+| order_id | UUID | FK to orders |
+| customer_id | UUID | FK to customers |
+| total | DECIMAL | Invoice total |
+| status | TEXT | Invoice status |
+| due_date | DATE | Payment due date |
+
+#### transactions
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID | Primary key |
+| type | TEXT | income/expense |
+| category | TEXT | Transaction category |
+| amount | DECIMAL | Amount |
+| description | TEXT | Description |
+| date | DATE | Transaction date |
+
+#### inventory_logs
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID | Primary key |
+| product_id | UUID | FK to products |
+| type | TEXT | in/out/adjustment |
+| quantity | INTEGER | Quantity changed |
+| reason | TEXT | Reason for change |
 
 ## 7. Delivery & Payment
 
-- رسوم التوصيل: 2 د.ك ثابتة (تختلف حسب المنطقة)
+- رسوم التوصيل: 2 د.ك ثابتة
 - طرق الدفع: كاش عند الاستلام / رابط دفع إلكتروني
-- 6 محافظات و 70+ منطقة في الكويت
 
 ## 8. Admin Panel Routes
 
 | Route | Page | Description |
 |-------|------|-------------|
-| /admin/login | AdminLogin | تسجيل الدخول |
-| /admin | Dashboard | لوحة التحكم الرئيسية |
-| /admin/orders | Orders | إدارة الطلبات |
-| /admin/products | Products | إدارة المنتجات |
-
-## 9. Admin Credentials
-
-- **الرابط**: `/admin/login`
-- **اسم المستخدم**: `admin`
-- **كلمة المرور**: `nafaes2024!@#`
+| /admin | Dashboard | Main dashboard |
+| /admin/products | Products | Product management |
+| /admin/inventory | Inventory | Stock management |
+| /admin/orders | Orders | Order management |
+| /admin/invoices | Invoices | Invoice management |
+| /admin/customers | Customers | Customer database |
+| /admin/accounting | Accounting | Finance tracking |
+| /admin/settings | Settings | Store settings |

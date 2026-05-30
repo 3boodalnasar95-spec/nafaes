@@ -14,6 +14,7 @@ export default function AdminLogin() {
   const navigate = useNavigate();
   const location = useLocation();
   
+  // Redirect if already authenticated
   const from = (location.state as { from?: string })?.from || '/admin';
   
   if (isAuthenticated) {

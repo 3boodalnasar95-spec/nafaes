@@ -1,8 +1,13 @@
 import { Link } from 'react-router-dom';
 import { ShoppingBag } from 'lucide-react';
-import { useStore } from '@/store/useStore';
+import { Product } from '../data/products';
+import { useStore } from '../store/useStore';
 
-export default function ProductCard({ product }: { product: any }) {
+interface ProductCardProps {
+  product: Product;
+}
+
+export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useStore();
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -13,13 +18,13 @@ export default function ProductCard({ product }: { product: any }) {
   return (
     <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-[#E8E0D5]">
       <Link to={`/product/${product.id}`} className="block relative overflow-hidden">
-        <div className="aspect-square bg-gradient-to-br from-[#F5F0E8] to-[#E8E0D5] flex items-center justify-center p-4">
+        <div className="aspect-square bg-gradient-to-br from-[#F5F0E8] to-[#E8E0D5] flex items-center justify-center">
           <img
-            src={product.image || '/placeholder.svg'}
+            src={product.image}
             alt={product.name_ar}
-            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x400/F5F0E8/C9A96E?text=' + encodeURIComponent(product.name_ar || '');
+              (e.target as HTMLImageElement).src = `https://via.placeholder.com/400x400/F5F0E8/C9A96E?text=${encodeURIComponent(product.name_en)}`;
             }}
           />
         </div>
@@ -36,7 +41,7 @@ export default function ProductCard({ product }: { product: any }) {
 
         <div className="flex items-center justify-between mb-4">
           <span className="text-2xl font-bold text-[#C9A96E]">
-            {typeof product.price === 'number' ? product.price.toFixed(3) : product.price} د.ك
+            {formatPrice(product.price)}
           </span>
         </div>
 
@@ -50,4 +55,8 @@ export default function ProductCard({ product }: { product: any }) {
       </div>
     </div>
   );
+}
+
+function formatPrice(price: number): string {
+  return `${price.toFixed(3)} د.ك`;
 }

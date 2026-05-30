@@ -38,7 +38,7 @@ export default function Cart() {
       <section className="bg-gradient-to-b from-[#F5F0E8] to-[#FAF8F5] py-12">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-2">سلة التسوق</h1>
-          <p className="text-[#6B6B6B]">لديك {cartItems.length} {cartItems.length === 1 ? 'منتج' : 'منتجات'}</p>
+          <p className="text-[#6B6B6B]">لديك {cartItems.length} {cartItems.length === 1 ? 'منتج' : 'منتجات'} في السلة</p>
         </div>
       </section>
 
@@ -47,15 +47,15 @@ export default function Cart() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-4">
               {cartItems.map((item) => (
-                <div key={item.selectedSize ? `${item.product.id}-${item.selectedSize}` : item.product.id} className="bg-white rounded-xl border border-[#E8E0D5] p-4 flex flex-col sm:flex-row gap-4">
+                <div key={item.product.id} className="bg-white rounded-xl border border-[#E8E0D5] p-4 flex flex-col sm:flex-row gap-4">
                   <Link to={`/product/${item.product.id}`} className="flex-shrink-0">
                     <div className="w-full sm:w-28 h-28 bg-[#F5F0E8] rounded-lg flex items-center justify-center overflow-hidden p-2">
                       <img
-                        src={item.product.image || '/placeholder.svg'}
+                        src={item.product.image}
                         alt={item.product.name_ar}
                         className="w-full h-full object-contain"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/200x200/F5F0E8/C9A96E?text=' + encodeURIComponent(item.product.name_en || '');
+                          (e.target as HTMLImageElement).src = `https://via.placeholder.com/200x200/F5F0E8/C9A96E?text=${encodeURIComponent(item.product.name_en)}`;
                         }}
                       />
                     </div>
@@ -72,13 +72,13 @@ export default function Cart() {
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
                       <div className="flex items-center bg-[#F5F0E8] rounded-lg">
-                        <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="p-2">
+                        <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="p-2 text-[#6B6B6B] hover:text-[#1A1A1A]">
                           <Minus className="w-4 h-4" />
                         </button>
-                        <span className="w-12 text-center font-medium">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)} className="p-2">
+                        <span className="w-12 text-center font-medium text-[#1A1A1A]">{item.quantity}</span>
+                        <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)} className="p-2 text-[#6B6B6B] hover:text-[#1A1A1A]">
                           <Plus className="w-4 h-4" />
                         </button>
                       </div>
@@ -92,7 +92,6 @@ export default function Cart() {
                   </div>
                 </div>
               ))}
-
               <button onClick={clearCart} className="text-red-500 hover:text-red-600 text-sm font-medium">
                 إفراغ السلة
               </button>
