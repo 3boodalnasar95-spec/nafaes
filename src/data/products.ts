@@ -13,11 +13,14 @@ export interface Product {
   parentDevice?: string;
   isFlavor?: boolean;
   flavorNotes?: string;
+  hasSizeOptions?: boolean;
+  basePrice?: number;
 }
 
 export interface CartItem {
   product: Product;
   quantity: number;
+  selectedSize?: string;
 }
 
 export interface Order {
@@ -29,18 +32,32 @@ export interface Order {
   paymentMethod: 'cash' | 'link';
 }
 
+// Size options for fragrances
+export interface SizeOption {
+  size: string;
+  ml: number;
+  price: number;
+}
+
+// Available sizes for flavor products
+export const flavorSizes: SizeOption[] = [
+  { size: '20ml', ml: 20, price: 3.5 },
+  { size: '120ml', ml: 120, price: 10.9 },
+  { size: '500ml', ml: 500, price: 25 },
+];
+
 // Flavor options for electrical devices
 export const deviceFlavors = [
-  { id: 'flavor-black-oud', name_ar: 'بلاك عود', name_en: 'BLACK OUD', price: 10.9, image: '/images/flavor-black-oud.png', description: 'رائحة عود فاخرة وعميقة' },
-  { id: 'flavor-rose-musk', name_ar: 'روز مسك', name_en: 'ROSE MUSK', price: 10.9, image: '/images/flavor-rose-musk.png', description: 'مزيج رومانسي من الورود والمسك' },
-  { id: 'flavor-santal-vanilla', name_ar: 'سانتال فانيلا', name_en: 'SANTAL VANILLA', price: 10.9, image: '/images/flavor-santal-vanilla.png', description: 'دفء الفانيليا مع خشبية السانتال' },
-  { id: 'flavor-ocean-breeze', name_ar: 'أوشن بريدز', name_en: 'OCEAN BREEZE', price: 10.9, image: '/images/flavor-ocean-breeze.png', description: 'انتعاش بحري منعش' },
-  { id: 'flavor-night-oud', name_ar: 'نايت عود', name_en: 'NIGHT OUD', price: 10.9, image: '/images/flavor-night-oud.png', description: 'رائحة عود ليلي mystique' },
-  { id: 'flavor-amber-woods', name_ar: 'أمبر وودز', name_en: 'AMBER WOODS', price: 10.9, image: '/images/flavor-amber-woods.png', description: 'خشبية دافئة مع العنبر' },
-  { id: 'flavor-oud-royal', name_ar: 'عود رويال', name_en: 'OUD ROYAL', price: 10.9, image: '/images/flavor-oud-royal.png', description: 'عود ملكي فاخر' },
-  { id: 'flavor-arabian-oud', name_ar: 'عربي عود', name_en: 'ARABIAN OUD', price: 10.9, image: '/images/flavor-arabian-oud.png', description: 'عراقة عربية أصيلة' },
-  { id: 'flavor-white-musk', name_ar: 'وايت مسك', name_en: 'WHITE MUSK', price: 10.9, image: '/images/flavor-white-musk.png', description: 'نقاء المسك الأبيض' },
-  { id: 'flavor-fresh-linen', name_ar: 'فريش لينن', name_en: 'FRESH LINEN', price: 10.9, image: '/images/flavor-fresh-linen.png', description: 'انتعاش الملابس النظيفة' },
+  { id: 'flavor-black-oud', name_ar: 'بلاك عود', name_en: 'BLACK OUD', basePrice: 3.5, image: '/images/flavor-black-oud.png', description: 'رائحة عود فاخرة وعميقة', sizes: flavorSizes },
+  { id: 'flavor-rose-musk', name_ar: 'روز مسك', name_en: 'ROSE MUSK', basePrice: 3.5, image: '/images/flavor-rose-musk.png', description: 'مزيج رومانسي من الورود والمسك', sizes: flavorSizes },
+  { id: 'flavor-santal-vanilla', name_ar: 'سانتال فانيلا', name_en: 'SANTAL VANILLA', basePrice: 3.5, image: '/images/flavor-santal-vanilla.png', description: 'دفء الفانيليا مع خشبية السانتال', sizes: flavorSizes },
+  { id: 'flavor-ocean-breeze', name_ar: 'أوشن بريدز', name_en: 'OCEAN BREEZE', basePrice: 3.5, image: '/images/flavor-ocean-breeze.png', description: 'انتعاش بحري منعش', sizes: flavorSizes },
+  { id: 'flavor-night-oud', name_ar: 'نايت عود', name_en: 'NIGHT OUD', basePrice: 3.5, image: '/images/flavor-night-oud.png', description: 'رائحة عود ليلي mystique', sizes: flavorSizes },
+  { id: 'flavor-amber-woods', name_ar: 'أمبر وودز', name_en: 'AMBER WOODS', basePrice: 3.5, image: '/images/flavor-amber-woods.png', description: 'خشبية دافئة مع العنبر', sizes: flavorSizes },
+  { id: 'flavor-oud-royal', name_ar: 'عود رويال', name_en: 'OUD ROYAL', basePrice: 3.5, image: '/images/flavor-oud-royal.png', description: 'عود ملكي فاخر', sizes: flavorSizes },
+  { id: 'flavor-arabian-oud', name_ar: 'عربي عود', name_en: 'ARABIAN OUD', basePrice: 3.5, image: '/images/flavor-arabian-oud.png', description: 'عراقة عربية أصيلة', sizes: flavorSizes },
+  { id: 'flavor-white-musk', name_ar: 'وايت مسك', name_en: 'WHITE MUSK', basePrice: 3.5, image: '/images/flavor-white-musk.png', description: 'نقاء المسك الأبيض', sizes: flavorSizes },
+  { id: 'flavor-fresh-linen', name_ar: 'فريش لينن', name_en: 'FRESH LINEN', basePrice: 3.5, image: '/images/flavor-fresh-linen.png', description: 'انتعاش الملابس النظيفة', sizes: flavorSizes },
 ];
 
 // All products - devices, flavors, and gifts
@@ -108,13 +125,14 @@ export const products: Product[] = [
     category: 'device',
   },
 
-  // ==================== FLAVORS (زيوت عطرية) ====================
+  // ==================== FLAVORS (زيوت عطرية) with size options ====================
   {
     id: 'flavor-black-oud',
     name_ar: 'بلاك عود',
     name_en: 'BLACK OUD',
-    type: 'زيوت عطرية - عطر مركز',
-    price: 10.9,
+    type: 'زيوت عطرية',
+    price: 3.5,
+    basePrice: 3.5,
     shortDescription: 'رائحة عود فاخرة وعميقة',
     fullDescription: 'زيوت عطرية بتركيبة عود فاخرة تمنح أجواءً ملكية وفاخرة لأي مساحة.',
     specs: {
@@ -128,13 +146,15 @@ export const products: Product[] = [
     category: 'flavor',
     isFlavor: true,
     flavorNotes: 'رائحة عود فاخرة وعميقة',
+    hasSizeOptions: true,
   },
   {
     id: 'flavor-rose-musk',
     name_ar: 'روز مسك',
     name_en: 'ROSE MUSK',
-    type: 'زيوت عطرية - عطر وردي',
-    price: 10.9,
+    type: 'زيوت عطرية',
+    price: 3.5,
+    basePrice: 3.5,
     shortDescription: 'مزيج رومانسي من الورود والمسك',
     fullDescription: 'زيوت عطرية بمزيج ساحر من الورود الطازجة والمسك الناعم.',
     specs: {
@@ -148,13 +168,15 @@ export const products: Product[] = [
     category: 'flavor',
     isFlavor: true,
     flavorNotes: 'مزيج رومانسي من الورود والمسك',
+    hasSizeOptions: true,
   },
   {
     id: 'flavor-santal-vanilla',
     name_ar: 'سانتال فانيلا',
     name_en: 'SANTAL VANILLA',
-    type: 'زيوت عطرية - عطر خشبي',
-    price: 10.9,
+    type: 'زيوت عطرية',
+    price: 3.5,
+    basePrice: 3.5,
     shortDescription: 'دفء الفانيليا مع خشبية السانتال',
     fullDescription: 'زيوت عطرية بمزيج دافئ من السانتال الكلاسيكي والفانيليا الكريمية.',
     specs: {
@@ -168,13 +190,15 @@ export const products: Product[] = [
     category: 'flavor',
     isFlavor: true,
     flavorNotes: 'دفء الفانيليا مع خشبية السانتال',
+    hasSizeOptions: true,
   },
   {
     id: 'flavor-ocean-breeze',
     name_ar: 'أوشن بريدز',
     name_en: 'OCEAN BREEZE',
-    type: 'زيوت عطرية - عطر بحري',
-    price: 10.9,
+    type: 'زيوت عطرية',
+    price: 3.5,
+    basePrice: 3.5,
     shortDescription: 'انتعاش بحري منعش',
     fullDescription: 'زيوت عطرية بانتعاش المحيط والملح البحري لم أجواء منعشة.',
     specs: {
@@ -188,13 +212,15 @@ export const products: Product[] = [
     category: 'flavor',
     isFlavor: true,
     flavorNotes: 'انتعاش بحري منعش',
+    hasSizeOptions: true,
   },
   {
     id: 'flavor-night-oud',
     name_ar: 'نايت عود',
     name_en: 'NIGHT OUD',
-    type: 'زيوت عطرية - عطر ليلي',
-    price: 10.9,
+    type: 'زيوت عطرية',
+    price: 3.5,
+    basePrice: 3.5,
     shortDescription: 'رائحة عود ليلي mystique',
     fullDescription: 'زيوت عطرية بلمسة عود ليلية ساحرة تخلق أجواء ساحرة.',
     specs: {
@@ -208,13 +234,15 @@ export const products: Product[] = [
     category: 'flavor',
     isFlavor: true,
     flavorNotes: 'رائحة عود ليلي mystique',
+    hasSizeOptions: true,
   },
   {
     id: 'flavor-amber-woods',
     name_ar: 'أمبر وودز',
     name_en: 'AMBER WOODS',
-    type: 'زيوت عطرية - عطر عنبري',
-    price: 10.9,
+    type: 'زيوت عطرية',
+    price: 3.5,
+    basePrice: 3.5,
     shortDescription: 'خشبية دافئة مع العنبر',
     fullDescription: 'زيوت عطرية بمزيج دافئ من الأخشاب والعنبر الطبيعي.',
     specs: {
@@ -228,13 +256,15 @@ export const products: Product[] = [
     category: 'flavor',
     isFlavor: true,
     flavorNotes: 'خشبية دافئة مع العنبر',
+    hasSizeOptions: true,
   },
   {
     id: 'flavor-oud-royal',
     name_ar: 'عود رويال',
     name_en: 'OUD ROYAL',
-    type: 'زيوت عطرية - عطر ملكي',
-    price: 10.9,
+    type: 'زيوت عطرية',
+    price: 3.5,
+    basePrice: 3.5,
     shortDescription: 'عود ملكي فاخر',
     fullDescription: 'زيوت عطرية بتركيبة عود ملكية فاخرة للأجواء الراقية.',
     specs: {
@@ -248,13 +278,15 @@ export const products: Product[] = [
     category: 'flavor',
     isFlavor: true,
     flavorNotes: 'عود ملكي فاخر',
+    hasSizeOptions: true,
   },
   {
     id: 'flavor-arabian-oud',
     name_ar: 'عربي عود',
     name_en: 'ARABIAN OUD',
-    type: 'زيوت عطرية - عطر عربي',
-    price: 10.9,
+    type: 'زيوت عطرية',
+    price: 3.5,
+    basePrice: 3.5,
     shortDescription: 'عراقة عربية أصيلة',
     fullDescription: 'زيوت عطرية بالنكهة العربية الأصيلة من العود العربي.',
     specs: {
@@ -268,13 +300,15 @@ export const products: Product[] = [
     category: 'flavor',
     isFlavor: true,
     flavorNotes: 'عراقة عربية أصيلة',
+    hasSizeOptions: true,
   },
   {
     id: 'flavor-white-musk',
     name_ar: 'وايت مسك',
     name_en: 'WHITE MUSK',
-    type: 'زيوت عطرية - عطر نقي',
-    price: 10.9,
+    type: 'زيوت عطرية',
+    price: 3.5,
+    basePrice: 3.5,
     shortDescription: 'نقاء المسك الأبيض',
     fullDescription: 'زيوت عطرية بنقاء المسك الأبيض لم أجواء نظيفة ومميزة.',
     specs: {
@@ -288,13 +322,15 @@ export const products: Product[] = [
     category: 'flavor',
     isFlavor: true,
     flavorNotes: 'نقاء المسك الأبيض',
+    hasSizeOptions: true,
   },
   {
     id: 'flavor-fresh-linen',
     name_ar: 'فريش لينن',
     name_en: 'FRESH LINEN',
-    type: 'زيوت عطرية - عطر الكتان',
-    price: 10.9,
+    type: 'زيوت عطرية',
+    price: 3.5,
+    basePrice: 3.5,
     shortDescription: 'انتعاش الملابس النظيفة',
     fullDescription: 'زيوت عطرية بانتعاش الكتان الطازج والملابس النظيفة.',
     specs: {
@@ -308,6 +344,7 @@ export const products: Product[] = [
     category: 'flavor',
     isFlavor: true,
     flavorNotes: 'انتعاش الملابس النظيفة',
+    hasSizeOptions: true,
   },
 
   // ==================== GIFT SETS ====================
@@ -412,6 +449,13 @@ export function formatPrice(price: number): string {
   return `${price.toFixed(3)} د.ك`;
 }
 
+export function getSizePrice(flavorId: string, size: string): number {
+  const flavor = deviceFlavors.find(f => f.id === flavorId);
+  if (!flavor) return 0;
+  const sizeOption = flavor.sizes.find(s => s.size === size);
+  return sizeOption?.price || flavor.basePrice;
+}
+
 export function generateWhatsAppMessage(
   cartItems: CartItem[], 
   customerData: Order & { governorate?: string }, 
@@ -443,7 +487,11 @@ export function generateWhatsAppMessage(
   
   cartItems.forEach((item, index) => {
     const itemTotal = item.product.price * item.quantity;
-    message += `${index + 1}. ${item.product.name_ar}\n`;
+    let itemName = item.product.name_ar;
+    if (item.selectedSize) {
+      itemName += ` (${item.selectedSize})`;
+    }
+    message += `${index + 1}. ${itemName}\n`;
     message += `   ${item.product.name_en}\n`;
     message += `   الكمية: ${item.quantity} × ${formatPrice(item.product.price)}\n`;
     message += `   المجموع: ${formatPrice(itemTotal)}\n\n`;

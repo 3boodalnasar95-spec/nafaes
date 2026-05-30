@@ -11,7 +11,10 @@ export default function Cart() {
   const total = subtotal + deliveryFee;
 
   // Generate WhatsApp message for cart
-  const whatsappMessage = `مرحباً، أرغب بالطلب من NAFAES:\n\n${cartItems.map((item, i) => `${i + 1}. ${item.product.name_ar} (x${item.quantity})`).join('\n')}\n\nالإجمالي: ${formatPrice(total)}\n\nشكراً`;
+  const whatsappMessage = `مرحباً، أرغب بالطلب من NAFAES:\n\n${cartItems.map((item, i) => {
+    const sizeInfo = item.selectedSize ? ` (${item.selectedSize})` : '';
+    return `${i + 1}. ${item.product.name_ar}${sizeInfo} (x${item.quantity})`;
+  }).join('\n')}\n\nالإجمالي: ${formatPrice(total)}\n\nشكراً`;
 
   if (cartItems.length === 0) {
     return (
@@ -50,7 +53,7 @@ export default function Cart() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-4">
               {cartItems.map((item) => (
-                <div key={item.product.id} className="bg-white rounded-xl border border-[#E8E0D5] p-4 flex flex-col sm:flex-row gap-4">
+                <div key={`${item.product.id}-${item.selectedSize || 'default'}`} className="bg-white rounded-xl border border-[#E8E0D5] p-4 flex flex-col sm:flex-row gap-4">
                   <Link to={`/product/${item.product.id}`} className="flex-shrink-0">
                     <div className="w-full sm:w-28 h-28 bg-[#F5F0E8] rounded-lg flex items-center justify-center overflow-hidden p-2">
                       <img
@@ -69,6 +72,11 @@ export default function Cart() {
                         <Link to={`/product/${item.product.id}`} className="text-[#1A1A1A] font-bold text-lg hover:text-[#C9A96E]">
                           {item.product.name_ar}
                         </Link>
+                        {item.selectedSize && (
+                          <span className="inline-block bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded-full mr-2">
+                            {item.selectedSize}
+                          </span>
+                        )}
                         <p className="text-[#6B6B6B] text-sm">{item.product.name_en}</p>
                       </div>
                       <button onClick={() => removeFromCart(item.product.id)} className="p-2 text-[#6B6B6B] hover:text-red-500">

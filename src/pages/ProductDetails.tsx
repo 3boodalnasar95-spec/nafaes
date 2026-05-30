@@ -2,7 +2,7 @@
 
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, Check, MessageCircle, Minus, Plus, Package, Droplets } from 'lucide-react';
-import { products, formatPrice, whatsappLink, deviceFlavors } from '../data/products';
+import { products, formatPrice, whatsappLink, deviceFlavors, flavorSizes, SizeOption } from '../data/products';
 import { useStore } from '../store/useStore';
 import Layout from '../components/Layout';
 import { useState } from 'react';
@@ -13,6 +13,7 @@ export default function ProductDetails() {
   const { addToCart } = useStore();
   const [quantity, setQuantity] = useState(1);
   const [selectedFlavor, setSelectedFlavor] = useState<string | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string>('120ml');
 
   const product = products.find(p => p.id === id);
 
@@ -31,20 +32,41 @@ export default function ProductDetails() {
 
   // Check if this is an electrical device that can have flavors
   const isElectricalDevice = ['elan-nomad', 'elan-prime', 'noir-majeste'].includes(product.id);
+  
+  // Check if this is a flavor product with size options
+  const isFlavorProduct = product.isFlavor || product.hasSizeOptions;
+
+  // Get size price
+  const getCurrentPrice = () => {
+    if (isFlavorProduct) {
+      const flavor = deviceFlavors.find(f => f.id === product.id);
+      const sizeOption = flavor?.sizes.find(s => s.size === selectedSize);
+      return sizeOption?.price || flavor?.basePrice || product.price;
+    }
+    return product.price;
+  };
 
   const handleAddToCart = () => {
+    const finalPrice = getCurrentPrice();
+    const productWithPrice = { ...product, price: finalPrice };
+    
     // Add main product
     for (let i = 0; i < quantity; i++) {
-      addToCart(product);
+      addToCart(productWithPrice, isFlavorProduct ? selectedSize : undefined);
     }
-    // If flavor selected, add flavor as separate product
+    
+    // If flavor selected for device, add flavor with selected size
     if (selectedFlavor && isElectricalDevice) {
       const flavor = deviceFlavors.find(f => f.id === selectedFlavor);
       if (flavor) {
         const flavorProduct = products.find(p => p.id === selectedFlavor);
         if (flavorProduct) {
+          const sizeOption = flavor.sizes.find(s => s.size === selectedSize);
+          const flavorPrice = sizeOption?.price || flavor.basePrice;
+          const flavorProductWithPrice = { ...flavorProduct, price: flavorPrice };
+          
           for (let i = 0; i < quantity; i++) {
-            addToCart(flavorProduct);
+            addToCart(flavorProductWithPrice, selectedSize);
           }
         }
       }
@@ -53,8 +75,8 @@ export default function ProductDetails() {
   };
 
   const whatsappMessage = selectedFlavor 
-    ? `أرغب بطلب منتج ${product.name_en} - ${product.name_ar} مع زيت ${deviceFlavors.find(f => f.id === selectedFlavor)?.name_ar || ''}، السعر ${formatPrice(product.price)} + ${formatPrice(deviceFlavors.find(f => f.id === selectedFlavor)?.price || 0)} الزيت.`
-    : `أرغب بطلب منتج ${product.name_en} - ${product.name_ar}، السعر ${formatPrice(product.price)}.`;
+    ? `أرغب بطلب ${product.name_en} - ${product.name_ar} مع زيت ${deviceFlavors.find(f => f.id === selectedFlavor)?.name_ar || ''} (${selectedSize})`
+    : `أرغب بطلب ${product.name_en} - ${product.name_ar}`;
 
   return (
     <Layout>
@@ -96,11 +118,48 @@ export default function ProductDetails() {
                 <p className="text-[#6B6B6B] text-lg leading-relaxed">{product.fullDescription}</p>
               </div>
 
+              {/* Size Selection for Flavor Products */}
+              {isFlavorProduct && (
+                <div className="mb-8">
+                  <h3 className="text-lg font-bold text-[#1A1A1A] mb-4 flex items-center gap-2">
+                    <Package className="w-5 h-5 text-[#C9A96E]" />
+                    اختر الحجم
+                  </h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    {flavorSizes.map((size: SizeOption) => (
+                      <button
+                        key={size.size}
+                        onClick={() => setSelectedSize(size.size)}
+                        className={`p-4 rounded-xl border-2 transition-all text-center ${
+                          selectedSize === size.size
+                            ? 'border-[#C9A96E] bg-[#C9A96E]/10'
+                            : 'border-[#E8E0D5] hover:border-[#C9A96E]/50'
+                        }`}
+                      >
+                        <div className="w-16 h-16 mx-auto mb-2 rounded-full overflow-hidden bg-white flex items-center justify-center">
+                          <span className="text-2xl">💧</span>
+                        </div>
+                        <p className="font-bold text-[#1A1A1A]">{size.size}</p>
+                        <p className="text-[#C9A96E] font-bold">{formatPrice(size.price)}</p>
+                        {selectedSize === size.size && (
+                          <Check className="w-5 h-5 text-[#C9A96E] mx-auto mt-2" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="mb-8 p-6 bg-[#F5F0E8] rounded-2xl">
                 <div className="flex items-center justify-between">
                   <span className="text-[#6B6B6B]">السعر</span>
-                  <span className="text-4xl font-bold text-[#C9A96E]">{formatPrice(product.price)}</span>
+                  <span className="text-4xl font-bold text-[#C9A96E]">{formatPrice(getCurrentPrice())}</span>
                 </div>
+                {isFlavorProduct && (
+                  <p className="text-sm text-[#6B6B6B] mt-2 text-center">
+                    الحجم المحدد: {selectedSize}
+                  </p>
+                )}
               </div>
 
               {/* Flavor Selection for Electrical Devices */}
@@ -135,26 +194,41 @@ export default function ProductDetails() {
                           />
                         </div>
                         <p className="font-medium text-[#1A1A1A] text-sm">{flavor.name_ar}</p>
-                        <p className="text-[#C9A96E] text-xs font-bold">{formatPrice(flavor.price)}</p>
                         {selectedFlavor === flavor.id && (
                           <Check className="w-4 h-4 text-[#C9A96E] mx-auto mt-1" />
                         )}
                       </button>
                     ))}
                   </div>
+                  
+                  {/* Size selection for flavor add-on */}
                   {selectedFlavor && (
-                    <div className="mt-4 p-4 bg-[#C9A96E]/10 rounded-xl flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-[#1A1A1A]">
-                          {deviceFlavors.find(f => f.id === selectedFlavor)?.name_ar}
-                        </p>
+                    <div className="mt-4 p-4 bg-[#C9A96E]/10 rounded-xl">
+                      <h4 className="font-medium text-[#1A1A1A] mb-3">اختر حجم الزيت العطري:</h4>
+                      <div className="grid grid-cols-3 gap-2">
+                        {flavorSizes.map((size: SizeOption) => (
+                          <button
+                            key={`${selectedFlavor}-${size.size}`}
+                            onClick={() => setSelectedSize(size.size)}
+                            className={`p-2 rounded-lg border-2 transition-all text-center ${
+                              selectedSize === size.size
+                                ? 'border-[#C9A96E] bg-[#C9A96E]/20'
+                                : 'border-[#E8E0D5] hover:border-[#C9A96E]/50'
+                            }`}
+                          >
+                            <p className="font-bold text-sm">{size.size}</p>
+                            <p className="text-[#C9A96E] text-xs">{formatPrice(size.price)}</p>
+                          </button>
+                        ))}
+                      </div>
+                      <div className="mt-3 flex items-center justify-between">
                         <p className="text-sm text-[#6B6B6B]">
-                          زيت عطري سيُضاف للسلة
+                          زيت: {deviceFlavors.find(f => f.id === selectedFlavor)?.name_ar} ({selectedSize})
+                        </p>
+                        <p className="text-[#C9A96E] font-bold">
+                          + {formatPrice(deviceFlavors.find(f => f.id === selectedFlavor)?.sizes.find(s => s.size === selectedSize)?.price || 0)}
                         </p>
                       </div>
-                      <span className="text-[#C9A96E] font-bold">
-                        + {formatPrice(deviceFlavors.find(f => f.id === selectedFlavor)?.price || 0)}
-                      </span>
                     </div>
                   )}
                 </div>
@@ -181,6 +255,12 @@ export default function ProductDetails() {
                       <span className="text-[#1A1A1A] font-medium">{value}</span>
                     </div>
                   ))}
+                  {isFlavorProduct && (
+                    <div className={`flex justify-between p-4 bg-[#FAF8F5]`}>
+                      <span className="text-[#6B6B6B] font-medium">الحجم</span>
+                      <span className="text-[#1A1A1A] font-medium">{selectedSize}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 

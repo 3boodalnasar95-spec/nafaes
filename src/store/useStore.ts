@@ -2,8 +2,8 @@ import { create } from 'zustand';
 import { Product } from '../data/products';
 
 interface StoreState {
-  cartItems: { product: Product; quantity: number }[];
-  addToCart: (product: Product) => void;
+  cartItems: { product: Product; quantity: number; selectedSize?: string }[];
+  addToCart: (product: Product, selectedSize?: string) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -13,20 +13,26 @@ interface StoreState {
 export const useStore = create<StoreState>((set, get) => ({
   cartItems: [],
   
-  addToCart: (product) => {
+  addToCart: (product, selectedSize) => {
     const { cartItems } = get();
-    const existingItem = cartItems.find((item) => item.product.id === product.id);
+    // Create a unique key based on product id and size
+    const itemKey = selectedSize ? `${product.id}-${selectedSize}` : product.id;
+    const existingItemIndex = cartItems.findIndex(
+      (item) => (selectedSize ? `${item.product.id}-${item.selectedSize}` : item.product.id) === itemKey
+    );
     
-    if (existingItem) {
+    if (existingItemIndex >= 0) {
+      // Update quantity if item exists
       set({
-        cartItems: cartItems.map((item) =>
-          item.product.id === product.id
+        cartItems: cartItems.map((item, index) =>
+          index === existingItemIndex
             ? { ...item, quantity: item.quantity + 1 }
             : item
         ),
       });
     } else {
-      set({ cartItems: [...cartItems, { product, quantity: 1 }] });
+      // Add new item
+      set({ cartItems: [...cartItems, { product, quantity: 1, selectedSize }] });
     }
   },
   

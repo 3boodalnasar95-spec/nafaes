@@ -17,6 +17,9 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   // Check if this is an electrical device
   const isElectricalDevice = ['elan-nomad', 'elan-prime', 'noir-majeste'].includes(product.id);
+  
+  // Check if this is a flavor product
+  const isFlavorProduct = product.isFlavor || product.hasSizeOptions;
 
   return (
     <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-[#E8E0D5]">
@@ -40,7 +43,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
         
-        {/* Category Badge - Changed to زيوت عطرية */}
+        {/* Category Badge */}
         {product.category === 'flavor' && (
           <div className="absolute top-3 right-3 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">
             زيوت عطرية
@@ -69,6 +72,11 @@ export default function ProductCard({ product }: ProductCardProps) {
           {isElectricalDevice && (
             <span className="text-xs text-[#6B6B6B] bg-[#F5F0E8] px-2 py-1 rounded-full">
               + 10 نكهات
+            </span>
+          )}
+          {isFlavorProduct && (
+            <span className="text-xs text-[#6B6B6B] bg-blue-50 px-2 py-1 rounded-full">
+              أحجام متعددة
             </span>
           )}
         </div>
