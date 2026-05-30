@@ -7,7 +7,7 @@ import { formatPrice, deliveryFee, kuwaitGovernorates, getAreaById } from '../da
 import { PersonalInfoForm, AddressForm, PaymentMethod, OrderSummary } from '@/components/checkout';
 import { createOrder, getFormattedDate } from '@/lib/db-operations';
 import { downloadInvoicePDF } from '@/utils/pdfGenerator';
-import { generateFixedWhatsAppMessage, getWhatsAppLink, type InvoiceData } from '@/utils/whatsappGenerator';
+import { validateKuwaitiPhone, generateFixedWhatsAppMessage, getWhatsAppLink, type InvoiceData } from '@/utils/whatsappGenerator';
 import { toast } from 'sonner';
 
 interface CheckoutFormData {
@@ -48,12 +48,28 @@ export default function Checkout() {
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-    if (!formData.name.trim()) newErrors.name = 'الرجاء إدخال الاسم';
-    if (!formData.phone.trim()) newErrors.phone = 'الرجاء إدخال رقم الهاتف';
-    else if (!/^[0-9]{8}$/.test(formData.phone)) newErrors.phone = 'رقم الهاتف يجب أن يكون 8 أرقام';
+    
+    if (!formData.name.trim()) {
+      newErrors.name = 'الرجاء إدخال الاسم';
+    } else if (formData.name.trim().length < 3) {
+      newErrors.name = 'الاسم يجب أن يكون 3 أحرف على الأقل';
+    }
+    
+    // Use enhanced phone validation
+    const phoneResult = validateKuwaitiPhone(formData.phone);
+    if (!phoneResult.valid) {
+      newErrors.phone = phoneResult.error || 'رقم الهاتف غير صحيح';
+    }
+    
     if (!formData.governorate) newErrors.governorate = 'الرجاء اختيار المحافظة';
     if (!formData.area) newErrors.area = 'الرجاء اختيار المنطقة';
-    if (!formData.address.trim()) newErrors.address = 'الرجاء إدخال العنوان التفصيلي';
+    
+    if (!formData.address.trim()) {
+      newErrors.address = 'الرجاء إدخال العنوان التفصيلي';
+    } else if (formData.address.trim().length < 10) {
+      newErrors.address = 'العنوان قصير جداً. أدخل العنوان كاملاً (القطعة، الشارع، رقم المبنى)';
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -70,13 +86,13 @@ export default function Checkout() {
 
       // Prepare order data
       const orderInput = {
-        customer_name: formData.name,
-        customer_phone: formData.phone,
+        customer_name: formData.name.trim(),
+        customer_phone: formData.phone.trim(),
         governorate: selectedGovernorate?.name || formData.governorate,
         area: selectedArea?.name || formData.area,
         area_id: formData.area,
-        address: formData.address,
-        notes: formData.notes,
+        address: formData.address.trim(),
+        notes: formData.notes.trim(),
         payment_method: formData.paymentMethod,
         subtotal,
         delivery_fee: totalDeliveryFee,
@@ -103,12 +119,12 @@ export default function Checkout() {
       const invoiceData: InvoiceData = {
         orderNumber: newOrderNumber,
         date: dateStr,
-        customerName: formData.name,
-        customerPhone: formData.phone,
+        customerName: formData.name.trim(),
+        customerPhone: formData.phone.trim(),
         governorate: selectedGovernorate?.name || formData.governorate,
         area: selectedArea?.name || formData.area,
-        address: formData.address,
-        notes: formData.notes,
+        address: formData.address.trim(),
+        notes: formData.notes.trim(),
         paymentMethod: formData.paymentMethod,
         items: cartItems.map(item => ({
           nameAr: item.product.name_ar,
