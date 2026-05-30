@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { CheckCircle, MessageCircle, AlertCircle, ArrowRight, Search, MapPin, Loader } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useOrders } from '../contexts/OrderContext';
 import { InvoiceData } from '@/utils/pdfGenerator';
 import Layout from '../components/Layout';
-import { formatPrice, deliveryFee, kuwaitGovernorates, getAreasByGovernorate, getAreaById, type DeliveryArea } from '../data/products';
+import { formatPrice, deliveryFee, kuwaitGovernorates, getAreasByGovernorate, getAreaById, searchAreas, type DeliveryArea } from '../data/products';
 import { downloadInvoicePDF } from '@/utils/pdfGenerator';
 import { generateWhatsAppMessage, generateAdminWhatsAppMessage, getWhatsAppLink } from '@/utils/whatsappGenerator';
 
@@ -22,7 +22,6 @@ interface CheckoutFormData {
 export default function Checkout() {
   const { cartItems, clearCart, cartTotal } = useStore();
   const { addOrder } = useOrders();
-  const navigate = useNavigate();
   const [formData, setFormData] = useState<CheckoutFormData>({
     name: '', phone: '', governorate: '', area: '', address: '', notes: '', paymentMethod: 'cash'
   });
@@ -42,21 +41,28 @@ export default function Checkout() {
   const total = subtotal + totalDeliveryFee;
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Load areas when governorate changes
   useEffect(() => {
     if (formData.governorate) {
-      setFilteredAreas(getAreasByGovernorate(formData.governorate));
+      const areas = getAreasByGovernorate(formData.governorate);
+      setFilteredAreas(areas);
+      setAreaSearch('');
+    } else {
+      setFilteredAreas([]);
     }
+    // Reset area selection when governorate changes
+    setFormData(prev => ({ ...prev, area: '' }));
   }, [formData.governorate]);
 
+  // Search/filter areas
   useEffect(() => {
-    if (areaSearch && formData.governorate) {
-      const areas = getAreasByGovernorate(formData.governorate);
-      setFilteredAreas(areas.filter(a => a.name.toLowerCase().includes(areaSearch.toLowerCase())));
-    } else if (formData.governorate) {
-      setFilteredAreas(getAreasByGovernorate(formData.governorate));
+    if (formData.governorate) {
+      const areas = searchAreas(areaSearch, formData.governorate);
+      setFilteredAreas(areas);
     }
   }, [areaSearch, formData.governorate]);
 
+  // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -82,6 +88,8 @@ export default function Checkout() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
+      const selectedGovernorate = kuwaitGovernorates.find(g => g.id === formData.governorate);
+      
       const invoiceData: InvoiceData = {
         orderNumber: 'NAF-XXXXXXXX-XX',
         date: new Date().toLocaleDateString('ar-SA', {
@@ -93,7 +101,7 @@ export default function Checkout() {
         }),
         customerName: formData.name,
         customerPhone: formData.phone,
-        governorate: kuwaitGovernorates.find(g => g.id === formData.governorate)?.name || formData.governorate,
+        governorate: selectedGovernorate?.name || formData.governorate,
         area: selectedArea?.name || formData.area,
         address: formData.address,
         notes: formData.notes,
@@ -113,7 +121,7 @@ export default function Checkout() {
       const newOrderId = addOrder({
         customerName: formData.name,
         customerPhone: formData.phone,
-        governorate: kuwaitGovernorates.find(g => g.id === formData.governorate)?.name || formData.governorate,
+        governorate: selectedGovernorate?.name || formData.governorate,
         area: selectedArea?.name || formData.area,
         areaId: formData.area,
         address: formData.address,
@@ -132,6 +140,7 @@ export default function Checkout() {
         total
       });
 
+      // Get the actual order number from localStorage
       const storedOrder = localStorage.getItem('nafaes_orders');
       if (storedOrder) {
         const orders = JSON.parse(storedOrder);
@@ -158,9 +167,11 @@ export default function Checkout() {
     }
     setPdfGenerating(false);
     
+    // Send to customer
     const customerMessage = generateWhatsAppMessage(orderData);
     window.open(getWhatsAppLink(customerMessage), '_blank');
     
+    // Send notification to admin
     const adminMessage = generateAdminWhatsAppMessage(orderData);
     setTimeout(() => {
       window.open(`https://wa.me/96566377312?text=${adminMessage}`, '_blank');
@@ -310,7 +321,10 @@ export default function Checkout() {
                     </label>
                     <select 
                       value={formData.governorate} 
-                      onChange={(e) => { setFormData({ ...formData, governorate: e.target.value, area: '' }); setErrors({ ...errors, governorate: '' }); }}
+                      onChange={(e) => { 
+                        setFormData({ ...formData, governorate: e.target.value, area: '' }); 
+                        setErrors({ ...errors, governorate: '' }); 
+                      }}
                       className={`w-full px-4 py-3 bg-[#FAF8F5] border ${errors.governorate ? 'border-red-500' : 'border-[#E8E0D5]'} rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E]`}
                     >
                       <option value="">اختر المحافظة</option>
@@ -329,20 +343,27 @@ export default function Checkout() {
                     <input 
                       type="text" 
                       value={areaSearch || (selectedArea?.name || '')}
-                      onChange={(e) => { setAreaSearch(e.target.value); setShowAreaDropdown(true); setFormData(prev => ({ ...prev, area: '' })); setErrors({ ...errors, area: '' }); }}
+                      onChange={(e) => { 
+                        setAreaSearch(e.target.value); 
+                        setShowAreaDropdown(true); 
+                        if (e.target.value !== selectedArea?.name) {
+                          setFormData(prev => ({ ...prev, area: '' })); 
+                        }
+                        setErrors({ ...errors, area: '' }); 
+                      }}
                       onFocus={() => setShowAreaDropdown(true)}
                       disabled={!formData.governorate}
                       placeholder={formData.governorate ? "ابحث عن منطقتك..." : "اختر المحافظة أولاً"}
                       className={`w-full px-4 py-3 bg-[#FAF8F5] border ${errors.area ? 'border-red-500' : 'border-[#E8E0D5]'} rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E] ${!formData.governorate && 'opacity-50 cursor-not-allowed'}`}
                     />
                     {selectedArea && (
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C9A96E] text-sm">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C9A96E] text-sm font-medium">
                         {formatPrice(selectedArea.delivery)} توصيل
                       </span>
                     )}
                     
                     {showAreaDropdown && formData.governorate && filteredAreas.length > 0 && (
-                      <div className="absolute z-50 w-full mt-1 bg-white border border-[#E8E0D5] rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-[#E8E0D5] rounded-xl shadow-xl max-h-64 overflow-y-auto">
                         {filteredAreas.map(area => (
                           <button 
                             key={area.id} 
@@ -353,10 +374,12 @@ export default function Checkout() {
                               setShowAreaDropdown(false);
                               setErrors({ ...errors, area: '' });
                             }}
-                            className="w-full px-4 py-3 text-right hover:bg-[#FAF8F5] border-b border-[#E8E0D5] last:border-0"
+                            className="w-full px-4 py-3 text-right hover:bg-[#FAF8F5] border-b border-[#E8E0D5] last:border-0 flex items-center justify-between"
                           >
                             <span className="text-[#1A1A1A]">{area.name}</span>
-                            <span className="text-[#C9A96E] text-sm mr-2">{formatPrice(area.delivery)}</span>
+                            <span className={`text-sm font-medium ${area.delivery === 2 ? 'text-green-600' : area.delivery === 2.5 ? 'text-blue-600' : area.delivery === 3 ? 'text-orange-600' : 'text-red-600'}`}>
+                              {formatPrice(area.delivery)}
+                            </span>
                           </button>
                         ))}
                       </div>
@@ -479,6 +502,13 @@ export default function Checkout() {
                     <span className="text-[#C9A96E] font-bold text-2xl">{formatPrice(total)}</span>
                   </div>
                 </div>
+                
+                {/* Delivery Info */}
+                {selectedArea && (
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-700">
+                    <p>🚚 التوصيل إلى <strong>{selectedArea.name}</strong></p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
