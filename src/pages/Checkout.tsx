@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight, Download, CheckCircle } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowRight, CheckCircle } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useOrders } from '../contexts/OrderContext';
 import Layout from '../components/Layout';
@@ -23,14 +23,16 @@ interface CheckoutFormData {
 
 export default function Checkout() {
   const { cartItems, clearCart, cartTotal } = useStore();
-  const { addOrder } = useOrders();
+  const { addOrder, getOrder } = useOrders();
+  const navigate = useNavigate();
+  
   const [formData, setFormData] = useState<CheckoutFormData>({
     name: '', phone: '', governorate: '', area: '', address: '', notes: '', paymentMethod: 'cash'
   });
   const [submitted, setSubmitted] = useState(false);
   const [orderData, setOrderData] = useState<InvoiceData | null>(null);
-  const [orderSent, setOrderSent] = useState(false);
-  const [pdfGenerating, setPdfGenerating] = useState(false);
+  const [currentOrder, setCurrentOrder] = useState<any>(null);
+  const [sending, setSending] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const subtotal = cartTotal();
@@ -64,34 +66,9 @@ export default function Checkout() {
     if (!validateForm()) return;
 
     const selectedGovernorate = kuwaitGovernorates.find(g => g.id === formData.governorate);
-    const orderNumber = generateOrderNumber();
-    const dateStr = getFormattedDate();
     
-    // Create invoice data
-    const invoiceData: InvoiceData = {
-      orderNumber,
-      date: dateStr,
-      customerName: formData.name,
-      customerPhone: formData.phone,
-      governorate: selectedGovernorate?.name || formData.governorate,
-      area: selectedArea?.name || formData.area,
-      address: formData.address,
-      notes: formData.notes,
-      paymentMethod: formData.paymentMethod,
-      items: cartItems.map(item => ({
-        nameAr: item.product.name_ar,
-        nameEn: item.product.name_en,
-        quantity: item.quantity,
-        unitPrice: item.product.price,
-        totalPrice: item.product.price * item.quantity
-      })),
-      subtotal,
-      deliveryFee: totalDeliveryFee,
-      total
-    };
-
-    // Add order to context (stores in localStorage and creates notification)
-    addOrder({
+    // First, save the order to get the order number
+    const savedOrder = addOrder({
       customerName: formData.name,
       customerPhone: formData.phone,
       governorate: selectedGovernorate?.name || formData.governorate,
@@ -113,33 +90,61 @@ export default function Checkout() {
       total
     });
 
+    console.log('📦 Order saved with number:', savedOrder.orderNumber);
+
+    // Create invoice data with the correct order number
+    const invoiceData: InvoiceData = {
+      orderNumber: savedOrder.orderNumber,
+      date: getFormattedDate(),
+      customerName: formData.name,
+      customerPhone: formData.phone,
+      governorate: selectedGovernorate?.name || formData.governorate,
+      area: selectedArea?.name || formData.area,
+      address: formData.address,
+      notes: formData.notes,
+      paymentMethod: formData.paymentMethod,
+      items: cartItems.map(item => ({
+        nameAr: item.product.name_ar,
+        nameEn: item.product.name_en,
+        quantity: item.quantity,
+        unitPrice: item.product.price,
+        totalPrice: item.product.price * item.quantity
+      })),
+      subtotal,
+      deliveryFee: totalDeliveryFee,
+      total
+    };
+
+    setCurrentOrder(savedOrder);
     setOrderData(invoiceData);
     setSubmitted(true);
 
-    // Automatically generate PDF and send to admin WhatsApp
-    setPdfGenerating(true);
+    // Now send WhatsApp and PDF automatically
+    setSending(true);
     
     try {
-      // Generate and download PDF
+      // 1. Generate and download PDF
       await downloadInvoicePDF(invoiceData);
+      console.log('📄 PDF generated');
       
-      // Generate fixed WhatsApp message for admin
-      const adminMessage = generateFixedWhatsAppMessage(invoiceData);
+      // 2. Send WhatsApp message to admin (fixed message - customer cannot edit)
+      const fixedMessage = generateFixedWhatsAppMessage(invoiceData);
+      const whatsappUrl = getWhatsAppLink(fixedMessage);
       
-      // Open admin WhatsApp with the order details
-      window.open(getWhatsAppLink(adminMessage), '_blank');
+      console.log('📱 Opening WhatsApp with fixed message...');
+      window.open(whatsappUrl, '_blank');
       
-      toast.success('تم إرسال الطلب بنجاح!');
+      toast.success(`✅ تم إرسال الطلب بنجاح!\nرقم الطلب: ${savedOrder.orderNumber}`);
+      
+      // Clear cart after successful submission
+      clearCart();
+      
     } catch (error) {
       console.error('Error sending order:', error);
       toast.error('حدث خطأ أثناء إرسال الطلب');
     }
     
-    setPdfGenerating(false);
-    setOrderSent(true);
-    
-    // Clear cart after successful submission
-    clearCart();
+    setSending(false);
   };
 
   if (cartItems.length === 0 && !submitted) {
@@ -157,23 +162,24 @@ export default function Checkout() {
     );
   }
 
-  if (submitted && orderData) {
+  if (submitted && orderData && currentOrder) {
     return (
       <Layout>
         <section className="py-12">
           <div className="container mx-auto px-4 max-w-2xl">
             <div className="bg-white rounded-2xl border border-[#E8E0D5] p-8 text-center shadow-lg">
+              
               {/* Success Icon */}
-              <div className="w-24 h-24 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center">
+              <div className="w-24 h-24 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center animate-bounce">
                 <CheckCircle className="w-12 h-12 text-green-500" />
               </div>
               
               <h2 className="text-3xl font-bold text-[#1A1A1A] mb-4">🎉 تم استلام طلبك بنجاح!</h2>
               
-              {/* Order Number */}
+              {/* Order Number - Prominent */}
               <div className="bg-gradient-to-r from-[#C9A96E] to-[#D4AF37] text-white rounded-xl p-6 mb-6">
-                <p className="text-sm opacity-90 mb-1">رقم الطلب</p>
-                <p className="text-3xl font-bold tracking-wider">{orderData.orderNumber}</p>
+                <p className="text-sm opacity-90 mb-1">رقم الطلب الخاص بك</p>
+                <p className="text-4xl font-bold tracking-wider">{currentOrder.orderNumber}</p>
               </div>
               
               {/* Order Summary */}
@@ -208,7 +214,7 @@ export default function Checkout() {
               
               {/* Customer Info */}
               <div className="bg-blue-50 rounded-xl p-4 mb-6 text-right">
-                <h4 className="font-bold text-[#1A1A1A] mb-2 text-center">👤 بيانات التوصيل</h4>
+                <h4 className="font-bold text-[#1A1A1A] mb-3 text-center">👤 بيانات التوصيل</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <p><strong>الاسم:</strong> {orderData.customerName}</p>
                   <p><strong>الهاتف:</strong> +965 {orderData.customerPhone}</p>
@@ -216,33 +222,36 @@ export default function Checkout() {
                   <p><strong>المنطقة:</strong> {orderData.area}</p>
                 </div>
                 <p className="text-sm mt-2"><strong>العنوان:</strong> {orderData.address}</p>
-                <p className="text-sm"><strong>الدفع:</strong> {orderData.paymentMethod === 'cash' ? '💵 كاش عند الاستلام' : '💳 رابط دفع'}</p>
-              </div>
-              
-              {/* PDF Download */}
-              <div className="flex flex-col gap-3">
-                <button 
-                  onClick={() => downloadInvoicePDF(orderData)}
-                  disabled={pdfGenerating}
-                  className="flex items-center justify-center gap-3 bg-[#C9A96E] hover:bg-[#D4AF37] text-white font-bold py-4 rounded-xl transition-colors disabled:opacity-50"
-                >
-                  {pdfGenerating ? (
-                    <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <Download className="w-6 h-6" />
-                  )}
-                  {pdfGenerating ? 'جاري إنشاء الفاتورة...' : '📄 تحميل فاتورة PDF'}
-                </button>
-                
-                <p className="text-[#6B6B6B] text-sm">
-                  ✅ تم إرسال الطلب إليك تلقائياً عبر واتساب
+                <p className="text-sm">
+                  <strong>طريقة الدفع:</strong> {orderData.paymentMethod === 'cash' ? '💵 كاش عند الاستلام' : '💳 رابط دفع'}
                 </p>
               </div>
+              
+              {/* Notice */}
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+                <p className="text-green-700 text-sm">
+                  ✅ <strong>تم إرسال الطلب والفاتورة إلينا تلقائياً عبر واتساب!</strong>
+                </p>
+                <p className="text-green-600 text-xs mt-1">
+                  سيتم التواصل معك قريباً لتأكيد الطلب
+                </p>
+              </div>
+              
+              {/* Download PDF Button */}
+              <button 
+                onClick={() => downloadInvoicePDF(orderData)}
+                className="w-full flex items-center justify-center gap-3 bg-[#C9A96E] hover:bg-[#D4AF37] text-white font-bold py-4 rounded-xl transition-colors mb-4"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                📄 تحميل فاتورة PDF
+              </button>
               
               {/* Back to Home */}
               <Link 
                 to="/" 
-                className="inline-flex items-center gap-2 mt-6 text-[#C9A96E] hover:text-[#1A1A1A] font-medium transition-colors"
+                className="inline-flex items-center gap-2 mt-4 text-[#C9A96E] hover:text-[#1A1A1A] font-medium transition-colors"
               >
                 <ArrowRight className="w-5 h-5" />
                 العودة للرئيسية
@@ -259,7 +268,7 @@ export default function Checkout() {
       <section className="bg-gradient-to-b from-[#F5F0E8] to-[#FAF8F5] py-12">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-2">إتمام الطلب</h1>
-          <p className="text-[#6B6B6B]">أكمل بياناتك سيتم إرسال الطلب إلينا تلقائياً</p>
+          <p className="text-[#6B6B6B]">أكمل بياناتك وسيتم إرسال الطلب إلينا تلقائياً</p>
         </div>
       </section>
 
@@ -295,22 +304,32 @@ export default function Checkout() {
                   onPaymentChange={handlePaymentChange}
                 />
 
-                {/* Notice */}
+                {/* Auto-send notice */}
                 <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
                   <p className="text-green-700 text-sm text-center">
-                    ✨ بمجرد تأكيد الطلب، سيتم إرسال الفاتورة PDF إليك فوراً مع إشعار لنا عبر واتساب
+                    ✨ <strong>ملاحظة مهمة:</strong> بمجرد تأكيد الطلب، سيتم إرسال الفاتورة PDF إليك مع إرسال تلقائي للواتساب الخاص بنا
                   </p>
                 </div>
 
                 <button 
                   type="submit" 
-                  className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-[#25D366] to-[#20BD5A] hover:opacity-90 text-white font-bold py-4 rounded-xl transition-all text-lg"
+                  disabled={sending}
+                  className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-[#25D366] to-[#20BD5A] hover:opacity-90 text-white font-bold py-4 rounded-xl transition-all text-lg disabled:opacity-50"
                 >
-                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                  </svg>
-                  تأكيد وإرسال الطلب
-                  <ArrowRight className="w-5 h-5" />
+                  {sending ? (
+                    <>
+                      <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      جاري إرسال الطلب...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                      </svg>
+                      تأكيد وإرسال الطلب
+                      <ArrowRight className="w-5 h-5" />
+                    </>
+                  )}
                 </button>
               </form>
             </div>

@@ -44,9 +44,8 @@ interface OrderContextType {
   orders: Order[];
   notifications: Notification[];
   unreadCount: number;
-  addOrder: (order: Omit<Order, 'id' | 'orderNumber' | 'status' | 'createdAt' | 'sentToWhatsApp'>) => string;
+  addOrder: (order: Omit<Order, 'id' | 'orderNumber' | 'status' | 'createdAt' | 'sentToWhatsApp'>) => Order;
   updateOrderStatus: (orderId: string, status: Order['status']) => void;
-  markOrderSent: (orderId: string) => void;
   getOrder: (orderId: string) => Order | undefined;
   getOrderByNumber: (orderNumber: string) => Order | undefined;
   markNotificationRead: (notificationId: string) => void;
@@ -84,17 +83,21 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     
     if (storedOrders) {
       try {
-        setOrders(JSON.parse(storedOrders));
+        const parsed = JSON.parse(storedOrders);
+        setOrders(parsed);
       } catch (e) {
         console.error('Error loading orders:', e);
+        setOrders([]);
       }
     }
     
     if (storedNotifications) {
       try {
-        setNotifications(JSON.parse(storedNotifications));
+        const parsed = JSON.parse(storedNotifications);
+        setNotifications(parsed);
       } catch (e) {
         console.error('Error loading notifications:', e);
+        setNotifications([]);
       }
     }
   }, []);
@@ -109,7 +112,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
   }, [notifications]);
 
-  const addOrder = useCallback((orderData: Omit<Order, 'id' | 'orderNumber' | 'status' | 'createdAt' | 'sentToWhatsApp'>): string => {
+  const addOrder = useCallback((orderData: Omit<Order, 'id' | 'orderNumber' | 'status' | 'createdAt' | 'sentToWhatsApp'>): Order => {
     const orderId = generateId();
     const orderNumber = generateOrderNumber();
     const now = new Date().toISOString();
@@ -123,14 +126,17 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
       sentToWhatsApp: false,
     };
 
-    setOrders(prev => [newOrder, ...prev]);
+    setOrders(prev => {
+      const updated = [newOrder, ...prev];
+      return updated;
+    });
 
     // Create notification
     const notification: Notification = {
       id: generateNotificationId(),
       type: 'order',
-      title: 'طلب جديد! 🛒',
-      message: `طلب جديد من ${orderData.customerName} - ${orderData.items.length} منتجات - الإجمالي: ${orderData.total.toFixed(3)} د.ك`,
+      title: '🛒 طلب جديد!',
+      message: `طلب من: ${orderData.customerName}\nالهاتف: +965 ${orderData.customerPhone}\nالمنطقة: ${orderData.area}\nالإجمالي: ${orderData.total.toFixed(3)} د.ك\nالمنتجات: ${orderData.items.length}`,
       orderId: orderId,
       read: false,
       createdAt: now,
@@ -141,18 +147,15 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     // Also store current order for PDF generation
     localStorage.setItem('current_order_for_pdf', JSON.stringify(newOrder));
 
-    return orderId;
+    console.log('✅ Order saved:', newOrder);
+    console.log('📋 Order number:', orderNumber);
+
+    return newOrder;
   }, []);
 
   const updateOrderStatus = useCallback((orderId: string, status: Order['status']) => {
     setOrders(prev => prev.map(order => 
       order.id === orderId ? { ...order, status } : order
-    ));
-  }, []);
-
-  const markOrderSent = useCallback((orderId: string) => {
-    setOrders(prev => prev.map(order => 
-      order.id === orderId ? { ...order, sentToWhatsApp: true } : order
     ));
   }, []);
 
@@ -198,7 +201,6 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
       unreadCount,
       addOrder,
       updateOrderStatus,
-      markOrderSent,
       getOrder,
       getOrderByNumber,
       markNotificationRead,
