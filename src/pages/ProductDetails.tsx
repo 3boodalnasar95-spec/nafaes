@@ -65,9 +65,6 @@ export default function ProductDetails() {
                   src={product.image}
                   alt={product.name_ar}
                   className="w-full h-full object-contain"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
                 />
                 <div className="absolute top-4 right-4 bg-[#C9A96E] text-white text-sm font-bold px-4 py-2 rounded-full">
                   {product.type}
@@ -78,7 +75,9 @@ export default function ProductDetails() {
             {/* Product Info */}
             <div>
               <div className="mb-4">
-                <p className="text-[#6B6B6B] text-sm mb-1">{categoryInfo?.name_en}</p>
+                {categoryInfo && (
+                  <p className="text-[#6B6B6B] text-sm mb-1">{categoryInfo.name_en}</p>
+                )}
                 <h1 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-2">{product.name_ar}</h1>
                 <p className="text-xl text-[#C9A96E] font-medium">{product.name_en}</p>
               </div>
