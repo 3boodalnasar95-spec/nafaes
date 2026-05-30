@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle } from 'lucide-react';
 import { useStore } from '../store/useStore';
-import { useOrders } from '../contexts/OrderContext';
 import Layout from '../components/Layout';
 import { formatPrice, deliveryFee, kuwaitGovernorates, getAreaById } from '../data/products';
 import { PersonalInfoForm, AddressForm, PaymentMethod, OrderSummary } from '../components/checkout';
@@ -23,15 +22,13 @@ interface CheckoutFormData {
 
 export default function Checkout() {
   const { cartItems, clearCart, cartTotal } = useStore();
-  const { addOrder, getOrder } = useOrders();
-  const navigate = useNavigate();
   
   const [formData, setFormData] = useState<CheckoutFormData>({
     name: '', phone: '', governorate: '', area: '', address: '', notes: '', paymentMethod: 'cash'
   });
   const [submitted, setSubmitted] = useState(false);
   const [orderData, setOrderData] = useState<InvoiceData | null>(null);
-  const [currentOrder, setCurrentOrder] = useState<any>(null);
+  const [orderNumber, setOrderNumber] = useState('');
   const [sending, setSending] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -66,36 +63,13 @@ export default function Checkout() {
     if (!validateForm()) return;
 
     const selectedGovernorate = kuwaitGovernorates.find(g => g.id === formData.governorate);
+    const newOrderNumber = generateOrderNumber();
+    const dateStr = getFormattedDate();
     
-    // First, save the order to get the order number
-    const savedOrder = addOrder({
-      customerName: formData.name,
-      customerPhone: formData.phone,
-      governorate: selectedGovernorate?.name || formData.governorate,
-      area: selectedArea?.name || formData.area,
-      areaId: formData.area,
-      address: formData.address,
-      notes: formData.notes,
-      paymentMethod: formData.paymentMethod,
-      items: cartItems.map(item => ({
-        productId: item.product.id,
-        productNameAr: item.product.name_ar,
-        productNameEn: item.product.name_en,
-        quantity: item.quantity,
-        unitPrice: item.product.price,
-        totalPrice: item.product.price * item.quantity
-      })),
-      subtotal,
-      deliveryFee: totalDeliveryFee,
-      total
-    });
-
-    console.log('📦 Order saved with number:', savedOrder.orderNumber);
-
-    // Create invoice data with the correct order number
+    // Create invoice data first
     const invoiceData: InvoiceData = {
-      orderNumber: savedOrder.orderNumber,
-      date: getFormattedDate(),
+      orderNumber: newOrderNumber,
+      date: dateStr,
       customerName: formData.name,
       customerPhone: formData.phone,
       governorate: selectedGovernorate?.name || formData.governorate,
@@ -115,26 +89,77 @@ export default function Checkout() {
       total
     };
 
-    setCurrentOrder(savedOrder);
+    // Create order object
+    const newOrder = {
+      id: `order_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      orderNumber: newOrderNumber,
+      customerName: formData.name,
+      customerPhone: formData.phone,
+      governorate: selectedGovernorate?.name || formData.governorate,
+      area: selectedArea?.name || formData.area,
+      areaId: formData.area,
+      address: formData.address,
+      notes: formData.notes,
+      paymentMethod: formData.paymentMethod,
+      items: cartItems.map(item => ({
+        productId: item.product.id,
+        productNameAr: item.product.name_ar,
+        productNameEn: item.product.name_en,
+        quantity: item.quantity,
+        unitPrice: item.product.price,
+        totalPrice: item.product.price * item.quantity
+      })),
+      subtotal,
+      deliveryFee: totalDeliveryFee,
+      total,
+      status: 'pending' as const,
+      createdAt: new Date().toISOString(),
+      sentToWhatsApp: false
+    };
+
+    // Save order to localStorage
+    const existingOrders = JSON.parse(localStorage.getItem('nafaes_orders') || '[]');
+    const updatedOrders = [newOrder, ...existingOrders];
+    localStorage.setItem('nafaes_orders', JSON.stringify(updatedOrders));
+
+    // Create notification
+    const notification = {
+      id: `notif_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      type: 'order' as const,
+      title: '🛒 طلب جديد!',
+      message: `طلب من: ${formData.name}\nالهاتف: +965 ${formData.phone}\nالمنطقة: ${selectedArea?.name || formData.area}\nالإجمالي: ${total.toFixed(3)} د.ك\nالمنتجات: ${cartItems.length}`,
+      orderId: newOrder.id,
+      read: false,
+      createdAt: new Date().toISOString()
+    };
+
+    const existingNotifications = JSON.parse(localStorage.getItem('nafaes_notifications') || '[]');
+    const updatedNotifications = [notification, ...existingNotifications];
+    localStorage.setItem('nafaes_notifications', JSON.stringify(updatedNotifications));
+
+    console.log('✅ Order saved:', newOrder);
+    console.log('📋 Order number:', newOrderNumber);
+
     setOrderData(invoiceData);
+    setOrderNumber(newOrderNumber);
     setSubmitted(true);
 
-    // Now send WhatsApp and PDF automatically
+    // Send WhatsApp and PDF automatically
     setSending(true);
     
     try {
-      // 1. Generate and download PDF
+      // 1. Generate and download PDF for customer
       await downloadInvoicePDF(invoiceData);
-      console.log('📄 PDF generated');
+      console.log('📄 PDF generated and downloaded');
       
-      // 2. Send WhatsApp message to admin (fixed message - customer cannot edit)
+      // 2. Send WhatsApp message to admin
       const fixedMessage = generateFixedWhatsAppMessage(invoiceData);
       const whatsappUrl = getWhatsAppLink(fixedMessage);
       
       console.log('📱 Opening WhatsApp with fixed message...');
       window.open(whatsappUrl, '_blank');
       
-      toast.success(`✅ تم إرسال الطلب بنجاح!\nرقم الطلب: ${savedOrder.orderNumber}`);
+      toast.success('✅ تم إرسال الطلب بنجاح!\nرقم الطلب: ' + newOrderNumber);
       
       // Clear cart after successful submission
       clearCart();
@@ -162,7 +187,7 @@ export default function Checkout() {
     );
   }
 
-  if (submitted && orderData && currentOrder) {
+  if (submitted && orderData) {
     return (
       <Layout>
         <section className="py-12">
@@ -176,10 +201,10 @@ export default function Checkout() {
               
               <h2 className="text-3xl font-bold text-[#1A1A1A] mb-4">🎉 تم استلام طلبك بنجاح!</h2>
               
-              {/* Order Number - Prominent */}
+              {/* Order Number */}
               <div className="bg-gradient-to-r from-[#C9A96E] to-[#D4AF37] text-white rounded-xl p-6 mb-6">
                 <p className="text-sm opacity-90 mb-1">رقم الطلب الخاص بك</p>
-                <p className="text-4xl font-bold tracking-wider">{currentOrder.orderNumber}</p>
+                <p className="text-4xl font-bold tracking-wider">{orderNumber}</p>
               </div>
               
               {/* Order Summary */}
@@ -214,7 +239,7 @@ export default function Checkout() {
               
               {/* Customer Info */}
               <div className="bg-blue-50 rounded-xl p-4 mb-6 text-right">
-                <h4 className="font-bold text-[#1A1A1A] mb-3 text-center">👤 بيانات التوصيل</h4>
+                <h4 className="font-bold text-[#1A1A1A] mb-2 text-center">👤 بيانات التوصيل</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <p><strong>الاسم:</strong> {orderData.customerName}</p>
                   <p><strong>الهاتف:</strong> +965 {orderData.customerPhone}</p>
@@ -223,14 +248,14 @@ export default function Checkout() {
                 </div>
                 <p className="text-sm mt-2"><strong>العنوان:</strong> {orderData.address}</p>
                 <p className="text-sm">
-                  <strong>طريقة الدفع:</strong> {orderData.paymentMethod === 'cash' ? '💵 كاش عند الاستلام' : '💳 رابط دفع'}
+                  <strong>الدفع:</strong> {orderData.paymentMethod === 'cash' ? '💵 كاش عند الاستلام' : '💳 رابط دفع'}
                 </p>
               </div>
               
               {/* Notice */}
               <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
                 <p className="text-green-700 text-sm">
-                  ✅ <strong>تم إرسال الطلب والفاتورة إلينا تلقائياً عبر واتساب!</strong>
+                  ✅ <strong>تم إرسال الطلب والفاتورة إليك عبر واتساب!</strong>
                 </p>
                 <p className="text-green-600 text-xs mt-1">
                   سيتم التواصل معك قريباً لتأكيد الطلب
@@ -268,7 +293,7 @@ export default function Checkout() {
       <section className="bg-gradient-to-b from-[#F5F0E8] to-[#FAF8F5] py-12">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-2">إتمام الطلب</h1>
-          <p className="text-[#6B6B6B]">أكمل بياناتك وسيتم إرسال الطلب إلينا تلقائياً</p>
+          <p className="text-[#6B6B6B]">أكمل بياناتك سيتم إرسال الطلب إلينا تلقائياً</p>
         </div>
       </section>
 
@@ -304,10 +329,10 @@ export default function Checkout() {
                   onPaymentChange={handlePaymentChange}
                 />
 
-                {/* Auto-send notice */}
+                {/* Notice */}
                 <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
                   <p className="text-green-700 text-sm text-center">
-                    ✨ <strong>ملاحظة مهمة:</strong> بمجرد تأكيد الطلب، سيتم إرسال الفاتورة PDF إليك مع إرسال تلقائي للواتساب الخاص بنا
+                    ✨ بمجرد تأكيد الطلب، سيتم إرسال الفاتورة PDF إليك فوراً مع إشعار لنا عبر واتساب
                   </p>
                 </div>
 

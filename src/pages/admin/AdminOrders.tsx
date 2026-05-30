@@ -1,16 +1,71 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Eye, Check, X, MessageCircle, Download, Package, Phone, MapPin } from 'lucide-react';
-import { useOrders, Order } from '@/contexts/OrderContext';
 import { formatPrice } from '@/data/products';
 import { downloadInvoicePDF } from '@/utils/pdfGenerator';
-import { generateAdminWhatsAppMessage, getWhatsAppLink } from '@/utils/whatsappGenerator';
 import AdminLayout from './AdminLayout';
 
+interface OrderItem {
+  productId: string;
+  productNameAr: string;
+  productNameEn: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+interface Order {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  customerPhone: string;
+  governorate: string;
+  area: string;
+  areaId: string;
+  address: string;
+  notes: string;
+  paymentMethod: 'cash' | 'link';
+  items: OrderItem[];
+  subtotal: number;
+  deliveryFee: number;
+  total: number;
+  status: 'pending' | 'confirmed' | 'preparing' | 'shipped' | 'delivered' | 'cancelled';
+  createdAt: string;
+  sentToWhatsApp: boolean;
+}
+
 export default function AdminOrders() {
-  const { orders, updateOrderStatus } = useOrders();
+  const [orders, setOrders] = useState<Order[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  useEffect(() => {
+    loadOrders();
+    
+    // Poll for updates every 3 seconds
+    const interval = setInterval(loadOrders, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadOrders = () => {
+    try {
+      const storedOrders = localStorage.getItem('nafaes_orders');
+      if (storedOrders) {
+        const parsed = JSON.parse(storedOrders);
+        setOrders(parsed);
+      }
+    } catch (e) {
+      console.error('Error loading orders:', e);
+    }
+  };
+
+  const updateOrderStatus = (orderId: string, status: Order['status']) => {
+    const updatedOrders = orders.map(order => 
+      order.id === orderId ? { ...order, status } : order
+    );
+    setOrders(updatedOrders);
+    localStorage.setItem('nafaes_orders', JSON.stringify(updatedOrders));
+  };
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
@@ -67,30 +122,56 @@ export default function AdminOrders() {
   };
 
   const sendWhatsApp = (order: Order) => {
-    const invoiceData = {
-      orderNumber: order.orderNumber,
-      date: new Date(order.createdAt).toLocaleDateString('ar-SA'),
-      customerName: order.customerName,
-      customerPhone: order.customerPhone,
-      governorate: order.governorate,
-      area: order.area,
-      address: order.address,
-      notes: order.notes,
-      paymentMethod: order.paymentMethod,
-      items: order.items.map(item => ({
-        nameAr: item.productNameAr,
-        nameEn: item.productNameEn,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        totalPrice: item.totalPrice
-      })),
-      subtotal: order.subtotal,
-      deliveryFee: order.deliveryFee,
-      total: order.total
-    };
-    
-    const message = generateAdminWhatsAppMessage(invoiceData);
-    window.open(getWhatsAppLink(message), '_blank');
+    const message = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏪 NAFAES | نفائس - طلب جديد 🕌
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 ═══ بيانات الطلب ═══ 📋
+
+🔢 رقم الطلب: ${order.orderNumber}
+📅 التاريخ: ${new Date(order.createdAt).toLocaleDateString('ar-SA')}
+⏰ الحالة: قيد المراجعة
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👤 ═══ بيانات العميل ═══ 👤
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+👤 الاسم: ${order.customerName}
+📞 الهاتف: +965 ${order.customerPhone}
+📍 المحافظة: ${order.governorate}
+📍 المنطقة: ${order.area}
+🏠 العنوان: ${order.address}
+${order.notes ? `📝 ملاحظات: ${order.notes}` : ''}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🛒 ═══ تفاصيل المنتجات ═══ 🛒
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${order.items.map((item, index) => `${index + 1}. ${item.productNameAr}
+   📦 ${item.productNameEn}
+   الكمية: ${item.quantity} وحدة
+   السعر: ${item.unitPrice.toFixed(3)} د.ك/وحدة
+   💰 المجموع: ${item.totalPrice.toFixed(3)} د.ك`).join('\n\n')}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💰 ═══ ملخص الفاتورة ═══ 💰
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📦 المجموع الفرعي: ${order.subtotal.toFixed(3)} د.ك
+🚚 رسوم التوصيل: ${order.deliveryFee.toFixed(3)} د.ك
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💵 الإجمالي النهائي: ${order.total.toFixed(3)} د.ك
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💳 طريقة الدفع: ${order.paymentMethod === 'cash' ? '💵 كاش عند الاستلام' : '💳 رابط دفع إلكتروني'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ شكراً لتعاملكم مع نفائس 🕌
+📱 للمتابعة: 66377312
+📸 @nafaes.q8
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+
+    window.open(`https://wa.me/96566377312?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   const statusTabs = [
@@ -106,7 +187,7 @@ export default function AdminOrders() {
     <AdminLayout>
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-[#1A1A1A]">إدارة الطلبات</h2>
-        <p className="text-[#6B6B6B]">عرض وتتبع جميع الطلبات</p>
+        <p className="text-[#6B6B6B]">عرض وتتبع جميع الطلبات ({orders.length})</p>
       </div>
 
       {/* Status Tabs */}

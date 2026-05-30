@@ -1,18 +1,121 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   TrendingUp, ShoppingCart, Users, Package, 
   DollarSign, AlertTriangle, Bell, MessageCircle,
   Clock, CheckCircle, X, Eye, RefreshCw
 } from 'lucide-react';
-import { useOrders, Order, Notification } from '@/contexts/OrderContext';
 import AdminLayout from './AdminLayout';
 import { formatPrice } from '@/data/products';
 
+interface OrderItem {
+  productId: string;
+  productNameAr: string;
+  productNameEn: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+interface Order {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  customerPhone: string;
+  governorate: string;
+  area: string;
+  areaId: string;
+  address: string;
+  notes: string;
+  paymentMethod: 'cash' | 'link';
+  items: OrderItem[];
+  subtotal: number;
+  deliveryFee: number;
+  total: number;
+  status: 'pending' | 'confirmed' | 'preparing' | 'shipped' | 'delivered' | 'cancelled';
+  createdAt: string;
+  sentToWhatsApp: boolean;
+}
+
+interface Notification {
+  id: string;
+  type: 'order' | 'alert' | 'system';
+  title: string;
+  message: string;
+  orderId?: string;
+  read: boolean;
+  createdAt: string;
+}
+
 export default function AdminDashboard() {
-  const { orders, notifications, unreadCount, markNotificationRead, markAllNotificationsRead, updateOrderStatus } = useOrders();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Load orders from localStorage
+  useEffect(() => {
+    loadData();
+    
+    // Listen for storage changes
+    window.addEventListener('storage', loadData);
+    return () => window.removeEventListener('storage', loadData);
+  }, []);
+
+  // Poll for updates every 3 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadData();
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadData = () => {
+    try {
+      const storedOrders = localStorage.getItem('nafaes_orders');
+      const storedNotifications = localStorage.getItem('nafaes_notifications');
+      
+      if (storedOrders) {
+        const parsed = JSON.parse(storedOrders);
+        setOrders(parsed);
+      }
+      
+      if (storedNotifications) {
+        const parsed = JSON.parse(storedNotifications);
+        setNotifications(parsed);
+      }
+    } catch (e) {
+      console.error('Error loading data:', e);
+    }
+  };
+
+  const updateOrderStatus = (orderId: string, status: Order['status']) => {
+    const updatedOrders = orders.map(order => 
+      order.id === orderId ? { ...order, status } : order
+    );
+    setOrders(updatedOrders);
+    localStorage.setItem('nafaes_orders', JSON.stringify(updatedOrders));
+  };
+
+  const markNotificationRead = (notificationId: string) => {
+    const updated = notifications.map(n =>
+      n.id === notificationId ? { ...n, read: true } : n
+    );
+    setNotifications(updated);
+    localStorage.setItem('nafaes_notifications', JSON.stringify(updated));
+  };
+
+  const markAllNotificationsRead = () => {
+    const updated = notifications.map(n => ({ ...n, read: true }));
+    setNotifications(updated);
+    localStorage.setItem('nafaes_notifications', JSON.stringify(updated));
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    loadData();
+    setTimeout(() => setRefreshing(false), 500);
+  };
 
   // Calculate stats
   const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
@@ -22,14 +125,7 @@ export default function AdminDashboard() {
     return new Date(o.createdAt).toDateString() === today;
   });
 
-  const handleRefresh = () => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
-  };
-
-  const handleQuickStatusUpdate = (orderId: string, status: Order['status']) => {
-    updateOrderStatus(orderId, status);
-  };
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -126,7 +222,7 @@ export default function AdminDashboard() {
                             </div>
                             <div className="flex-1">
                               <p className="font-medium text-[#1A1A1A] text-sm">{notif.title}</p>
-                              <p className="text-sm text-[#6B6B6B] mt-1">{notif.message}</p>
+                              <p className="text-sm text-[#6B6B6B] mt-1 whitespace-pre-line">{notif.message}</p>
                               <p className="text-xs text-[#C9A96E] mt-2">
                                 {new Date(notif.createdAt).toLocaleDateString('ar-SA', {
                                   hour: '2-digit',
@@ -244,14 +340,14 @@ export default function AdminDashboard() {
                 {order.status === 'pending' && (
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleQuickStatusUpdate(order.id, 'confirmed')}
+                      onClick={() => updateOrderStatus(order.id, 'confirmed')}
                       className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
                       title="تأكيد"
                     >
                       <CheckCircle className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => handleQuickStatusUpdate(order.id, 'cancelled')}
+                      onClick={() => updateOrderStatus(order.id, 'cancelled')}
                       className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                       title="إلغاء"
                     >
