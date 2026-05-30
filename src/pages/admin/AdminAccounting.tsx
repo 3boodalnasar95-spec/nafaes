@@ -23,7 +23,9 @@ export default function AdminAccounting() {
 
   const loadTransactions = async () => {
     setLoading(true);
-    const data = await getTransactions(typeFilter === 'all' ? undefined : typeFilter);
+    const data = await getTransactions(
+      typeFilter === 'all' ? {} : { type: typeFilter }
+    );
     setTransactions(data);
     setLoading(false);
   };
@@ -50,8 +52,8 @@ export default function AdminAccounting() {
   const netProfit = totalIncome - totalExpense;
 
   const categories = {
-    income: ['sales', 'delivery', 'other'],
-    expense: ['delivery', 'inventory', 'marketing', 'utilities', 'salaries', 'other']
+    income: ['sales', 'delivery', 'other'] as const,
+    expense: ['delivery', 'inventory', 'marketing', 'utilities', 'salaries', 'other'] as const
   };
 
   const categoryLabels: Record<string, string> = {
@@ -176,7 +178,7 @@ export default function AdminAccounting() {
                     </td>
                     <td className="px-4 py-4 text-center">
                       <span className="px-3 py-1 rounded-full text-xs bg-[#F5F0E8] text-[#6B6B6B]">
-                        {categoryLabels[transaction.category]}
+                        {categoryLabels[transaction.category] || transaction.category}
                       </span>
                     </td>
                     <td className={`px-4 py-4 text-left font-bold ${

@@ -130,8 +130,8 @@ export default function AdminProducts() {
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 bg-[#F5F0E8] rounded-lg flex items-center justify-center overflow-hidden">
-                            {product.image ? (
-                              <img src={product.image} alt={product.name_ar} className="w-full h-full object-contain" />
+                            {product.images?.[0] ? (
+                              <img src={product.images[0]} alt={product.name_ar} className="w-full h-full object-contain" />
                             ) : (
                               <Package className="w-6 h-6 text-[#C9A96E]" />
                             )}

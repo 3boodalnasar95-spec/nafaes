@@ -26,14 +26,16 @@ export default function AdminInvoices() {
     inv.customer?.name?.includes(search)
   );
 
-  const getStatusBadge = (status: Invoice['status']) => {
-    const badges: Record<Invoice['status'], { label: string; color: string }> = {
+  const getStatusBadge = (status: string) => {
+    const badges: Record<string, { label: string; color: string }> = {
       draft: { label: 'مسودة', color: 'bg-gray-100 text-gray-700' },
       sent: { label: 'تم الإرسال', color: 'bg-blue-100 text-blue-700' },
+      viewed: { label: 'تم المشاهدة', color: 'bg-yellow-100 text-yellow-700' },
       paid: { label: 'مدفوعة', color: 'bg-green-100 text-green-700' },
       cancelled: { label: 'ملغاة', color: 'bg-red-100 text-red-700' },
+      void: { label: 'ملغاة', color: 'bg-gray-200 text-gray-600' },
     };
-    return badges[status];
+    return badges[status] || { label: status, color: 'bg-gray-100 text-gray-700' };
   };
 
   return (

@@ -29,16 +29,18 @@ export default function AdminOrders() {
     loadOrders();
   };
 
-  const getStatusBadge = (status: Order['status']) => {
-    const badges: Record<Order['status'], { label: string; color: string }> = {
+  const getStatusBadge = (status: string) => {
+    const badges: Record<string, { label: string; color: string }> = {
       pending: { label: 'معلق', color: 'bg-yellow-100 text-yellow-700' },
       confirmed: { label: 'تم التأكيد', color: 'bg-blue-100 text-blue-700' },
       preparing: { label: 'قيد التجهيز', color: 'bg-purple-100 text-purple-700' },
-      shipped: { label: 'تم الشحن', color: 'bg-indigo-100 text-indigo-700' },
+      ready: { label: 'جاهز', color: 'bg-indigo-100 text-indigo-700' },
+      shipped: { label: 'تم الشحن', color: 'bg-cyan-100 text-cyan-700' },
       delivered: { label: 'تم التوصيل', color: 'bg-green-100 text-green-700' },
       cancelled: { label: 'ملغي', color: 'bg-red-100 text-red-700' },
+      refunded: { label: 'مرتجع', color: 'bg-gray-100 text-gray-700' },
     };
-    return badges[status];
+    return badges[status] || { label: status, color: 'bg-gray-100 text-gray-700' };
   };
 
   const filteredOrders = orders.filter(order => {
@@ -128,9 +130,9 @@ export default function AdminOrders() {
                     <div>
                       <p className="font-bold text-[#1A1A1A]">{order.order_number}</p>
                       <p className="text-sm text-[#6B6B6B]">
-                        {order.customer?.name} - {order.customer?.phone}
+                        {order.customer?.name || order.customer_name} - {order.customer?.phone || order.customer_phone}
                       </p>
-                      <p className="text-sm text-[#6B6B6B]">{order.customer?.area}</p>
+                      <p className="text-sm text-[#6B6B6B]">{order.customer?.area || order.customer_area}</p>
                     </div>
                   </div>
                   <div className="text-left">
@@ -147,7 +149,7 @@ export default function AdminOrders() {
                   <div className="space-y-2">
                     {order.items?.slice(0, 3).map((item, i) => (
                       <div key={i} className="flex justify-between text-sm">
-                        <span className="text-[#1A1A1A]">{item.product?.name_ar} × {item.quantity}</span>
+                        <span className="text-[#1A1A1A]">{item.name} × {item.quantity}</span>
                         <span className="text-[#C9A96E]">{formatPrice(item.total_price)}</span>
                       </div>
                     ))}
@@ -216,9 +218,9 @@ export default function AdminOrders() {
                     </button>
                   )}
 
-                  {order.customer?.phone && (
+                  {(order.customer?.phone || order.customer_phone) && (
                     <a
-                      href={`https://wa.me/965${order.customer.phone}`}
+                      href={`https://wa.me/965${order.customer?.phone || order.customer_phone}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 px-4 py-2 bg-[#25D366] text-white rounded-lg hover:bg-[#20BD5A] transition-colors mr-auto"

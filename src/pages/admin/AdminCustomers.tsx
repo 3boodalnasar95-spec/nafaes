@@ -33,7 +33,7 @@ export default function AdminCustomers() {
   const filteredCustomers = customers.filter(c => 
     c.name.includes(search) || 
     c.phone.includes(search) ||
-    c.area.includes(search)
+    c.area?.includes(search)
   );
 
   return (
@@ -116,13 +116,15 @@ export default function AdminCustomers() {
                   <Phone className="w-4 h-4" />
                   <span dir="ltr">+965 {customer.phone}</span>
                 </div>
-                <div className="flex items-center gap-2 text-[#6B6B6B]">
-                  <MapPin className="w-4 h-4" />
-                  <span>{customer.area}</span>
-                </div>
+                {customer.area && (
+                  <div className="flex items-center gap-2 text-[#6B6B6B]">
+                    <MapPin className="w-4 h-4" />
+                    <span>{customer.area}</span>
+                  </div>
+                )}
               </div>
               
-              <p className="text-sm text-[#6B6B6B] mt-3 line-clamp-2">{customer.address}</p>
+              <p className="text-sm text-[#6B6B6B] mt-3 line-clamp-2">{customer.address_text || ''}</p>
             </div>
           ))
         )}

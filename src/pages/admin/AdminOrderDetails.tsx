@@ -27,25 +27,18 @@ export default function AdminOrderDetails() {
     loadOrder(id);
   };
 
-  const getStatusBadge = (status: Order['status']) => {
-    const badges: Record<Order['status'], { label: string; color: string }> = {
+  const getStatusBadge = (status: string) => {
+    const badges: Record<string, { label: string; color: string }> = {
       pending: { label: 'معلق', color: 'bg-yellow-100 text-yellow-700' },
       confirmed: { label: 'تم التأكيد', color: 'bg-blue-100 text-blue-700' },
       preparing: { label: 'قيد التجهيز', color: 'bg-purple-100 text-purple-700' },
-      shipped: { label: 'تم الشحن', color: 'bg-indigo-100 text-indigo-700' },
+      ready: { label: 'جاهز', color: 'bg-indigo-100 text-indigo-700' },
+      shipped: { label: 'تم الشحن', color: 'bg-cyan-100 text-cyan-700' },
       delivered: { label: 'تم التوصيل', color: 'bg-green-100 text-green-700' },
       cancelled: { label: 'ملغي', color: 'bg-red-100 text-red-700' },
+      refunded: { label: 'مرتجع', color: 'bg-gray-100 text-gray-700' },
     };
-    return badges[status];
-  };
-
-  const statusFlow = ['pending', 'confirmed', 'preparing', 'shipped', 'delivered'];
-  const statusLabels: Record<string, string> = {
-    pending: 'معلق',
-    confirmed: 'تأكيد',
-    preparing: 'تجهيز',
-    shipped: 'شحن',
-    delivered: 'توصيل',
+    return badges[status] || { label: status, color: 'bg-gray-100 text-gray-700' };
   };
 
   if (loading) {
@@ -72,6 +65,14 @@ export default function AdminOrderDetails() {
   }
 
   const badge = getStatusBadge(order.status);
+  const statusFlow = ['pending', 'confirmed', 'preparing', 'shipped', 'delivered'];
+  const statusLabels: Record<string, string> = {
+    pending: 'معلق',
+    confirmed: 'تأكيد',
+    preparing: 'تجهيز',
+    shipped: 'شحن',
+    delivered: 'توصيل',
+  };
   const currentStatusIndex = statusFlow.indexOf(order.status);
 
   return (
@@ -116,15 +117,15 @@ export default function AdminOrderDetails() {
               {order.items?.map((item, i) => (
                 <div key={i} className="flex items-center gap-4 p-4 bg-[#FAF8F5] rounded-lg">
                   <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center overflow-hidden">
-                    {item.product?.image ? (
-                      <img src={item.product.image} alt={item.product.name_ar || ''} className="w-full h-full object-contain" />
+                    {item.product?.images?.[0] ? (
+                      <img src={item.product.images[0]} alt={item.name} className="w-full h-full object-contain" />
                     ) : (
                       <Package className="w-8 h-8 text-[#C9A96E]" />
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-[#1A1A1A]">{item.product?.name_ar}</p>
-                    <p className="text-sm text-[#6B6B6B]">{item.product?.name_en}</p>
+                    <p className="font-medium text-[#1A1A1A]">{item.name}</p>
+                    <p className="text-sm text-[#6B6B6B]">{item.sku}</p>
                   </div>
                   <div className="text-left">
                     <p className="font-bold text-[#1A1A1A]">{item.quantity} × {Number(item.unit_price).toFixed(3)} د.ك</p>
@@ -187,28 +188,28 @@ export default function AdminOrderDetails() {
             </h3>
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-[#1A1A1A]">
-                <span className="font-medium">{order.customer?.name || 'غير متوفر'}</span>
+                <span className="font-medium">{order.customer?.name || order.customer_name || 'غير متوفر'}</span>
               </div>
-              {order.customer?.phone && (
+              {(order.customer?.phone || order.customer_phone) && (
                 <div className="flex items-center gap-2 text-[#6B6B6B]">
                   <Phone className="w-4 h-4" />
-                  <span dir="ltr">+965 {order.customer.phone}</span>
+                  <span dir="ltr">+965 {order.customer?.phone || order.customer_phone}</span>
                 </div>
               )}
-              {order.customer?.area && (
+              {(order.customer?.area || order.customer_area) && (
                 <div className="flex items-start gap-2 text-[#6B6B6B]">
                   <MapPin className="w-4 h-4 mt-1" />
                   <div>
-                    <p>{order.customer.area}</p>
-                    <p className="text-sm">{order.customer.address}</p>
+                    <p>{order.customer?.area || order.customer_area}</p>
+                    <p className="text-sm">{order.customer?.address_text || order.customer_address}</p>
                   </div>
                 </div>
               )}
             </div>
 
-            {order.customer?.phone && (
+            {(order.customer?.phone || order.customer_phone) && (
               <a
-                href={`https://wa.me/965${order.customer.phone}`}
+                href={`https://wa.me/965${order.customer?.phone || order.customer_phone}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-4 w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BD5A] text-white py-3 rounded-lg transition-colors"
@@ -278,7 +279,8 @@ export default function AdminOrderDetails() {
               <div className="flex justify-between">
                 <span className="text-[#6B6B6B]">طريقة الدفع</span>
                 <span className="text-[#1A1A1A]">
-                  {order.payment_method === 'cash' ? 'كاش عند الاستلام' : 'رابط دفع'}
+                  {order.payment_method === 'cash' ? 'كاش عند الاستلام' : 
+                   order.payment_method === 'knet' ? 'كي نت' : 'رابط دفع'}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -288,7 +290,8 @@ export default function AdminOrderDetails() {
                   order.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
                   'bg-red-100 text-red-700'
                 }`}>
-                  {order.payment_status === 'paid' ? 'مدفوع' : order.payment_status === 'pending' ? 'معلق' : 'فشل'}
+                  {order.payment_status === 'paid' ? 'مدفوع' : 
+                   order.payment_status === 'pending' ? 'معلق' : 'فشل'}
                 </span>
               </div>
             </div>

@@ -16,8 +16,8 @@ export default function AdminProductForm() {
     type: '',
     price: '',
     cost_price: '0',
-    short_description: '',
-    full_description: '',
+    description_short: '',
+    description_full: '',
     sku: '',
     category: 'general',
     stock_quantity: '0',
@@ -48,13 +48,13 @@ export default function AdminProductForm() {
         type: product.type || '',
         price: product.price?.toString() || '',
         cost_price: product.cost_price?.toString() || '0',
-        short_description: product.short_description || '',
-        full_description: product.full_description || '',
+        description_short: product.description_short || '',
+        description_full: product.description_full || '',
         sku: product.sku || '',
-        category: product.category || 'general',
+        category: product.category_id || 'general',
         stock_quantity: product.stock_quantity?.toString() || '0',
         min_stock_level: product.min_stock_level?.toString() || '5',
-        image: product.image || '',
+        image: product.images?.[0] || '',
         specs: product.specs || {},
         features: product.features || [],
         is_active: product.is_active ?? true,
@@ -71,13 +71,13 @@ export default function AdminProductForm() {
       type: formData.type,
       price: parseFloat(formData.price) || 0,
       cost_price: parseFloat(formData.cost_price) || 0,
-      short_description: formData.short_description,
-      full_description: formData.full_description,
+      description_short: formData.description_short,
+      description_full: formData.description_full,
       specs: formData.specs,
       features: formData.features,
-      image: formData.image,
+      images: formData.image ? [formData.image] : [],
       sku: formData.sku,
-      category: formData.category,
+      category_id: formData.category,
       stock_quantity: parseInt(formData.stock_quantity) || 0,
       min_stock_level: parseInt(formData.min_stock_level) || 5,
       is_active: formData.is_active,
@@ -276,8 +276,8 @@ export default function AdminProductForm() {
           <div>
             <label className="block text-sm font-medium text-[#1A1A1A] mb-1">وصف مختصر</label>
             <textarea
-              value={formData.short_description}
-              onChange={(e) => setFormData({ ...formData, short_description: e.target.value })}
+              value={formData.description_short}
+              onChange={(e) => setFormData({ ...formData, description_short: e.target.value })}
               className="w-full px-4 py-2 bg-[#FAF8F5] border border-[#E8E0D5] rounded-lg focus:outline-none focus:border-[#C9A96E] resize-none"
               rows={2}
             />
@@ -286,8 +286,8 @@ export default function AdminProductForm() {
           <div>
             <label className="block text-sm font-medium text-[#1A1A1A] mb-1">وصف كامل</label>
             <textarea
-              value={formData.full_description}
-              onChange={(e) => setFormData({ ...formData, full_description: e.target.value })}
+              value={formData.description_full}
+              onChange={(e) => setFormData({ ...formData, description_full: e.target.value })}
               className="w-full px-4 py-2 bg-[#FAF8F5] border border-[#E8E0D5] rounded-lg focus:outline-none focus:border-[#C9A96E] resize-none"
               rows={3}
             />
