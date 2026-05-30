@@ -23,21 +23,22 @@ export interface InvoiceData {
 // Generate FIXED WhatsApp message for ADMIN - customer cannot edit
 export function generateAdminWhatsAppMessage(orderData: InvoiceData): string {
   const paymentMethodText = orderData.paymentMethod === 'cash' 
-    ? '💵 كاش عند الاستلام' 
-    : '💳 رابط دفع إلكتروني';
+    ? 'كاش عند الاستلام 💵' 
+    : 'رابط دفع إلكتروني 💳';
 
-  let message = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-  message += `🏪 NAFAES | نفائس - طلب جديد 🕌\n`;
-  message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+  let message = '';
+  message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+  message += '🏪 NAFAES | نفائس - طلب جديد 🕌\n';
+  message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
   
-  message += `📋 ═══ بيانات الطلب ═══ 📋\n\n`;
+  message += '📋═══ بيانات الطلب ═══📋\n\n';
   message += `🔢 رقم الطلب: ${orderData.orderNumber}\n`;
   message += `📅 التاريخ: ${orderData.date}\n`;
-  message += `⏰ الحالة: ⏳ قيد المراجعة\n\n`;
+  message += `⏰ الحالة: قيد المراجعة\n\n`;
   
-  message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-  message += `👤 ═══ بيانات العميل ═══ 👤\n`;
-  message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+  message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+  message += '👤═══ بيانات العميل ═══👤\n';
+  message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
   message += `👤 الاسم: ${orderData.customerName}\n`;
   message += `📞 الهاتف: +965 ${orderData.customerPhone}\n`;
   message += `📍 المحافظة: ${orderData.governorate}\n`;
@@ -47,9 +48,9 @@ export function generateAdminWhatsAppMessage(orderData: InvoiceData): string {
     message += `📝 ملاحظات: ${orderData.notes}\n`;
   }
   
-  message += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-  message += `🛒 ═══ تفاصيل المنتجات ═══ 🛒\n`;
-  message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+  message += '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+  message += '🛒═══ تفاصيل المنتجات ═══🛒\n';
+  message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
   
   orderData.items.forEach((item, index) => {
     message += `${index + 1}. ${item.nameAr}\n`;
@@ -60,24 +61,24 @@ export function generateAdminWhatsAppMessage(orderData: InvoiceData): string {
     message += `   💰 المجموع: ${item.totalPrice.toFixed(3)} د.ك\n\n`;
   });
   
-  message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-  message += `💰 ═══ ملخص الفاتورة ═══ 💰\n`;
-  message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+  message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+  message += '💰═══ ملخص الفاتورة ═══💰\n';
+  message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
   message += `📦 المجموع الفرعي: ${orderData.subtotal.toFixed(3)} د.ك\n`;
   message += `🚚 رسوم التوصيل: ${orderData.deliveryFee.toFixed(3)} د.ك\n`;
-  message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+  message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
   message += `💵 الإجمالي النهائي: ${orderData.total.toFixed(3)} د.ك\n`;
-  message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+  message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
   
   message += `💳 طريقة الدفع: ${paymentMethodText}\n\n`;
   
-  message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-  message += `✅ شكراً لتعاملكم مع نفائس 🕌\n`;
-  message += `📱 للمتابعة: 66377312\n`;
-  message += `📸 @nafaes.q8\n`;
-  message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+  message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+  message += '✅ شكراً لتعاملكم مع نفائس 🕌\n';
+  message += '📱 للمتابعة: 66377312\n';
+  message += '📸 @nafaes.q8\n';
+  message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
   
-  return message; // Return un-encoded for now, we'll encode when sending
+  return message;
 }
 
 // Alias for the same function

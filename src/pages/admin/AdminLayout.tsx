@@ -1,11 +1,11 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
-  LayoutDashboard, ShoppingCart, LogOut, Menu, X,
-  Bell, Package, Users
+  LayoutDashboard, ShoppingCart, Package, Users,
+  DollarSign, Settings, LogOut, Menu, X,
+  Bell
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { useOrders } from '@/contexts/OrderContext';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -15,12 +15,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { unreadCount } = useOrders();
 
   const menuItems = [
     { path: '/admin', icon: LayoutDashboard, label: 'لوحة التحكم', exact: true },
-    { path: '/admin/orders', icon: ShoppingCart, label: 'الطلبات' },
-    { path: '/products', icon: Package, label: 'المتجر', external: true },
+    { path: '/admin/orders', icon: ShoppingCart, label: 'الطلبات', badge: true },
+    { path: '/admin/products', icon: Package, label: 'المنتجات' },
+    { path: '/admin/customers', icon: Users, label: 'العملاء' },
+    { path: '/admin/accounting', icon: DollarSign, label: 'المحاسبة' },
+    { path: '/admin/settings', icon: Settings, label: 'الإعدادات' },
   ];
 
   const isActive = (path: string, exact?: boolean) => {
@@ -59,12 +61,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <nav className="p-4 space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const content = (
+            return (
               <Link
                 key={item.path}
                 to={item.path}
-                onClick={() => !item.external && setSidebarOpen(false)}
-                target={item.external ? '_blank' : undefined}
+                onClick={() => setSidebarOpen(false)}
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
                   isActive(item.path, item.exact)
@@ -74,19 +75,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               >
                 <Icon className="w-5 h-5" />
                 <span>{item.label}</span>
-                {item.path === '/admin/orders' && unreadCount > 0 && (
-                  <span className="mr-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                    {unreadCount}
-                  </span>
-                )}
               </Link>
             );
-            return content;
           })}
         </nav>
 
-        {/* Logout */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[#333]">
+        {/* Bottom Actions */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[#333] space-y-1">
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-[#888] hover:bg-[#333] hover:text-white transition-colors"
@@ -111,19 +106,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <h1 className="text-lg font-bold text-[#1A1A1A]">لوحة تحكم نفائس</h1>
           </div>
           
-          <div className="flex items-center gap-4">
-            {unreadCount > 0 && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-[#C9A96E]/10 rounded-full">
-                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                <span className="text-sm text-[#C9A96E] font-medium">{unreadCount} طلب جديد</span>
-              </div>
-            )}
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#C9A96E] rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-bold">أ</span>
-              </div>
-              <span className="hidden sm:block text-sm text-[#1A1A1A]">المدير</span>
-            </div>
+          <div className="flex items-center gap-3">
+            <a
+              href="https://wa.me/96566377312"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 bg-[#25D366] text-white rounded-full hover:bg-[#20BD5A] transition-colors text-sm font-medium"
+            >
+              <span>واتساب</span>
+            </a>
           </div>
         </header>
 
