@@ -21,8 +21,8 @@ export default function AdminInvoices() {
   };
 
   const filteredInvoices = invoices.filter(inv => 
-    inv.invoice_number?.includes(search) ||
-    inv.customer?.name?.includes(search)
+    inv.invoice_number?.toLowerCase().includes(search.toLowerCase()) ||
+    inv.customer_id?.toLowerCase().includes(search.toLowerCase())
   );
 
   const getStatusBadge = (status: string) => {
@@ -61,7 +61,7 @@ export default function AdminInvoices() {
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B6B6B]" />
           <input
             type="text"
-            placeholder="ابحث برقم الفاتورة أو اسم العميل..."
+            placeholder="ابحث برقم الفاتورة أو رقم العميل..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pr-10 pl-4 py-2 bg-[#FAF8F5] border border-[#E8E0D5] rounded-lg text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E]"
@@ -84,7 +84,7 @@ export default function AdminInvoices() {
               <thead className="bg-[#F5F0E8]">
                 <tr>
                   <th className="text-right px-4 py-3 text-sm font-medium text-[#1A1A1A]">رقم الفاتورة</th>
-                  <th className="text-right px-4 py-3 text-sm font-medium text-[#1A1A1A]">العميل</th>
+                  <th className="text-right px-4 py-3 text-sm font-medium text-[#1A1A1A]">رقم العميل</th>
                   <th className="text-center px-4 py-3 text-sm font-medium text-[#1A1A1A]">تاريخ الإنشاء</th>
                   <th className="text-center px-4 py-3 text-sm font-medium text-[#1A1A1A]">الحالة</th>
                   <th className="text-left px-4 py-3 text-sm font-medium text-[#1A1A1A]">الإجمالي</th>
