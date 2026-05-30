@@ -26,6 +26,19 @@ export interface Order {
   paymentMethod: 'cash' | 'link';
 }
 
+export interface KuwaitArea {
+  id: string;
+  governorate: string;
+  name: string;
+  deliveryFee: number;
+  estimatedDays: number;
+}
+
+export interface Governorate {
+  id: string;
+  name: string;
+}
+
 // Local products data
 export const products: Product[] = [
   {
@@ -35,16 +48,14 @@ export const products: Product[] = [
     type: 'جهاز تعطير ذكي',
     price: 49,
     shortDescription: 'جهاز تعطير ذكي قابل للشحن يمنحك تجربة عطرية متنقلة وأنيقة.',
-    fullDescription: 'إيلان 360 نوماد مصمم لمن يبحث عن الفخامة والراحة في جهاز واحد. يعمل ببطارية ليثيوم مدمجة، ويدعم الشحن Type-C، مع انتشار عطري 360° لتوزيع الرائحة بشكل متوازن.',
+    fullDescription: 'إيلان 360 نوماد مصمم لمن يبحث عن الفخامة والراحة في جهاز واحد.',
     specs: {
       'السعة': '120 مل',
       'نوع التشغيل': 'بطارية ليثيوم قابلة للشحن',
       'الشحن': 'Type-C',
       'الانتشار': '360°',
-      'مستويات التحكم': '3 مستويات',
-      'التحكم': 'Wi-Fi + Bluetooth',
     },
-    features: ['رفاهية متنقلة', 'تشغيل ذكي', 'تصميم فاخر', 'سهل الحمل'],
+    features: ['رفاهية متنقلة', 'تشغيل ذكي', 'تصميم فاخر'],
     image: '/images/devices/elan-nomad.png',
   },
   {
@@ -54,14 +65,13 @@ export const products: Product[] = [
     type: 'جهاز تعطير كهربائي',
     price: 42,
     shortDescription: 'جهاز تعطير كهربائي ثابت بتصميم أنيق، مناسب للمنازل والمكاتب.',
-    fullDescription: 'إيلان 360 برايم هو جهاز تعطير كهربائي يمنح المكان رائحة ثابتة ومنتظمة طوال اليوم. يتميز بتشغيل مباشر بالكهرباء، انتشار 360°، سعة 120 مل.',
+    fullDescription: 'إيلان 360 برايم جهاز تعطير كهربائي يمنح المكان رائحة ثابتة.',
     specs: {
       'السعة': '120 مل',
       'نوع التشغيل': 'كهربائي مباشر',
       'الانتشار': '360°',
-      'التحكم': 'Touch / Bluetooth / Remote',
     },
-    features: ['فخامة يومية', 'تشغيل ثابت', 'رائحة متوازنة', 'تصميم أنيق'],
+    features: ['فخامة يومية', 'تشغيل ثابت', 'رائحة متوازنة'],
     image: '/images/devices/elan-prime.png',
   },
   {
@@ -70,15 +80,14 @@ export const products: Product[] = [
     name_en: 'NOIR MAJESTÉ',
     type: 'جهاز تعطير احترافي',
     price: 59,
-    shortDescription: 'جهاز تعطير احترافي للمساحات الراقية والكبيرة، مزود بشاشة LCD وتحكم ذكي.',
-    fullDescription: 'نوار ماجستيه جهاز تعطير فاخر مناسب للمنازل الكبيرة، المكاتب، الصالونات، العيادات. يتميز بسعة 200 مل، تغطية قوية، شاشة LCD، تحكم باللمس.',
+    shortDescription: 'جهاز تعطير احترافي للمساحات الراقية والكبيرة.',
+    fullDescription: 'نوار ماجستيه جهاز تعطير فاخر مناسب للمنازل الكبيرة.',
     specs: {
       'السعة': '200 مل',
       'التغطية': '300–500m³',
-      'التحكم': 'Touch Buttons / Bluetooth',
       'الشاشة': 'LCD',
     },
-    features: ['مناسب للمساحات الكبيرة', 'تصميم احترافي', 'تحكم ذكي', 'تشغيل هادئ'],
+    features: ['مناسب للمساحات الكبيرة', 'تصميم احترافي'],
     image: '/images/devices/noir-majeste.png',
   },
   {
@@ -87,14 +96,13 @@ export const products: Product[] = [
     name_en: 'FOREST RESERVE',
     type: 'طقم هدايا عطري',
     price: 13.9,
-    shortDescription: 'طقم هدايا عطري أنيق يجمع بين زجاجة معطر وشمعة معطرة.',
-    fullDescription: 'فورست ريزيرف طقم هدايا عطري فاخر مناسب للإهداء والمناسبات. يجمع بين معطر أعواد وشمعة معطرة مع تغليف أنيق جاهز للتقديم.',
+    shortDescription: 'طقم هدايا عطري أنيق.',
+    fullDescription: 'فورست ريزيرف طقم هدايا عطري فاخر.',
     specs: {
-      'النوع': 'طقم هدايا',
+      'النوع': 'Gift Set',
       'الطابع العطري': 'خشبي / دافئ',
-      'الاستخدام': 'هدية جاهزة وأنيقة',
     },
-    features: ['هدية فاخرة', 'جاهز للإهداء', 'تغليف أنيق', 'رائحة خشبية دافئة'],
+    features: ['هدية فاخرة', 'جاهز للإهداء'],
     image: '/images/gifts/forest-reserve.png',
   },
   {
@@ -103,89 +111,82 @@ export const products: Product[] = [
     name_en: 'AMBER SANTAL',
     type: 'معطر أعواد فاخر',
     price: 10.9,
-    shortDescription: 'معطر أعواد فاخر برائحة دافئة وخشبية، مناسب للديكور والهدايا.',
-    fullDescription: 'أمبر سانتال معطر أعواد بتصميم أنيق ورائحة دافئة وخشبية. لا يحتاج إلى كهرباء أو بطاريات، فقط ضع الأعواد داخل الزجاجة واترك الرائحة تنتشر.',
+    shortDescription: 'معطر أعواد فاخر برائحة دافئة وخشبية.',
+    fullDescription: 'أمبر سانتال معطر أعواد بتصميم أنيق.',
     specs: {
       'النوع': 'معطر أعواد',
       'الانتشار': 'أعواد خشبية',
-      'مدة الاستخدام': 'أكثر من 60 يوم',
+      'مدة الاستخدام': '60+ يوم',
     },
-    features: ['زجاجة أنيقة', 'أعواد طبيعية', 'رائحة دافئة', 'تغليف فاخر'],
+    features: ['زجاجة أنيقة', 'أعواد طبيعية'],
     image: '/images/reed/amber-santal.png',
   },
 ];
+
+export const localProducts = products;
 
 export const deliveryFee = 2;
 export const whatsappNumber = '96566377312';
 export const whatsappLink = `https://wa.me/${whatsappNumber}`;
 
 // Kuwait Areas
-export interface KuwaitArea {
-  id: string;
-  governorate: string;
-  name: string;
-  name_ar: string;
-  deliveryFee: number;
-  estimatedDays: number;
-}
-
-export const kuwaitGovernorates = [
-  { id: 'capital', name_ar: 'العاصمة' },
-  { id: 'hawalli', name_ar: 'حولي' },
-  { id: 'farwaniya', name_ar: 'الفروانية' },
-  { id: 'mubarak', name_ar: 'مبارك الكبير' },
-  { id: 'ahmadi', name_ar: 'الأحمدي' },
-  { id: 'jahra', name_ar: 'الجهراء' },
+export const kuwaitGovernorates: Governorate[] = [
+  { id: 'capital', name: 'العاصمة' },
+  { id: 'hawalli', name: 'حولي' },
+  { id: 'farwaniya', name: 'الفروانية' },
+  { id: 'mubarak', name: 'مبارك الكبير' },
+  { id: 'ahmadi', name: 'الأحمدي' },
+  { id: 'jahra', name: 'الجهراء' },
 ];
 
 export const kuwaitAreas: KuwaitArea[] = [
   // محافظة العاصمة
-  { id: 'kout', name: 'الكوت', name_ar: 'الكوت', governorate: 'capital', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'daiya', name: 'الدية', name_ar: 'الدية', governorate: 'capital', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'al-shamaliya', name: 'الشمالية', name_ar: 'الشمالية', governorate: 'capital', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'al-salhiya', name: 'الصالحية', name_ar: 'الصالحية', governorate: 'capital', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'al-rawda', name: 'الرابطة', name_ar: 'الرابطة', governorate: 'capital', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'al-dasma', name: 'الدسمة', name_ar: 'الدسمة', governorate: 'capital', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'al-nuzha', name: 'النزهة', name_ar: 'النزهة', governorate: 'capital', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'al-shaab', name: 'الشعب', name_ar: 'الشعب', governorate: 'capital', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'al-qibla', name: 'القبلة', name_ar: 'القبلة', governorate: 'capital', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'al-mansuriya', name: 'المنصورية', name_ar: 'المنصورية', governorate: 'capital', deliveryFee: 2, estimatedDays: 1 },
-
+  { id: 'city', governorate: 'capital', name: 'مدينة الكويت', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'sharq', governorate: 'capital', name: 'شرق', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'qibla', governorate: 'capital', name: 'القبلة', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'murgab', governorate: 'capital', name: 'المرقاب', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'dasman', governorate: 'capital', name: 'دسمان', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'salhiya', governorate: 'capital', name: 'الصالحية', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'dasma', governorate: 'capital', name: 'الدسمة', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'nuzha', governorate: 'capital', name: 'النزهة', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'shaab', governorate: 'capital', name: 'الشعب', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'rawda', governorate: 'capital', name: 'الروضة', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'yarmouk', governorate: 'capital', name: 'اليرموك', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'surra', governorate: 'capital', name: 'السرة', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'keifan', governorate: 'capital', name: 'كيفان', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'qadisiya', governorate: 'capital', name: 'القادسية', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'granada', governorate: 'capital', name: 'غرناطة', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'nahda', governorate: 'capital', name: 'النهضة', deliveryFee: 2, estimatedDays: 1 },
   // محافظة حولي
-  { id: 'salmiya', name: 'السالمية', name_ar: 'السالمية', governorate: 'hawalli', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'hawalli-city', name: 'حولي', name_ar: 'حولي', governorate: 'hawalli', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'jabriya', name: 'الجابرية', name_ar: 'الجابرية', governorate: 'hawalli', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'bayan', name: 'بيان', name_ar: 'بيان', governorate: 'hawalli', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'salwa', name: 'سلوى', name_ar: 'سلوى', governorate: 'hawalli', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'surra', name: 'السرة', name_ar: 'السرة', governorate: 'hawalli', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'maidan-bayan', name: 'ميدان بيان', name_ar: 'ميدان بيان', governorate: 'hawalli', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'hateen', name: 'حطين', name_ar: 'حطين', governorate: 'hawalli', deliveryFee: 2, estimatedDays: 1 },
-
+  { id: 'salmiya', governorate: 'hawalli', name: 'السالمية', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'hawalli-city', governorate: 'hawalli', name: 'حولي', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'jabriya', governorate: 'hawalli', name: 'الجابرية', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'bayan', governorate: 'hawalli', name: 'بيان', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'salwa', governorate: 'hawalli', name: 'سلوى', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'surra-h', governorate: 'hawalli', name: 'السرة', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'hatin', governorate: 'hawalli', name: 'حطين', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'mushref', governorate: 'hawalli', name: 'مشرف', deliveryFee: 2, estimatedDays: 1 },
   // محافظة الفروانية
-  { id: 'farwaniya-city', name: 'مدينة الفروانية', name_ar: 'مدينة الفروانية', governorate: 'farwaniya', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'al-riggae', name: 'الرقة', name_ar: 'الرقة', governorate: 'farwaniya', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'ibn-sina', name: 'ابن سينا', name_ar: 'ابن سينا', governorate: 'farwaniya', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'al-ardhiya', name: 'العارضية', name_ar: 'العارضية', governorate: 'farwaniya', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'jleeb', name: 'جليب الشيوخ', name_ar: 'جليب الشيوخ', governorate: 'farwaniya', deliveryFee: 2.5, estimatedDays: 1 },
-
+  { id: 'farwaniya-city', governorate: 'farwaniya', name: 'الفروانية', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'khaitan', governorate: 'farwaniya', name: 'خيطان', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'riggae', governorate: 'farwaniya', name: 'الرقعي', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'jleeb', governorate: 'farwaniya', name: 'جليب الشيوخ', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'andalus', governorate: 'farwaniya', name: 'الأندلس', deliveryFee: 2, estimatedDays: 1 },
   // محافظة مبارك الكبير
-  { id: 'al-ahmadi', name: 'الأحمدي', name_ar: 'الأحمدي', governorate: 'mubarak', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'al-funaitees', name: 'الفنيطيس', name_ar: 'الفنيطيس', governorate: 'mubarak', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'al-sabah', name: 'ال صباح', name_ar: 'ال صباح', governorate: 'mubarak', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'al-adi', name: 'العدان', name_ar: 'العدان', governorate: 'mubarak', deliveryFee: 2, estimatedDays: 1 },
-
+  { id: 'adan', governorate: 'mubarak', name: 'العدان', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'funitees', governorate: 'mubarak', name: 'الفنيطيس', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'sobhan', governorate: 'mubarak', name: 'صبحان', deliveryFee: 2, estimatedDays: 1 },
   // محافظة الأحمدي
-  { id: 'ahmadi-city', name: 'مدينة الأحمدي', name_ar: 'مدينة الأحمدي', governorate: 'ahmadi', deliveryFee: 3, estimatedDays: 2 },
-  { id: 'fintas', name: 'الفنطاس', name_ar: 'الفنطاس', governorate: 'ahmadi', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'mahboula', name: 'مهبول', name_ar: 'مهبول', governorate: 'ahmadi', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'abu-halifa', name: 'أبو حليلة', name_ar: 'أبو حليلة', governorate: 'ahmadi', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'wafra', name: 'الوفرة', name_ar: 'الوفرة', governorate: 'ahmadi', deliveryFee: 3, estimatedDays: 2 },
-
+  { id: 'ahmadi-city', governorate: 'ahmadi', name: 'الأحمدي', deliveryFee: 3, estimatedDays: 2 },
+  { id: 'fintas', governorate: 'ahmadi', name: 'الفنطاس', deliveryFee: 3, estimatedDays: 1 },
+  { id: 'mahboula', governorate: 'ahmadi', name: 'المهبولة', deliveryFee: 3, estimatedDays: 1 },
+  { id: 'wafra', governorate: 'ahmadi', name: 'الوفرة', deliveryFee: 3, estimatedDays: 2 },
+  { id: 'fahaheel', governorate: 'ahmadi', name: 'الفحيحيل', deliveryFee: 3, estimatedDays: 1 },
   // محافظة الجهراء
-  { id: 'jahra-city', name: 'مدينة الجهراء', name_ar: 'مدينة الجهراء', governorate: 'jahra', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'nasser-almulla', name: 'ناصر الملا', name_ar: 'ناصر الملا', governorate: 'jahra', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'sulaibikhat', name: 'صيلباط', name_ar: 'صيلباط', governorate: 'jahra', deliveryFee: 2, estimatedDays: 1 },
-  { id: 'kuwait-city', name: 'الكويت', name_ar: 'الكويت', governorate: 'jahra', deliveryFee: 2, estimatedDays: 1 },
+  { id: 'jahra-city', governorate: 'jahra', name: 'الجهراء', deliveryFee: 3, estimatedDays: 2 },
+  { id: 'nasser-almulla', governorate: 'jahra', name: 'ناصر الملا', deliveryFee: 3, estimatedDays: 2 },
+  { id: 'sulaibikhat', governorate: 'jahra', name: 'صيلباط', deliveryFee: 3, estimatedDays: 2 },
+  { id: 'kabd', governorate: 'jahra', name: 'كبد', deliveryFee: 3, estimatedDays: 2 },
 ];
 
 export function getAreasByGovernorate(governorateId: string): KuwaitArea[] {
@@ -218,40 +219,22 @@ export function generateWhatsAppMessage(orderData: any): string {
   message += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
   message += `📋 ═══ طلب جديد ═══ 📋\n\n`;
   message += `🔢 رقم الطلب: ${orderData.orderNumber}\n\n`;
-  message += `━━━━━━━━━━━━━━━━━━━━━━\n`;
-  message += `   👤 بيانات العميل\n`;
-  message += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
   message += `👤 الاسم: ${orderData.customerName}\n`;
   message += `📞 الهاتف: +965 ${orderData.customerPhone}\n`;
-  message += `📍 المحافظة: ${orderData.governorate}\n`;
   message += `📍 المنطقة: ${orderData.area}\n`;
-  message += `🏠 العنوان: ${orderData.address}\n`;
-  if (orderData.notes) message += `📝 ملاحظات: ${orderData.notes}\n`;
-  
-  message += `\n━━━━━━━━━━━━━━━━━━━━━━\n`;
-  message += `   🛒 تفاصيل المنتجات\n`;
-  message += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+  message += `🏠 العنوان: ${orderData.address}\n\n`;
   
   orderData.items.forEach((item: any, index: number) => {
     message += `${index + 1}. ${item.productNameAr}\n`;
     message += `   الكمية: ${item.quantity}\n`;
-    if (item.selectedSize) message += `   الحجم: ${item.selectedSize}\n`;
     message += `   المجموع: ${formatPrice(item.totalPrice)}\n\n`;
   });
   
   message += `━━━━━━━━━━━━━━━━━━━━━━\n`;
-  message += `   💰 ملخص الطلب\n`;
-  message += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-  message += `📦 المجموع الفرعي: ${formatPrice(orderData.subtotal)}\n`;
-  message += `🚚 رسوم التوصيل: ${formatPrice(orderData.deliveryFee)}\n`;
-  message += `💵 الإجمالي النهائي: ${formatPrice(orderData.total)}\n\n`;
-  message += `💳 طريقة الدفع: ${orderData.paymentMethod === 'cash' ? 'كاش عند الاستلام 💵' : 'رابط دفع إلكتروني 💳'}\n\n`;
-  message += `━━━━━━━━━━━━━━━━━━━━━━\n`;
-  message += `شكراً لتعاملكم مع نفائس 🕌\n`;
+  message += `📦 المجموع: ${formatPrice(orderData.subtotal)}\n`;
+  message += `🚚 التوصيل: ${formatPrice(orderData.deliveryFee)}\n`;
+  message += `💵 الإجمالي: ${formatPrice(orderData.total)}\n`;
   message += `━━━━━━━━━━━━━━━━━━━━━━\n`;
   
   return encodeURIComponent(message);
 }
-
-// Re-export
-export type { Product as ProductType };

@@ -2,8 +2,6 @@ export interface Product {
   id: string;
   name_ar: string;
   name_en: string;
-  nameAr?: string;
-  nameEn?: string;
   type: string;
   price: number;
   shortDescription: string;
@@ -12,8 +10,8 @@ export interface Product {
   features: string[];
   image: string;
   images?: string[];
-  slug?: string;
-  category_id?: string;
+  categorySlug?: string;
+  basePrice?: number;
   stock_quantity?: number;
   is_active?: boolean;
 }
@@ -43,7 +41,6 @@ export interface KuwaitArea {
   id: string;
   governorate: string;
   name: string;
-  name_ar: string;
   deliveryFee: number;
   estimatedDays: number;
 }
@@ -51,7 +48,6 @@ export interface KuwaitArea {
 export interface Governorate {
   id: string;
   name: string;
-  name_ar: string;
 }
 
 export interface Category {

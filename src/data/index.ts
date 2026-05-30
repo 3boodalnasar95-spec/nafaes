@@ -1,4 +1,2 @@
-export { categories, getCategoryBySlug, getCategoryInfo, categoryIcons } from './categories';
-export { products, deliveryFee, whatsappNumber, whatsappLink, formatPrice, generateOrderNumber, generateWhatsAppMessage } from './products';
-export { kuwaitGovernorates, kuwaitAreas, getAreasByGovernorate, getAreaById } from './kuwait-areas';
-export { localProducts } from './products';
+export { categories } from './categories';
+export { products, localProducts, deliveryFee, whatsappNumber, whatsappLink, formatPrice, generateOrderNumber, generateWhatsAppMessage, kuwaitGovernorates, kuwaitAreas, getAreasByGovernorate, getAreaById, type Product, type CartItem, type Order, type KuwaitArea, type Governorate } from './products';
