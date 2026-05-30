@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, MessageCircle, Users, Phone, MapPin } from 'lucide-react';
+import { Plus, Search, MessageCircle, Users, Phone, MapPin, Eye, ShoppingCart, DollarSign, Star } from 'lucide-react';
 import AdminLayout from './AdminLayout';
-import { getCustomers, createCustomer } from '@/lib/db-operations';
+import { getCustomers, createCustomer, getCustomerStats } from '@/lib/db-operations';
+import { formatPrice } from '@/data/products';
 import type { Customer } from '@/types/database';
 
 export default function AdminCustomers() {
@@ -9,6 +10,14 @@ export default function AdminCustomers() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [customerStats, setCustomerStats] = useState<{
+    totalOrders: number;
+    totalSpent: number;
+    avgOrderValue: number;
+    lastOrder: string | null;
+    ordersByStatus: Record<string, number>;
+  } | null>(null);
   const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', area: '', address: '' });
 
   useEffect(() => {
@@ -28,6 +37,12 @@ export default function AdminCustomers() {
     setNewCustomer({ name: '', phone: '', area: '', address: '' });
     setShowAddModal(false);
     loadCustomers();
+  };
+
+  const viewCustomerDetails = async (customer: Customer) => {
+    setSelectedCustomer(customer);
+    const stats = await getCustomerStats(customer.id);
+    setCustomerStats(stats);
   };
 
   const filteredCustomers = customers.filter(c => 
@@ -54,8 +69,8 @@ export default function AdminCustomers() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-xl border border-[#E8E0D5] p-6">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-[#C9A96E]/10 rounded-lg">
@@ -64,6 +79,45 @@ export default function AdminCustomers() {
             <div>
               <p className="text-2xl font-bold text-[#1A1A1A]">{customers.length}</p>
               <p className="text-sm text-[#6B6B6B]">إجمالي العملاء</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-[#E8E0D5] p-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-green-100 rounded-lg">
+              <ShoppingCart className="w-6 h-6 text-green-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-[#1A1A1A]">
+                {customers.reduce((sum, c) => sum + c.total_orders, 0)}
+              </p>
+              <p className="text-sm text-[#6B6B6B]">إجمالي الطلبات</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-[#E8E0D5] p-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-purple-100 rounded-lg">
+              <DollarSign className="w-6 h-6 text-purple-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-[#1A1A1A]">
+                {formatPrice(customers.reduce((sum, c) => sum + c.total_spent, 0))}
+              </p>
+              <p className="text-sm text-[#6B6B6B]">إجمالي الإنفاق</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-[#E8E0D5] p-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-orange-100 rounded-lg">
+              <Star className="w-6 h-6 text-orange-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-[#1A1A1A]">
+                {customers.reduce((sum, c) => sum + c.loyalty_points, 0)}
+              </p>
+              <p className="text-sm text-[#6B6B6B]">نقاط الولاء</p>
             </div>
           </div>
         </div>
@@ -94,24 +148,28 @@ export default function AdminCustomers() {
           </div>
         ) : (
           filteredCustomers.map(customer => (
-            <div key={customer.id} className="bg-white rounded-xl border border-[#E8E0D5] p-6">
+            <div key={customer.id} className="bg-white rounded-xl border border-[#E8E0D5] p-6 hover:shadow-lg transition-shadow">
               <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 bg-[#C9A96E] rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">{customer.name.charAt(0)}</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-[#C9A96E] rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-lg">{customer.name.charAt(0)}</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-[#1A1A1A]">{customer.name}</h3>
+                    {customer.is_vip && (
+                      <span className="text-xs bg-[#C9A96E]/10 text-[#C9A96E] px-2 py-0.5 rounded-full">VIP</span>
+                    )}
+                  </div>
                 </div>
-                <a
-                  href={`https://wa.me/965${customer.phone}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 bg-[#25D366] text-white rounded-lg hover:bg-[#20BD5A] transition-colors"
+                <button
+                  onClick={() => viewCustomerDetails(customer)}
+                  className="p-2 text-[#6B6B6B] hover:text-[#C9A96E] transition-colors"
                 >
-                  <MessageCircle className="w-4 h-4" />
-                </a>
+                  <Eye className="w-5 h-5" />
+                </button>
               </div>
               
-              <h3 className="font-bold text-[#1A1A1A] mb-2">{customer.name}</h3>
-              
-              <div className="space-y-2 text-sm">
+              <div className="space-y-2 text-sm mb-4">
                 <div className="flex items-center gap-2 text-[#6B6B6B]">
                   <Phone className="w-4 h-4" />
                   <span dir="ltr">+965 {customer.phone}</span>
@@ -123,8 +181,33 @@ export default function AdminCustomers() {
                   </div>
                 )}
               </div>
+
+              <div className="flex items-center justify-between pt-4 border-t border-[#E8E0D5]">
+                <div className="text-center">
+                  <p className="text-lg font-bold text-[#1A1A1A]">{customer.total_orders}</p>
+                  <p className="text-xs text-[#6B6B6B]">طلبات</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-bold text-[#C9A96E]">{formatPrice(customer.total_spent)}</p>
+                  <p className="text-xs text-[#6B6B6B]">أنفق</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-bold text-orange-500">{customer.loyalty_points}</p>
+                  <p className="text-xs text-[#6B6B6B]">نقاط</p>
+                </div>
+              </div>
               
-              <p className="text-sm text-[#6B6B6B] mt-3 line-clamp-2">{customer.address_text || ''}</p>
+              <div className="flex gap-2 mt-4">
+                <a
+                  href={`https://wa.me/965${customer.phone}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] text-white py-2 rounded-lg hover:bg-[#20BD5A] transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  واتساب
+                </a>
+              </div>
             </div>
           ))
         )}
@@ -193,6 +276,112 @@ export default function AdminCustomers() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Customer Details Modal */}
+      {selectedCustomer && customerStats && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-[#C9A96E] rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-2xl">{selectedCustomer.name.charAt(0)}</span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-[#1A1A1A]">{selectedCustomer.name}</h3>
+                  {selectedCustomer.is_vip && (
+                    <span className="text-sm bg-[#C9A96E]/10 text-[#C9A96E] px-2 py-0.5 rounded-full">عميل VIP</span>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => { setSelectedCustomer(null); setCustomerStats(null); }}
+                className="text-[#6B6B6B] hover:text-[#1A1A1A]"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Contact Info */}
+            <div className="bg-[#FAF8F5] rounded-xl p-4 mb-6">
+              <h4 className="font-bold text-[#1A1A1A] mb-3">معلومات التواصل</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-[#6B6B6B]" />
+                  <span dir="ltr">+965 {selectedCustomer.phone}</span>
+                </div>
+                {selectedCustomer.email && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#6B6B6B]">📧</span>
+                    <span>{selectedCustomer.email}</span>
+                  </div>
+                )}
+                {selectedCustomer.area && (
+                  <div className="flex items-center gap-2 col-span-2">
+                    <MapPin className="w-4 h-4 text-[#6B6B6B]" />
+                    <span>{selectedCustomer.area} - {selectedCustomer.address_text}</span>
+                  </div>
+                )}
+              </div>
+              <a
+                href={`https://wa.me/965${selectedCustomer.phone}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 w-full flex items-center justify-center gap-2 bg-[#25D366] text-white py-2 rounded-lg hover:bg-[#20BD5A] transition-colors"
+              >
+                <MessageCircle className="w-5 h-5" />
+                مراسلة عبر واتساب
+              </a>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="bg-green-50 rounded-xl p-4 text-center">
+                <p className="text-2xl font-bold text-green-600">{customerStats.totalOrders}</p>
+                <p className="text-sm text-[#6B6B6B]">إجمالي الطلبات</p>
+              </div>
+              <div className="bg-[#C9A96E]/10 rounded-xl p-4 text-center">
+                <p className="text-2xl font-bold text-[#C9A96E]">{formatPrice(customerStats.totalSpent)}</p>
+                <p className="text-sm text-[#6B6B6B]">إجمالي الإنفاق</p>
+              </div>
+              <div className="bg-purple-50 rounded-xl p-4 text-center">
+                <p className="text-2xl font-bold text-purple-600">{formatPrice(customerStats.avgOrderValue)}</p>
+                <p className="text-sm text-[#6B6B6B]">متوسط الطلب</p>
+              </div>
+            </div>
+
+            {/* Orders by Status */}
+            <div className="bg-[#FAF8F5] rounded-xl p-4">
+              <h4 className="font-bold text-[#1A1A1A] mb-3">الطلبات حسب الحالة</h4>
+              <div className="grid grid-cols-4 gap-2">
+                {Object.entries(customerStats.ordersByStatus).map(([status, count]) => {
+                  const statusLabels: Record<string, string> = {
+                    pending: 'معلق',
+                    confirmed: 'مؤكد',
+                    preparing: 'قيد التجهيز',
+                    shipped: 'تم الشحن',
+                    delivered: 'مكتمل',
+                    cancelled: 'ملغي'
+                  };
+                  const colors: Record<string, string> = {
+                    pending: 'bg-yellow-100 text-yellow-700',
+                    confirmed: 'bg-blue-100 text-blue-700',
+                    preparing: 'bg-purple-100 text-purple-700',
+                    shipped: 'bg-cyan-100 text-cyan-700',
+                    delivered: 'bg-green-100 text-green-700',
+                    cancelled: 'bg-red-100 text-red-700'
+                  };
+                  return (
+                    <div key={status} className={`p-2 rounded-lg text-center ${colors[status] || 'bg-gray-100'}`}>
+                      <p className="font-bold">{count}</p>
+                      <p className="text-xs">{statusLabels[status] || status}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       )}
