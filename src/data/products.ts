@@ -9,7 +9,7 @@ export interface Product {
   specs: Record<string, string>;
   features: string[];
   image: string;
-  category: 'device' | 'flavor' | 'gift';
+  category: 'device' | 'flavor' | 'gift' | 'reed';
   parentDevice?: string;
   isFlavor?: boolean;
   flavorNotes?: string;
@@ -46,23 +46,9 @@ export const flavorSizes: SizeOption[] = [
   { size: '500ml', ml: 500, price: 25 },
 ];
 
-// Flavor options for electrical devices
-export const deviceFlavors = [
-  { id: 'flavor-black-oud', name_ar: 'بلاك عود', name_en: 'BLACK OUD', basePrice: 3.5, image: '/images/flavor-black-oud.png', description: 'رائحة عود فاخرة وعميقة', sizes: flavorSizes },
-  { id: 'flavor-rose-musk', name_ar: 'روز مسك', name_en: 'ROSE MUSK', basePrice: 3.5, image: '/images/flavor-rose-musk.png', description: 'مزيج رومانسي من الورود والمسك', sizes: flavorSizes },
-  { id: 'flavor-santal-vanilla', name_ar: 'سانتال فانيلا', name_en: 'SANTAL VANILLA', basePrice: 3.5, image: '/images/flavor-santal-vanilla.png', description: 'دفء الفانيليا مع خشبية السانتال', sizes: flavorSizes },
-  { id: 'flavor-ocean-breeze', name_ar: 'أوشن بريدز', name_en: 'OCEAN BREEZE', basePrice: 3.5, image: '/images/flavor-ocean-breeze.png', description: 'انتعاش بحري منعش', sizes: flavorSizes },
-  { id: 'flavor-night-oud', name_ar: 'نايت عود', name_en: 'NIGHT OUD', basePrice: 3.5, image: '/images/flavor-night-oud.png', description: 'رائحة عود ليلي mystique', sizes: flavorSizes },
-  { id: 'flavor-amber-woods', name_ar: 'أمبر وودز', name_en: 'AMBER WOODS', basePrice: 3.5, image: '/images/flavor-amber-woods.png', description: 'خشبية دافئة مع العنبر', sizes: flavorSizes },
-  { id: 'flavor-oud-royal', name_ar: 'عود رويال', name_en: 'OUD ROYAL', basePrice: 3.5, image: '/images/flavor-oud-royal.png', description: 'عود ملكي فاخر', sizes: flavorSizes },
-  { id: 'flavor-arabian-oud', name_ar: 'عربي عود', name_en: 'ARABIAN OUD', basePrice: 3.5, image: '/images/flavor-arabian-oud.png', description: 'عراقة عربية أصيلة', sizes: flavorSizes },
-  { id: 'flavor-white-musk', name_ar: 'وايت مسك', name_en: 'WHITE MUSK', basePrice: 3.5, image: '/images/flavor-white-musk.png', description: 'نقاء المسك الأبيض', sizes: flavorSizes },
-  { id: 'flavor-fresh-linen', name_ar: 'فريش لينن', name_en: 'FRESH LINEN', basePrice: 3.5, image: '/images/flavor-fresh-linen.png', description: 'انتعاش الملابس النظيفة', sizes: flavorSizes },
-];
-
-// All products - devices, flavors, and gifts
+// All products organized by category
 export const products: Product[] = [
-  // ==================== ELECTRICAL DEVICES ====================
+  // ==================== SECTION 1: ELECTRICAL DEVICES (أجهزة كهربائية فاخرة) ====================
   {
     id: 'elan-nomad',
     name_ar: 'إيلان 360 نوماد',
@@ -125,7 +111,7 @@ export const products: Product[] = [
     category: 'device',
   },
 
-  // ==================== FLAVORS (زيوت عطرية) with size options ====================
+  // ==================== SECTION 2: FLAVOR OILS (زيوت عطرية) ====================
   {
     id: 'flavor-black-oud',
     name_ar: 'بلاك عود',
@@ -347,7 +333,63 @@ export const products: Product[] = [
     hasSizeOptions: true,
   },
 
-  // ==================== GIFT SETS ====================
+  // ==================== SECTION 3: REED DIFFUSERS (معطرات أعواد) ====================
+  {
+    id: 'amber-santal',
+    name_ar: 'أمبر سانتال',
+    name_en: 'AMBER SANTAL',
+    type: 'معطر أعواد فاخر',
+    price: 10.9,
+    shortDescription: 'معطر أعواد فاخر برائحة دافئة وخشبية، مناسب للديكور والهدايا.',
+    fullDescription: 'أمبر سانتال معطر أعواد بتصميم أنيق ورائحة دافئة وخشبية.',
+    specs: {
+      'النوع': 'معطر أعواد',
+      'الانتشار': 'أعواد خشبية',
+      'مدة الاستخدام': 'أكثر من 60 يوم',
+      'التغطية': '20–30 م²',
+    },
+    features: ['زجاجة أنيقة', 'أعواد طبيعية', 'رائحة دافئة وخشبية', 'تغليف فاخر'],
+    image: '/images/amber-santal.png',
+    category: 'reed',
+  },
+  {
+    id: 'noir-oud-reed',
+    name_ar: 'بلاك عود - معطر أعواد',
+    name_en: 'BLACK OUD REED',
+    type: 'معطر أعواد فاخر',
+    price: 12.9,
+    shortDescription: 'معطر أعواد برائحة عود فاخرة وعميقة.',
+    fullDescription: 'معطر أعواد فاخر برائحة عود داكنة وعميقة تملأ المكان بأناقة.',
+    specs: {
+      'النوع': 'معطر أعواد',
+      'الانتشار': 'أعواد خشبية',
+      'مدة الاستخدام': '60-90 يوم',
+      'التغطية': '25-35 م²',
+    },
+    features: ['عود فاخر', 'رائحة عميقة', 'أعواد طبيعية', 'تغليف فاخر'],
+    image: '/images/reed-noir-oud.png',
+    category: 'reed',
+  },
+  {
+    id: 'rose-garden-reed',
+    name_ar: 'روز جاردن - معطر أعواد',
+    name_en: 'ROSE GARDEN REED',
+    type: 'معطر أعواد وردي',
+    price: 11.9,
+    shortDescription: 'معطر أعواد برائحة ورود منعشة ورومانسية.',
+    fullDescription: 'معطر أعواد برائحة ورود طازجة تمنح المكان أجواء رومانسية.',
+    specs: {
+      'النوع': 'معطر أعواد',
+      'الانتشار': 'أعواد خشبية',
+      'مدة الاستخدام': '60-90 يوم',
+      'التغطية': '25-35 م²',
+    },
+    features: ['ورود طازجة', 'رائحة رومانسية', 'أعواد طبيعية', 'تغليف أنيق'],
+    image: '/images/reed-rose-garden.png',
+    category: 'reed',
+  },
+
+  // ==================== SECTION 4: GIFT SETS (أطقم هدايا) ====================
   {
     id: 'forest-reserve',
     name_ar: 'فورست ريزيرف',
@@ -366,23 +408,53 @@ export const products: Product[] = [
     category: 'gift',
   },
   {
-    id: 'amber-santal',
-    name_ar: 'أمبر سانتال',
-    name_en: 'AMBER SANTAL',
-    type: 'معطر أعواد فاخر',
-    price: 10.9,
-    shortDescription: 'معطر أعواد فاخر برائحة دافئة وخشبية، مناسب للديكور والهدايا.',
-    fullDescription: 'أمبر سانتال معطر أعواد بتصميم أنيق ورائحة دافئة وخشبية.',
+    id: 'luxury-gift-set',
+    name_ar: 'طقم الهدايا الفاخر',
+    name_en: 'LUXURY GIFT SET',
+    type: 'طقم هدايا فاخر',
+    price: 24.9,
+    shortDescription: 'طقم هدايا فاخر يشمل جهاز تعطير صغير مع مجموعة زيوت عطرية.',
+    fullDescription: 'طقم هدايا فاخر مثالي للمناسبات الخاصة، يشمل جهاز تعطير صغير مع 3 زيوت عطرية مميزة.',
     specs: {
-      'النوع': 'Reed Diffuser',
-      'الانتشار': 'أعواد خشبية',
-      'مدة الاستخدام': 'أكثر من 60 يوم',
-      'التغطية': '20–30 م²',
+      'النوع': 'Gift Set Premium',
+      'المحتويات': 'جهاز + 3 زيوت عطرية',
+      'الاستخدام': 'هدية فاخرة جاهزة',
     },
-    features: ['زجاجة أنيقة', 'أعواد طبيعية', 'رائحة دافئة وخشبية', 'تغليف فاخر'],
-    image: '/images/amber-santal.png',
+    features: ['هدية فاخرة', 'جهاز صغير', '3 زيوت عطرية', 'تغليف ذهبي'],
+    image: '/images/luxury-gift-set.png',
     category: 'gift',
   },
+  {
+    id: 'starter-gift-set',
+    name_ar: 'طقم البدء',
+    name_en: 'STARTER GIFT SET',
+    type: 'طقم هدايا للمبتدئين',
+    price: 9.9,
+    shortDescription: 'طقم هدايا مثالي للمبتدئين مع معطر أعواد صغير.',
+    fullDescription: 'طقم هدايا بسيط وأنيق للمبتدئين في عالم التعطير.',
+    specs: {
+      'النوع': 'Gift Set Basic',
+      'المحتويات': 'معطر أعواد صغير',
+      'الاستخدام': 'هدية أنيقة',
+    },
+    features: ['هدية أنيقة', 'سهل الاستخدام', 'رائحة مميزة', 'تغليف جميل'],
+    image: '/images/starter-gift-set.png',
+    category: 'gift',
+  },
+];
+
+// Flavor options for electrical devices
+export const deviceFlavors = [
+  { id: 'flavor-black-oud', name_ar: 'بلاك عود', name_en: 'BLACK OUD', basePrice: 3.5, image: '/images/flavor-black-oud.png', description: 'رائحة عود فاخرة وعميقة', sizes: flavorSizes },
+  { id: 'flavor-rose-musk', name_ar: 'روز مسك', name_en: 'ROSE MUSK', basePrice: 3.5, image: '/images/flavor-rose-musk.png', description: 'مزيج رومانسي من الورود والمسك', sizes: flavorSizes },
+  { id: 'flavor-santal-vanilla', name_ar: 'سانتال فانيلا', name_en: 'SANTAL VANILLA', basePrice: 3.5, image: '/images/flavor-santal-vanilla.png', description: 'دفء الفانيليا مع خشبية السانتال', sizes: flavorSizes },
+  { id: 'flavor-ocean-breeze', name_ar: 'أوشن بريدز', name_en: 'OCEAN BREEZE', basePrice: 3.5, image: '/images/flavor-ocean-breeze.png', description: 'انتعاش بحري منعش', sizes: flavorSizes },
+  { id: 'flavor-night-oud', name_ar: 'نايت عود', name_en: 'NIGHT OUD', basePrice: 3.5, image: '/images/flavor-night-oud.png', description: 'رائحة عود ليلي mystique', sizes: flavorSizes },
+  { id: 'flavor-amber-woods', name_ar: 'أمبر وودز', name_en: 'AMBER WOODS', basePrice: 3.5, image: '/images/flavor-amber-woods.png', description: 'خشبية دافئة مع العنبر', sizes: flavorSizes },
+  { id: 'flavor-oud-royal', name_ar: 'عود رويال', name_en: 'OUD ROYAL', basePrice: 3.5, image: '/images/flavor-oud-royal.png', description: 'عود ملكي فاخر', sizes: flavorSizes },
+  { id: 'flavor-arabian-oud', name_ar: 'عربي عود', name_en: 'ARABIAN OUD', basePrice: 3.5, image: '/images/flavor-arabian-oud.png', description: 'عراقة عربية أصيلة', sizes: flavorSizes },
+  { id: 'flavor-white-musk', name_ar: 'وايت مسك', name_en: 'WHITE MUSK', basePrice: 3.5, image: '/images/flavor-white-musk.png', description: 'نقاء المسك الأبيض', sizes: flavorSizes },
+  { id: 'flavor-fresh-linen', name_ar: 'فريش لينن', name_en: 'FRESH LINEN', basePrice: 3.5, image: '/images/flavor-fresh-linen.png', description: 'انتعاش الملابس النظيفة', sizes: flavorSizes },
 ];
 
 export const deliveryFee = 2;
@@ -456,6 +528,36 @@ export function getSizePrice(flavorId: string, size: string): number {
   return sizeOption?.price || flavor.basePrice;
 }
 
+// Get products by category
+export function getProductsByCategory(category: 'device' | 'flavor' | 'gift' | 'reed'): Product[] {
+  return products.filter(p => p.category === category);
+}
+
+// Get device products
+export function getDeviceProducts(): Product[] {
+  return products.filter(p => p.category === 'device');
+}
+
+// Get flavor products
+export function getFlavorProducts(): Product[] {
+  return products.filter(p => p.category === 'flavor');
+}
+
+// Get gift products
+export function getGiftProducts(): Product[] {
+  return products.filter(p => p.category === 'gift');
+}
+
+// Get reed diffuser products
+export function getReedProducts(): Product[] {
+  return products.filter(p => p.category === 'reed');
+}
+
+// Get related flavors for a device
+export function getFlavorsForDevice(deviceId: string): typeof deviceFlavors {
+  return deviceFlavors;
+}
+
 export function generateWhatsAppMessage(
   cartItems: CartItem[], 
   customerData: Order & { governorate?: string }, 
@@ -509,29 +611,4 @@ export function generateWhatsAppMessage(
   message += `━━━━━━━━━━━━━━━━━━━━━━\n`;
   
   return encodeURIComponent(message);
-}
-
-// Get products by category
-export function getProductsByCategory(category: 'device' | 'flavor' | 'gift'): Product[] {
-  return products.filter(p => p.category === category);
-}
-
-// Get device products
-export function getDeviceProducts(): Product[] {
-  return products.filter(p => p.category === 'device');
-}
-
-// Get flavor products
-export function getFlavorProducts(): Product[] {
-  return products.filter(p => p.category === 'flavor');
-}
-
-// Get gift products
-export function getGiftProducts(): Product[] {
-  return products.filter(p => p.category === 'gift');
-}
-
-// Get related flavors for a device
-export function getFlavorsForDevice(deviceId: string): typeof deviceFlavors {
-  return deviceFlavors;
 }

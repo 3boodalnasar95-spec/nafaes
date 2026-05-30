@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { ShoppingBag, Droplets } from 'lucide-react';
-import { Product, formatPrice, deviceFlavors } from '../data/products';
+import { ShoppingBag, Droplets, Sparkles, Gift, Package } from 'lucide-react';
+import { Product, formatPrice } from '../data/products';
 import { useStore } from '../store/useStore';
 
 interface ProductCardProps {
@@ -15,11 +15,30 @@ export default function ProductCard({ product }: ProductCardProps) {
     addToCart(product);
   };
 
-  // Check if this is an electrical device
-  const isElectricalDevice = ['elan-nomad', 'elan-prime', 'noir-majeste'].includes(product.id);
-  
-  // Check if this is a flavor product
-  const isFlavorProduct = product.isFlavor || product.hasSizeOptions;
+  // Check product category
+  const isElectricalDevice = product.category === 'device';
+  const isFlavorProduct = product.category === 'flavor';
+  const isReedProduct = product.category === 'reed';
+  const isGiftProduct = product.category === 'gift';
+
+  // Get badge info based on category
+  const getBadge = () => {
+    if (isElectricalDevice) {
+      return { text: 'أجهزة فاخرة', color: 'bg-gradient-to-r from-[#C9A96E] to-[#D4AF37]', icon: Sparkles };
+    }
+    if (isFlavorProduct) {
+      return { text: 'زيوت عطرية', color: 'bg-gradient-to-r from-blue-500 to-blue-600', icon: Droplets };
+    }
+    if (isReedProduct) {
+      return { text: 'معطر أعواد', color: 'bg-gradient-to-r from-amber-500 to-amber-600', icon: Package };
+    }
+    if (isGiftProduct) {
+      return { text: 'طقم هدايا', color: 'bg-gradient-to-r from-purple-500 to-purple-600', icon: Gift };
+    }
+    return null;
+  };
+
+  const badge = getBadge();
 
   return (
     <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-[#E8E0D5]">
@@ -35,23 +54,18 @@ export default function ProductCard({ product }: ProductCardProps) {
           />
         </div>
         
-        {/* Badge for electrical devices */}
-        {isElectricalDevice && (
-          <div className="absolute top-3 right-3 bg-[#C9A96E] text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
-            <Droplets className="w-3 h-3" />
-            مع النكهات
+        {/* Category Badge */}
+        {badge && (
+          <div className={`absolute top-3 right-3 ${badge.color} text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1 shadow-lg`}>
+            <badge.icon className="w-3 h-3" />
+            {badge.text}
           </div>
         )}
         
-        {/* Category Badge */}
-        {product.category === 'flavor' && (
-          <div className="absolute top-3 right-3 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-            زيوت عطرية
-          </div>
-        )}
-        {product.category === 'gift' && (
-          <div className="absolute top-3 right-3 bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-            طقم هدايا
+        {/* Size badge for flavors */}
+        {isFlavorProduct && (
+          <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm text-[#1A1A1A] text-xs px-2 py-1 rounded-full">
+            أحجام متعددة
           </div>
         )}
       </Link>
@@ -72,11 +86,6 @@ export default function ProductCard({ product }: ProductCardProps) {
           {isElectricalDevice && (
             <span className="text-xs text-[#6B6B6B] bg-[#F5F0E8] px-2 py-1 rounded-full">
               + 10 نكهات
-            </span>
-          )}
-          {isFlavorProduct && (
-            <span className="text-xs text-[#6B6B6B] bg-blue-50 px-2 py-1 rounded-full">
-              أحجام متعددة
             </span>
           )}
         </div>
