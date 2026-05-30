@@ -1,86 +1,43 @@
 import { Link } from 'react-router-dom';
-import { ShoppingBag, Sparkles, Droplets, Flower2, Gift, Package } from 'lucide-react';
-import { formatPrice, getCategoryInfo } from '@/data';
-import { Product } from '@/data/types';
+import { ShoppingBag } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 
-interface ProductCardProps {
-  product: Product;
-}
-
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product }: { product: any }) {
   const { addToCart } = useStore();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
-    e.stopPropagation();
     addToCart(product);
   };
 
-  const categoryInfo = getCategoryInfo(product.categorySlug);
-
-  const getCategoryIcon = (icon: string) => {
-    switch (icon) {
-      case 'Sparkles': return <Sparkles className="w-5 h-5" />;
-      case 'Droplets': return <Droplets className="w-5 h-5" />;
-      case 'Flower2': return <Flower2 className="w-5 h-5" />;
-      case 'Gift': return <Gift className="w-5 h-5" />;
-      default: return <Package className="w-5 h-5" />;
-    }
-  };
-
-  const getPlaceholderBg = () => {
-    switch (product.categorySlug) {
-      case 'smart-aroma-diffusers':
-        return 'from-[#C9A96E]/10 to-[#D4AF37]/10';
-      case 'fragrance-oils':
-        return 'from-blue-50 to-blue-100';
-      case 'reed-diffusers':
-        return 'from-amber-50 to-amber-100';
-      case 'gift-sets':
-        return 'from-purple-50 to-purple-100';
-      default:
-        return 'from-[#F5F0E8] to-[#E8E0D5]';
-    }
-  };
-
   return (
-    <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-[#E8E0D5] hover:border-[#C9A96E]/50">
-      <Link to={`/products/${product.id}`} className="block relative overflow-hidden">
-        <div className={`aspect-square bg-gradient-to-br ${getPlaceholderBg()} flex items-center justify-center p-4`}>
+    <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-[#E8E0D5]">
+      <Link to={`/product/${product.id}`} className="block relative overflow-hidden">
+        <div className="aspect-square bg-gradient-to-br from-[#F5F0E8] to-[#E8E0D5] flex items-center justify-center p-4">
           <img
-            src={product.image}
+            src={product.image || '/placeholder.svg'}
             alt={product.name_ar}
-            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x400/F5F0E8/C9A96E?text=' + encodeURIComponent(product.name_ar || '');
+            }}
           />
         </div>
-        
-        {categoryInfo && (
-          <div className={`absolute top-3 right-3 bg-gradient-to-r ${categoryInfo.color} text-white text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md`}>
-            {getCategoryIcon(categoryInfo.icon)}
-            <span>{categoryInfo.name_ar}</span>
-          </div>
-        )}
       </Link>
 
-      <div className="p-4">
-        <Link to={`/products/${product.id}`}>
-          <h3 className="text-base font-bold text-[#1A1A1A] mb-1 group-hover:text-[#C9A96E] transition-colors">
+      <div className="p-5">
+        <Link to={`/product/${product.id}`}>
+          <h3 className="text-xl font-bold text-[#1A1A1A] mb-1 group-hover:text-[#C9A96E] transition-colors">
             {product.name_ar}
           </h3>
         </Link>
-        <p className="text-[#6B6B6B] text-sm mb-2">{product.name_en}</p>
-        <p className="text-[#6B6B6B] text-xs mb-4 line-clamp-2 leading-relaxed">{product.shortDescription}</p>
+        <p className="text-[#6B6B6B] text-sm mb-3">{product.name_en}</p>
+        <p className="text-[#6B6B6B] text-sm mb-4 line-clamp-2">{product.shortDescription}</p>
 
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-lg font-bold text-[#C9A96E]">
-            {formatPrice(product.price)} د.ك
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-2xl font-bold text-[#C9A96E]">
+            {typeof product.price === 'number' ? product.price.toFixed(3) : product.price} د.ك
           </span>
-          {product.hasSizeOptions && (
-            <span className="text-xs text-[#6B6B6B] bg-[#F5F0E8] px-2 py-1 rounded">
-              3 أحجام
-            </span>
-          )}
         </div>
 
         <button

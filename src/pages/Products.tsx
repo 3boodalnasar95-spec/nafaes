@@ -1,45 +1,35 @@
-import { useState, useEffect } from 'react';
-import { Search, Sparkles, Droplets, Flower2, Gift, Package } from 'lucide-react';
+import { useState } from 'react';
+import { Search } from 'lucide-react';
 import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
-import { products, getProductsByCategory, categories } from '@/data';
+import { products } from '../data/products';
 
 export default function Products() {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('all');
+  const [sortBy, setSortBy] = useState('name');
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const category = params.get('category');
-    if (category) {
-      setSelectedCategory(category);
-    }
-  }, []);
+  // Filter products based on search and category
+  let filteredProducts = [...products];
 
-  const filteredProducts = selectedCategory === 'all' 
-    ? products 
-    : getProductsByCategory(selectedCategory);
+  if (search) {
+    filteredProducts = filteredProducts.filter(p => 
+      p.name_ar.includes(search) || 
+      p.name_en.toLowerCase().includes(search.toLowerCase())
+    );
+  }
 
-  const searchResults = search 
-    ? filteredProducts.filter(p => 
-        p.name_ar.includes(search) || 
-        p.name_en.toLowerCase().includes(search.toLowerCase())
-      )
-    : filteredProducts;
-
-  const getCategoryCount = (slug: string) => {
-    return products.filter(p => p.categorySlug === slug).length;
-  };
-
-  const getCategoryIcon = (icon: string) => {
-    switch (icon) {
-      case 'Sparkles': return <Sparkles className="w-6 h-6" />;
-      case 'Droplets': return <Droplets className="w-6 h-6" />;
-      case 'Flower2': return <Flower2 className="w-6 h-6" />;
-      case 'Gift': return <Gift className="w-6 h-6" />;
-      default: return <Package className="w-6 h-6" />;
-    }
-  };
+  // Sort products
+  switch (sortBy) {
+    case 'price-low':
+      filteredProducts.sort((a, b) => a.price - b.price);
+      break;
+    case 'price-high':
+      filteredProducts.sort((a, b) => b.price - a.price);
+      break;
+    default:
+      filteredProducts.sort((a, b) => a.name_ar.localeCompare(b.name_ar));
+  }
 
   return (
     <Layout>
@@ -48,44 +38,18 @@ export default function Products() {
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-4">منتجاتنا</h1>
           <p className="text-[#6B6B6B] max-w-xl mx-auto">
-            اكتشف مجموعتنا المختارة من أجهزة التعطير الذكية والزيوت العطرية الفاخرة
+            اكتشف مجموعتنا المختارة من أجهزة التعطير الذكية والمعطرات الفاخرة
           </p>
         </div>
       </section>
 
-      {/* Categories Section */}
-      <section className="py-12 bg-white border-b border-[#E8E0D5]">
+      {/* Products Section */}
+      <section className="py-12">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold text-[#1A1A1A] text-center mb-8">تسوق حسب الفئة</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {categories.map((category) => (
-              <button
-                key={category.slug}
-                onClick={() => setSelectedCategory(category.slug)}
-                className={`group bg-gradient-to-br from-[#FAF8F5] to-[#F5F0E8] rounded-2xl p-6 text-center hover:shadow-xl transition-all duration-300 border border-[#E8E0D5] hover:border-[#C9A96E] ${
-                  selectedCategory === category.slug ? 'ring-2 ring-[#C9A96E]' : ''
-                }`}
-              >
-                <div className={`w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br ${category.color} flex items-center justify-center text-white group-hover:scale-110 transition-transform`}>
-                  {getCategoryIcon(category.icon)}
-                </div>
-                <h3 className="font-bold text-[#1A1A1A] mb-1">{category.name_ar}</h3>
-                <p className="text-xs text-[#6B6B6B] mb-2">{category.name_en}</p>
-                <span className="text-sm text-[#C9A96E] font-medium">
-                  {getCategoryCount(category.slug)} منتجات
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Filter Section */}
-      <section className="py-6">
-        <div className="container mx-auto px-4">
+          {/* Search & Filter */}
           <div className="bg-white rounded-xl border border-[#E8E0D5] p-4 mb-6">
-            <div className="flex flex-col md:flex-row gap-4 items-center">
-              <div className="relative flex-1 w-full">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 relative">
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B6B6B]" />
                 <input
                   type="text"
@@ -95,57 +59,39 @@ export default function Products() {
                   className="w-full pr-10 pl-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E]"
                 />
               </div>
-
-              <div className="flex gap-2 overflow-x-auto pb-2 w-full md:w-auto">
-                <button
-                  onClick={() => setSelectedCategory('all')}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
-                    selectedCategory === 'all'
-                      ? 'bg-[#C9A96E] text-white'
-                      : 'bg-[#F5F0E8] text-[#6B6B6B] hover:bg-[#E8E0D5]'
-                  }`}
-                >
-                  الكل ({products.length})
-                </button>
-                {categories.map((cat) => (
-                  <button
-                    key={cat.slug}
-                    onClick={() => setSelectedCategory(cat.slug)}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${
-                      selectedCategory === cat.slug
-                        ? 'bg-[#C9A96E] text-white'
-                        : 'bg-[#F5F0E8] text-[#6B6B6B] hover:bg-[#E8E0D5]'
-                    }`}
-                  >
-                    {getCategoryIcon(cat.icon)}
-                    {cat.name_ar}
-                  </button>
-                ))}
-              </div>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E]"
+              >
+                <option value="name">ترتيب أبجدي</option>
+                <option value="price-low">السعر: من الأقل للأعلى</option>
+                <option value="price-high">السعر: من الأعلى للأقل</option>
+              </select>
             </div>
           </div>
 
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-[#6B6B6B]">
-              عرض <span className="font-bold text-[#1A1A1A]">{searchResults.length}</span> منتج
-              {selectedCategory !== 'all' && (
-                <span> في قسم <span className="font-bold text-[#C9A96E]">
-                  {categories.find(c => c.slug === selectedCategory)?.name_ar}
-                </span></span>
-              )}
-            </p>
-          </div>
+          {/* Results Count */}
+          <p className="mb-4 text-[#6B6B6B]">
+            تم العثور على {filteredProducts.length} منتج
+          </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {searchResults.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-
-          {searchResults.length === 0 && (
+          {/* Products Grid */}
+          {filteredProducts.length === 0 ? (
             <div className="text-center py-16">
-              <Package className="w-16 h-16 mx-auto mb-4 text-[#E8E0D5]" />
-              <p className="text-[#6B6B6B]">لا توجد نتائج</p>
+              <h3 className="text-xl font-bold text-[#1A1A1A] mb-4">لا توجد نتائج</h3>
+              <button
+                onClick={() => setSearch('')}
+                className="px-6 py-2 bg-[#C9A96E] text-white rounded-lg hover:bg-[#D4AF37] transition-colors"
+              >
+                مسح البحث
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
             </div>
           )}
         </div>

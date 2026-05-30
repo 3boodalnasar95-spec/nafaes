@@ -1,11 +1,10 @@
 import { create } from 'zustand';
-import { Product } from '@/data/types';
+import { Product } from '@/data/products';
 
 interface CartItem {
   product: Product;
   quantity: number;
   selectedSize?: string;
-  finalPrice: number;
 }
 
 interface StoreState {
@@ -17,20 +16,11 @@ interface StoreState {
   cartTotal: () => number;
 }
 
-function getProductPrice(product: Product, size?: string): number {
-  if (size && product.sizes) {
-    const sizeOption = product.sizes.find(s => s.size === size);
-    return sizeOption?.price || product.price;
-  }
-  return product.price;
-}
-
 export const useStore = create<StoreState>((set, get) => ({
   cartItems: [],
   
   addToCart: (product, selectedSize) => {
     const { cartItems } = get();
-    const finalPrice = getProductPrice(product, selectedSize);
     const itemKey = selectedSize ? `${product.id}-${selectedSize}` : product.id;
     const existingItemIndex = cartItems.findIndex(
       (item) => (selectedSize ? `${item.product.id}-${item.selectedSize}` : item.product.id) === itemKey
@@ -39,20 +29,11 @@ export const useStore = create<StoreState>((set, get) => ({
     if (existingItemIndex >= 0) {
       set({
         cartItems: cartItems.map((item, index) =>
-          index === existingItemIndex
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
+          index === existingItemIndex ? { ...item, quantity: item.quantity + 1 } : item
         ),
       });
     } else {
-      set({ 
-        cartItems: [...cartItems, { 
-          product, 
-          quantity: 1, 
-          selectedSize,
-          finalPrice 
-        }] 
-      });
+      set({ cartItems: [...cartItems, { product, quantity: 1, selectedSize }] });
     }
   },
   
@@ -81,6 +62,6 @@ export const useStore = create<StoreState>((set, get) => ({
   
   cartTotal: () => {
     const { cartItems } = get();
-    return cartItems.reduce((total, item) => total + item.finalPrice * item.quantity, 0);
+    return cartItems.reduce((total, item) => total + item.product.price * item.quantity, 0);
   },
 }));
