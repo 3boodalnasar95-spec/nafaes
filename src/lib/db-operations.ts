@@ -1,7 +1,7 @@
 import { supabase, isSupabaseConfigured } from './supabase';
 import type { 
   Customer, Product, Order, Invoice, Transaction, 
-  InventoryLog, DashboardStats 
+  InventoryLog, DashboardStats, OrderItem 
 } from '@/types/database';
 
 // ==================== CUSTOMERS ====================
@@ -10,6 +10,12 @@ export async function getCustomers(): Promise<Customer[]> {
   if (!isSupabaseConfigured || !supabase) return [];
   const { data } = await supabase.from('customers').select('*').order('created_at', { ascending: false });
   return data || [];
+}
+
+export async function getCustomer(id: string): Promise<Customer | null> {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data } = await supabase.from('customers').select('*').eq('id', id).single();
+  return data;
 }
 
 export async function createCustomer(customer: Omit<Customer, 'id' | 'created_at' | 'updated_at'>): Promise<Customer | null> {
@@ -32,6 +38,12 @@ export async function getProducts(): Promise<Product[]> {
   return data || [];
 }
 
+export async function getProduct(id: string): Promise<Product | null> {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data } = await supabase.from('products').select('*').eq('id', id).single();
+  return data;
+}
+
 export async function createProduct(product: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Promise<Product | null> {
   if (!isSupabaseConfigured || !supabase) return null;
   const { data } = await supabase.from('products').insert(product).select().single();
@@ -40,8 +52,13 @@ export async function createProduct(product: Omit<Product, 'id' | 'created_at' |
 
 export async function updateProduct(id: string, updates: Partial<Product>): Promise<Product | null> {
   if (!isSupabaseConfigured || !supabase) return null;
-  const { data } = await supabase.from('products').update(updates).eq('id', id).select().single();
+  const { data } = await supabase.from('products').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id).select().single();
   return data;
+}
+
+export async function deleteProduct(id: string): Promise<void> {
+  if (!isSupabaseConfigured || !supabase) return;
+  await supabase.from('products').delete().eq('id', id);
 }
 
 export async function updateStock(productId: string, quantity: number, type: 'in' | 'out', reason: string, createdBy: string): Promise<void> {
@@ -128,7 +145,8 @@ export async function createOrder(
     amount: newOrder.total,
     description: `طلب رقم ${orderNumber}`,
     reference_type: 'order',
-    reference_id: newOrder.id
+    reference_id: newOrder.id,
+    date: new Date().toISOString().split('T')[0]
   });
 
   return newOrder;
@@ -136,7 +154,7 @@ export async function createOrder(
 
 export async function updateOrderStatus(id: string, status: Order['status']): Promise<void> {
   if (!isSupabaseConfigured || !supabase) return;
-  await supabase.from('orders').update({ status }).eq('id', id);
+  await supabase.from('orders').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
 }
 
 // ==================== INVOICES ====================
@@ -150,6 +168,16 @@ export async function getInvoices(): Promise<Invoice[]> {
   return data || [];
 }
 
+export async function getInvoice(id: string): Promise<Invoice | null> {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data } = await supabase
+    .from('invoices')
+    .select('*, order:orders(*), customer:customers(*)')
+    .eq('id', id)
+    .single();
+  return data;
+}
+
 export async function createInvoice(invoice: Omit<Invoice, 'id' | 'invoice_number' | 'created_at'>): Promise<Invoice | null> {
   if (!isSupabaseConfigured || !supabase) return null;
 
@@ -158,6 +186,15 @@ export async function createInvoice(invoice: Omit<Invoice, 'id' | 'invoice_numbe
 
   const { data } = await supabase.from('invoices').insert({ ...invoice, invoice_number: invoiceNumber }).select().single();
   return data;
+}
+
+export async function updateInvoiceStatus(id: string, status: Invoice['status']): Promise<void> {
+  if (!isSupabaseConfigured || !supabase) return;
+  const updates: Record<string, unknown> = { status };
+  if (status === 'paid') {
+    updates.paid_at = new Date().toISOString();
+  }
+  await supabase.from('invoices').update(updates).eq('id', id);
 }
 
 // ==================== TRANSACTIONS ====================
@@ -173,6 +210,42 @@ export async function getTransactions(type?: 'income' | 'expense'): Promise<Tran
 export async function createTransaction(transaction: Omit<Transaction, 'id' | 'created_at'>): Promise<void> {
   if (!isSupabaseConfigured || !supabase) return;
   await supabase.from('transactions').insert(transaction);
+}
+
+// ==================== INVENTORY LOGS ====================
+
+export async function getInventoryLogs(productId?: string): Promise<InventoryLog[]> {
+  if (!isSupabaseConfigured || !supabase) return [];
+  let query = supabase.from('inventory_logs').select('*, product:products(*)').order('created_at', { ascending: false });
+  if (productId) query = query.eq('product_id', productId);
+  const { data } = await query;
+  return data || [];
+}
+
+// ==================== SETTINGS ====================
+
+export async function getSettings(): Promise<Record<string, string>> {
+  if (!isSupabaseConfigured || !supabase) {
+    return {
+      store_name: 'NAFAES | نفائس',
+      store_phone: '66377312',
+      whatsapp_number: '96566377312',
+      delivery_fee: '2',
+      address: 'الكويت',
+      email: 'info@nafaes.com',
+    };
+  }
+  const { data } = await supabase.from('settings').select('key, value');
+  const settings: Record<string, string> = {};
+  (data || []).forEach(item => {
+    settings[item.key] = item.value;
+  });
+  return settings;
+}
+
+export async function updateSetting(key: string, value: string): Promise<void> {
+  if (!isSupabaseConfigured || !supabase) return;
+  await supabase.from('settings').upsert({ key, value, updated_at: new Date().toISOString() }).eq('key', key);
 }
 
 // ==================== DASHBOARD ====================

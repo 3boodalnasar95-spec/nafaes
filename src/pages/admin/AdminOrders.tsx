@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Search, Eye, Check, X, MessageCircle, Filter } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import { getOrders, updateOrderStatus } from '@/lib/db-operations';
+import { formatPrice } from '@/data/products';
 import type { Order } from '@/types/database';
 
 export default function AdminOrders() {
@@ -129,27 +130,30 @@ export default function AdminOrders() {
                       <p className="text-sm text-[#6B6B6B]">
                         {order.customer?.name} - {order.customer?.phone}
                       </p>
-                      <p className="text-sm text-[#6B6B6B]">{order.area}</p>
+                      <p className="text-sm text-[#6B6B6B]">{order.customer?.area}</p>
                     </div>
                   </div>
                   <div className="text-left">
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${badge.color}`}>
                       {badge.label}
                     </span>
-                    <p className="text-2xl font-bold text-[#C9A96E] mt-2">{order.total.toFixed(3)} د.ك</p>
+                    <p className="text-2xl font-bold text-[#C9A96E] mt-2">{formatPrice(order.total)}</p>
                   </div>
                 </div>
 
-                {/* Order Items */}
+                {/* Order Items Preview */}
                 <div className="bg-[#FAF8F5] rounded-lg p-4 mb-4">
-                  <p className="text-sm font-medium text-[#6B6B6B] mb-2">المنتجات:</p>
+                  <p className="text-sm font-medium text-[#6B6B6B] mb-2">المنتجات ({order.items?.length || 0}):</p>
                   <div className="space-y-2">
-                    {order.items?.map((item, i) => (
+                    {order.items?.slice(0, 3).map((item, i) => (
                       <div key={i} className="flex justify-between text-sm">
                         <span className="text-[#1A1A1A]">{item.product?.name_ar} × {item.quantity}</span>
-                        <span className="text-[#C9A96E]">{item.total_price.toFixed(3)} د.ك</span>
+                        <span className="text-[#C9A96E]">{formatPrice(item.total_price)}</span>
                       </div>
                     ))}
+                    {order.items && order.items.length > 3 && (
+                      <p className="text-sm text-[#6B6B6B]">و {order.items.length - 3} منتجات أخرى...</p>
+                    )}
                   </div>
                 </div>
 
@@ -160,7 +164,7 @@ export default function AdminOrders() {
                     className="flex items-center gap-2 px-4 py-2 bg-[#F5F0E8] text-[#1A1A1A] rounded-lg hover:bg-[#E8E0D5] transition-colors"
                   >
                     <Eye className="w-4 h-4" />
-                    عرض
+                    عرض التفاصيل
                   </Link>
                   
                   {order.status === 'pending' && (

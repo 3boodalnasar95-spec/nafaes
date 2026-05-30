@@ -34,7 +34,7 @@
 
 ## 3. Layout & Structure
 
-### Pages
+### Pages - Customer
 1. **الصفحة الرئيسية** - Hero, featured products, about, Instagram posts
 2. **صفحة المنتجات** - Grid display with all products
 3. **تفاصيل المنتج** - Full product info, add to cart
@@ -42,16 +42,35 @@
 5. **إتمام الطلب** - Customer form, WhatsApp integration
 6. **التواصل** - Contact info, WhatsApp
 
+### Pages - Admin Panel
+1. **لوحة التحكم** - Dashboard with stats, alerts, quick actions
+2. **المنتجات** - CRUD products, stock management
+3. **المخزون** - Inventory tracking, low stock alerts
+4. **الطلبات** - Order management, status updates
+5. **الفواتير** - Invoice management, printing
+6. **العملاء** - Customer database
+7. **المحاسبة** - Income/expense tracking, reports
+8. **الإعدادات** - Store settings
+
 ### Floating Elements
 - WhatsApp floating button (bottom-left)
 
 ## 4. Features & Interactions
 
-### Core Features
+### Customer Features
 - تصفح المنتجات بتصميم فاخر
 - إضافة للسلة مع تنبيهات
 - إتمام الطلب عبر واتساب
 - معلومات التواصل
+
+### Admin Features
+- لوحة تحكم شاملة مع إحصائيات
+- إدارة المنتجات والمخزون
+- إدارة الطلبات وتتبع الحالات
+- نظام محاسبة متكامل
+- إدارة العملاء
+- إنشاء وطباعة الفواتير
+- تقارير وإحصائيات متقدمة
 
 ### WhatsApp Integration
 - رقم الواتساب: 66377312
@@ -68,15 +87,118 @@
 
 ## 6. Technical Approach
 
+### Frontend
 - React + TypeScript
 - React Router for navigation
-- Zustand for state management
+- Zustand for state management (cart)
 - Tailwind CSS for styling
 - RTL direction throughout
 - Lucide React for icons
 - Responsive design (mobile-first)
+- shadcn/ui components
+
+### Backend (Supabase)
+- PostgreSQL database
+- Row Level Security (RLS)
+- Real-time subscriptions ready
+
+### Database Schema
+
+#### customers
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID | Primary key |
+| name | TEXT | Customer name |
+| phone | TEXT | Phone number |
+| area | TEXT | Delivery area |
+| address | TEXT | Full address |
+| email | TEXT | Email (optional) |
+| notes | TEXT | Notes |
+| created_at | TIMESTAMP | Creation date |
+
+#### products
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID | Primary key |
+| name_ar | TEXT | Arabic name |
+| name_en | TEXT | English name |
+| type | TEXT | Product type |
+| price | DECIMAL | Selling price |
+| cost_price | DECIMAL | Cost price |
+| stock_quantity | INTEGER | Current stock |
+| min_stock_level | INTEGER | Low stock alert level |
+| is_active | BOOLEAN | Active status |
+| sku | TEXT | Stock keeping unit |
+| specs | JSONB | Specifications |
+| features | TEXT[] | Features array |
+
+#### orders
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID | Primary key |
+| order_number | TEXT | Unique order number |
+| customer_id | UUID | FK to customers |
+| subtotal | DECIMAL | Items total |
+| delivery_fee | DECIMAL | Delivery fee |
+| total | DECIMAL | Grand total |
+| status | TEXT | Order status |
+| payment_method | TEXT | cash/link |
+| payment_status | TEXT | Payment status |
+
+#### order_items
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID | Primary key |
+| order_id | UUID | FK to orders |
+| product_id | UUID | FK to products |
+| quantity | INTEGER | Quantity |
+| unit_price | DECIMAL | Price per unit |
+| total_price | DECIMAL | Line total |
+
+#### invoices
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID | Primary key |
+| invoice_number | TEXT | Unique invoice number |
+| order_id | UUID | FK to orders |
+| customer_id | UUID | FK to customers |
+| total | DECIMAL | Invoice total |
+| status | TEXT | Invoice status |
+| due_date | DATE | Payment due date |
+
+#### transactions
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID | Primary key |
+| type | TEXT | income/expense |
+| category | TEXT | Transaction category |
+| amount | DECIMAL | Amount |
+| description | TEXT | Description |
+| date | DATE | Transaction date |
+
+#### inventory_logs
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID | Primary key |
+| product_id | UUID | FK to products |
+| type | TEXT | in/out/adjustment |
+| quantity | INTEGER | Quantity changed |
+| reason | TEXT | Reason for change |
 
 ## 7. Delivery & Payment
 
 - رسوم التوصيل: 2 د.ك ثابتة
-- طرق الدفع: كاش عند الاستلام / رابط دفع لينك
+- طرق الدفع: كاش عند الاستلام / رابط دفع إلكتروني
+
+## 8. Admin Panel Routes
+
+| Route | Page | Description |
+|-------|------|-------------|
+| /admin | Dashboard | Main dashboard |
+| /admin/products | Products | Product management |
+| /admin/inventory | Inventory | Stock management |
+| /admin/orders | Orders | Order management |
+| /admin/invoices | Invoices | Invoice management |
+| /admin/customers | Customers | Customer database |
+| /admin/accounting | Accounting | Finance tracking |
+| /admin/settings | Settings | Store settings |

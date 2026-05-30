@@ -11,8 +11,10 @@ import NotFound from "./pages/NotFound";
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
+import AdminProductForm from "./pages/admin/AdminProductForm";
 import AdminInventory from "./pages/admin/AdminInventory";
 import AdminOrders from "./pages/admin/AdminOrders";
+import AdminOrderDetails from "./pages/admin/AdminOrderDetails";
 import AdminInvoices from "./pages/admin/AdminInvoices";
 import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminAccounting from "./pages/admin/AdminAccounting";
@@ -36,8 +38,11 @@ function App() {
           {/* Admin Panel */}
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/products" element={<AdminProducts />} />
+          <Route path="/admin/products/new" element={<AdminProductForm />} />
+          <Route path="/admin/products/:id" element={<AdminProductForm />} />
           <Route path="/admin/inventory" element={<AdminInventory />} />
           <Route path="/admin/orders" element={<AdminOrders />} />
+          <Route path="/admin/orders/:id" element={<AdminOrderDetails />} />
           <Route path="/admin/invoices" element={<AdminInvoices />} />
           <Route path="/admin/customers" element={<AdminCustomers />} />
           <Route path="/admin/accounting" element={<AdminAccounting />} />
