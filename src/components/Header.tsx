@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingBag, Menu, X, Instagram } from 'lucide-react';
+import { ShoppingBag, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
 
@@ -48,16 +48,6 @@ export default function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-4">
-            {/* Instagram */}
-            <a
-              href="https://instagram.com/nafaes.q8"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden md:flex items-center text-[#6B6B6B] hover:text-[#C9A96E] transition-colors"
-            >
-              <Instagram className="w-5 h-5" />
-            </a>
-
             {/* Cart */}
             <Link
               to="/cart"

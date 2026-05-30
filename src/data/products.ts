@@ -157,7 +157,7 @@ export const products: Product[] = [
     categorySlug: 'smart-aroma-diffusers',
   },
 
-  // ==================== SECTION 2: FRAGRANCE OILS (الزيوت العطرية) ====================
+  // ==================== SECTION 2: FRAGRANCE OILS (الزيوت العطرية) - 11 منتج ====================
   {
     id: 'flavor-black-oud',
     name_ar: 'بلاك عود',
@@ -311,6 +311,25 @@ export const products: Product[] = [
     hasSizeOptions: true,
   },
   {
+    id: 'flavor-mystique',
+    name_ar: 'ميستيك',
+    name_en: 'MYSTIQUE',
+    type: 'زيوت عطرية',
+    price: 10.9,
+    basePrice: 10.9,
+    shortDescription: 'عبق ساحر وغامض',
+    fullDescription: 'زيوت عطرية بعبق ساحر يلف المكان بأناقة وغموض.',
+    specs: {
+      'النوع': 'زيوت عطرية',
+      'الاستخدام': 'للأجهزة الكهربائية',
+    },
+    features: ['عبق ساحر', 'أناقة غامضة', 'رائحة فريدة', 'مناسب للأجهزة'],
+    image: '/images/oils/mystique.png',
+    categorySlug: 'fragrance-oils',
+    isFlavor: true,
+    hasSizeOptions: true,
+  },
+  {
     id: 'flavor-white-musk',
     name_ar: 'وايت مسك',
     name_en: 'WHITE MUSK',
@@ -393,18 +412,15 @@ export const products: Product[] = [
 ];
 
 // Flavor options for electrical devices
-export const deviceFlavors = [
-  { id: 'flavor-black-oud', name_ar: 'بلاك عود', name_en: 'BLACK OUD', basePrice: 10.9, image: '/images/oils/black-oud.png', description: 'رائحة عود فاخرة وعميقة', sizes: flavorSizes },
-  { id: 'flavor-rose-musk', name_ar: 'روز مسك', name_en: 'ROSE MUSK', basePrice: 10.9, image: '/images/oils/rose-musk.png', description: 'مزيج رومانسي من الورود والمسك', sizes: flavorSizes },
-  { id: 'flavor-santal-vanilla', name_ar: 'سانتال فانيلا', name_en: 'SANTAL VANILLA', basePrice: 10.9, image: '/images/oils/santal-vanilla.png', description: 'دفء الفانيليا مع خشبية السانتال', sizes: flavorSizes },
-  { id: 'flavor-ocean-breeze', name_ar: 'أوشن بريز', name_en: 'OCEAN BREEZE', basePrice: 10.9, image: '/images/oils/ocean-breeze.png', description: 'انتعاش بحري منعش', sizes: flavorSizes },
-  { id: 'flavor-night-oud', name_ar: 'نايت عود', name_en: 'NIGHT OUD', basePrice: 10.9, image: '/images/oils/night-oud.png', description: 'رائحة عود ليلية ساحرة', sizes: flavorSizes },
-  { id: 'flavor-amber-woods', name_ar: 'أمبر وودز', name_en: 'AMBER WOODS', basePrice: 10.9, image: '/images/oils/amber-woods.png', description: 'خشبية دافئة مع العنبر', sizes: flavorSizes },
-  { id: 'flavor-oud-royal', name_ar: 'عود رويال', name_en: 'OUD ROYAL', basePrice: 10.9, image: '/images/oils/oud-royal.png', description: 'عود ملكي فاخر', sizes: flavorSizes },
-  { id: 'flavor-arabian-oud', name_ar: 'عربي عود', name_en: 'ARABIAN OUD', basePrice: 10.9, image: '/images/oils/arabian-oud.png', description: 'عراقة عربية أصيلة', sizes: flavorSizes },
-  { id: 'flavor-white-musk', name_ar: 'وايت مسك', name_en: 'WHITE MUSK', basePrice: 10.9, image: '/images/oils/white-musk.png', description: 'نقاء المسك الأبيض', sizes: flavorSizes },
-  { id: 'flavor-fresh-linen', name_ar: 'فريش لينن', name_en: 'FRESH LINEN', basePrice: 10.9, image: '/images/oils/fresh-linen.png', description: 'انتعاش الملابس النظيفة', sizes: flavorSizes },
-];
+export const deviceFlavors = products.filter(p => p.categorySlug === 'fragrance-oils').map(flavor => ({
+  id: flavor.id,
+  name_ar: flavor.name_ar,
+  name_en: flavor.name_en,
+  basePrice: flavor.basePrice || flavor.price,
+  image: flavor.image,
+  description: flavor.shortDescription,
+  sizes: flavorSizes,
+}));
 
 export const deliveryFee = 2;
 export const whatsappNumber = '96566377312';
@@ -514,7 +530,6 @@ export const kuwaitAreas: KuwaitArea[] = [
   { id: 'fahaheel', governorate: 'ahmadi', governorate_ar: 'محافظة الأحمدي', name: 'الفحيحيل', deliveryFee: 3, estimatedDays: 1 },
   { id: 'sabahia', governorate: 'ahmadi', governorate_ar: 'محافظة الأحمدي', name: 'الصباحية', deliveryFee: 3, estimatedDays: 1 },
   { id: 'ugaila', governorate: 'ahmadi', governorate_ar: 'محافظة الأحمدي', name: 'العقيلة', deliveryFee: 3, estimatedDays: 1 },
-  { id: 'rahale', governorate: 'ahmadi', governorate_ar: 'محافظة الأحمدي', name: 'الرhale', deliveryFee: 3.5, estimatedDays: 2 },
   { id: 'wafra', governorate: 'ahmadi', governorate_ar: 'محافظة الأحمدي', name: 'الوفرة', deliveryFee: 4, estimatedDays: 2 },
   { id: 'jaber-al-ali', governorate: 'ahmadi', governorate_ar: 'محافظة الأحمدي', name: 'ضاحية جابر العلي', deliveryFee: 3, estimatedDays: 1 },
   { id: 'fahad-al-ahmad', governorate: 'ahmadi', governorate_ar: 'محافظة الأحمدي', name: 'ضاحية فهد الأحمد', deliveryFee: 3.5, estimatedDays: 2 },
