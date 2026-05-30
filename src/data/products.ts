@@ -40,7 +40,6 @@ export const products: Product[] = [
       'الشحن': 'Type-C',
       'الانتشار': '360°',
       'مستويات التحكم': '3 مستويات',
-      'المؤقت': '1 / 4 / 8 ساعات',
       'التحكم': 'Wi-Fi + Bluetooth',
       'التغطية': 'حتى 100 م²',
       'مستوى الصوت': 'أقل من 28 dB',
@@ -132,16 +131,14 @@ export const products: Product[] = [
 ];
 
 export const deliveryFee = 2;
-
 export const whatsappNumber = '96566377312';
-
 export const whatsappLink = `https://wa.me/${whatsappNumber}`;
 
 export function formatPrice(price: number): string {
   return `${price.toFixed(3)} د.ك`;
 }
 
-export function generateWhatsAppMessage(cartItems: CartItem[], customerData: Order): string {
+export function generateWhatsAppMessage(cartItems: CartItem[], customerData: Order, invoiceNumber: string, selectedImage: string | null): string {
   let message = `طلب جديد من موقع NAFAES | نفائس\n\n`;
   message += `بيانات العميل:\n`;
   message += `الاسم: ${customerData.name}\n`;
@@ -151,19 +148,20 @@ export function generateWhatsAppMessage(cartItems: CartItem[], customerData: Ord
   if (customerData.notes) {
     message += `الملاحظات: ${customerData.notes}\n`;
   }
-  
   message += `\nالمنتجات:\n`;
   cartItems.forEach((item, index) => {
     message += `${index + 1}. ${item.product.nameEn} - ${item.product.nameAr}\n`;
-    message += `   الكمية: ${item.quantity} | السعر: ${formatPrice(item.product.price)}\n`;
+    message += ` الكمية: ${item.quantity} | السعر: ${formatPrice(item.product.price)}\n`;
   });
-  
   const subtotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   message += `\nالمجموع الفرعي: ${formatPrice(subtotal)}\n`;
   message += `رسوم التوصيل: ${formatPrice(deliveryFee)}\n`;
   message += `الإجمالي النهائي: ${formatPrice(subtotal + deliveryFee)}\n\n`;
   message += `طريقة الدفع: ${customerData.paymentMethod === 'cash' ? 'كاش عند الاستلام' : 'رابط دفع لينك'}\n\n`;
+  message += `رقم الفاتورة: ${invoiceNumber}\n`;
+  if (selectedImage) {
+    message += `صورة الطلب: مرفقة\n`;
+  }
   message += `أرغب بتأكيد الطلب.`;
-  
   return encodeURIComponent(message);
 }

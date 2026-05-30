@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { CheckCircle, MessageCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle, MessageCircle, AlertCircle, ArrowRight, Minus, Plus } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import Layout from '../components/Layout';
 import { formatPrice, deliveryFee, whatsappLink, generateWhatsAppMessage } from '../data/products';
@@ -23,6 +23,10 @@ export default function Checkout() {
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [selectedImage, setSelectedImage] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [orderSent, setOrderSent] = useState(false);
+
+  const subtotal = cartTotal();
+  const total = subtotal + deliveryFee;
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -45,6 +49,7 @@ export default function Checkout() {
     const message = generateWhatsAppMessage(cartItems, formData, invoiceNumber, selectedImage);
     window.open(`${whatsappLink}?text=${message}`, '_blank');
     clearCart();
+    setOrderSent(true);
   };
 
   if (cartItems.length === 0 && !submitted) {
@@ -52,7 +57,8 @@ export default function Checkout() {
       <Layout>
         <div className="container mx-auto px-4 py-20 text-center">
           <h2 className="text-2xl font-bold text-[#1A1A1A] mb-4">السلة فارغة</h2>
-          <Link            to="/products"
+          <Link
+            to="/products"
             className="inline-flex items-center gap-2 bg-[#1A1A1A] hover:bg-[#C9A96E] text-white font-semibold px-6 py-3 rounded-xl transition-colors"
           >
             تصفح المنتجات
@@ -74,7 +80,7 @@ export default function Checkout() {
               </div>
               <h2 className="text-2xl font-bold text-[#1A1A1A] mb-4">تم استلام طلبك!</h2>
               <p className="text-[#6B6B6B] mb-6">
-                رقم الفاتورة: <strong className="text-[#C9A96E">{invoiceNumber}</strong>
+                رقم الفاتورة: <strong className="text-[#C9A96E]">{invoiceNumber}</strong>
               </p>
               {imagePreview && (
                 <img
@@ -86,27 +92,27 @@ export default function Checkout() {
               <div className="bg-[#F5F0E8] rounded-xl p-6 text-right mb-6">
                 <h3 className="font-semibold text-[#1A1A1A] mb-4">ملخص الطلب:</h3>
                 {cartItems.map((item) => (
-                  <div key={item.product.id} className="flex justify-between py-2 border-b border-[#E8E0D5] last:border-0">
-                    <span className="text-[#6B6B6B]">{item.product.nameAr} × {item.quantity}</span>
-                    <span className="text-[#1A1A1A] font-medium">{formatPrice(item.product.price * item.quantity)}</span>
+                  <div key={item.product.id} className="flex gap-3">
+                    <img
+                      src={item.product.image}
+                      alt={item.product.nameAr}
+                      className="w-16 h-16 object-contain bg-[#F5F0E8] rounded-lg p-1"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = `https://via.placeholder.com/100x100/F5F0E8/C9A96E?text=${encodeURIComponent(item.product.nameEn)}`;
+                      }}
+                    />
+                    <div className="flex-1">
+                      <p className="text-[#1A1A1A] font-medium text-sm">{item.product.nameAr}</p>
+                      <p className="text-[#6B6B6B] text-xs">الكمية: {item.quantity}</p>
+                      <p className="text-[#C9A96E] font-bold text-sm">{formatPrice(item.product.price * item.quantity)}</p>
+                    </div>
                   </div>
                 ))}
-                <div className="flex justify-between pt-2 mt-2">
-                  <span className="font-bold text-[#1A1A1A]">الإجمالي</span>
-                  <span className="font-bold text-[#C9A96E]">{formatPrice(cartTotal())}</span>
-                </div>
               </div>
-
-              <a
-                href={whatsappLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={sendToWhatsApp}
-                className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BD5A] text-white font-semibold py-4 rounded-xl transition-colors"
-              >
-                <MessageCircle className="w-6 h-6" />
-                إرسال الطلب عبر واتساب
-              </a>
+              <div className="flex justify-between pt-2 mt-2">
+                <span className="font-bold text-[#1A1A1A]">الإجمالي</span>
+                <span className="font-bold text-[#C9A96E]">{formatPrice(cartTotal())}</span>
+              </div>
             </div>
           </div>
         </section>
@@ -138,7 +144,7 @@ export default function Checkout() {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    disabled={submitted}
+                    disabled={submitted || orderSent}
                     className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E] transition-colors"
                     placeholder="أدخل اسمك الكامل"
                   />
@@ -152,7 +158,7 @@ export default function Checkout() {
                     required
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    disabled={submitted}
+                    disabled={submitted || orderSent}
                     className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E] transition-colors"
                     placeholder="رقم الهاتف"
                   />
@@ -166,7 +172,7 @@ export default function Checkout() {
                     required
                     value={formData.area}
                     onChange={(e) => setFormData({ ...formData, area: e.target.value })}
-                    disabled={submitted}
+                    disabled={submitted || orderSent}
                     className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E] transition-colors"
                     placeholder="مثال: حولي، الفروانية، الجهراء"
                   />
@@ -180,7 +186,7 @@ export default function Checkout() {
                     rows={3}
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    disabled={submitted}
+                    disabled={submitted || orderSent}
                     className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E] transition-colors resize-none"
                     placeholder="القطعة، الشارع، رقم المبنى، الدور، الشقة..."
                   />
@@ -189,10 +195,11 @@ export default function Checkout() {
                 {/* Notes */}
                 <div>
                   <label className="block text-[#1A1A1A] font-medium mb-2">ملاحظات إضافية (اختياري)</label>
-                  <textarea                    rows={2}
+                  <textarea
+                    rows={2}
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    disabled={submitted}
+                    disabled={submitted || orderSent}
                     className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E] transition-colors resize-none"
                     placeholder="أي ملاحظات خاصة بالطلب..."
                   />
@@ -230,11 +237,12 @@ export default function Checkout() {
                 {/* Invoice Number */}
                 <div>
                   <label className="block text-[#1A1A1A] font-medium mb-2">رقم الفاتورة *</label>
-                  <input                    type="text"
+                  <input
+                    type="text"
                     required
                     value={invoiceNumber}
                     onChange={(e) => setInvoiceNumber(e.target.value)}
-                    disabled={submitted}
+                    disabled={submitted || orderSent}
                     className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E] transition-colors"
                     placeholder="أدخل رقم الفاتورة"
                   />
@@ -247,7 +255,7 @@ export default function Checkout() {
                     type="file"
                     accept="image/*"
                     onChange={handleImageChange}
-                    disabled={submitted}
+                    disabled={submitted || orderSent}
                     className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E] transition-colors"
                   />
                 </div>
@@ -302,13 +310,14 @@ export default function Checkout() {
                   </div>
                 </div>
 
-                <button                  type="submit"
-                  onClick={handleSubmit}
-                  disabled={submitted}
-                  className="w-full flex items-center justify-center gap-2 bg-[#1A1A1A] hover:bg-[#C9A96E] text-white font-semibold py-4 rounded-xl transition-colors"
+                <button
+                  type="button"
+                  onClick={sendToWhatsApp}
+                  disabled={orderSent}
+                  className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BD5A] text-white font-semibold py-4 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {submitted ? 'تم إرسال الطلب' : 'إتمام الطلب عبر واتساب'}
                   <MessageCircle className="w-5 h-5" />
+                  {orderSent ? 'تم إرسال الطلب' : 'إرسال الطلب عبر واتساب'}
                 </button>
               </div>
             </div>
