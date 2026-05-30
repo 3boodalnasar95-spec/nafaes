@@ -1,27 +1,22 @@
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Star, Award, Truck, CreditCard, Instagram, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Star, Award, Truck, CreditCard, MessageCircle, Sparkles, Droplets, Flower2, Gift, ArrowRight } from 'lucide-react';
 import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
-import { products } from '../data/products';
+import { products, categories, getProductsByCategory } from '../data/products';
 
 export default function Index() {
+  // Get featured products (first 4)
   const featuredProducts = products.slice(0, 4);
 
-  const features = [
-    { icon: Star, title: 'منتجات مختارة بعناية', description: 'نختار لكم أفضل المنتجات العطرية' },
-    { icon: Award, title: 'تجربة عطرية فاخرة', description: 'جودة عالية ورائحة لا تُنسى' },
-    { icon: Truck, title: 'توصيل سريع', description: 'رسوم ثابتة 2 د.ك لكل الطلبات' },
-    { icon: CreditCard, title: 'دفع مرن', description: 'كاش عند الاستلام أو رابط دفع' },
-  ];
-
-  const instagramPosts = [
-    { id: 1, title: 'إيلان 360 نوماد', text: 'جهاز تعطير ذكي قابل للشحن', price: '49 د.ك' },
-    { id: 2, title: 'إيلان 360 برايم', text: 'جهاز تعطير كهربائي', price: '42 د.ك' },
-    { id: 3, title: 'نوار ماجستيه', text: 'جهاز احترافي بشاشة LCD', price: '59 د.ك' },
-    { id: 4, title: 'بلاك عود', text: 'رائحة عود فاخرة', price: '10.9 د.ك' },
-    { id: 5, title: 'روز مسك', text: 'مزيج رومانسي', price: '10.9 د.ك' },
-    { id: 6, title: 'سانتال فانيلا', text: 'دفء الفانيليا', price: '10.9 د.ك' },
-  ];
+  const getCategoryIcon = (icon: string) => {
+    switch (icon) {
+      case 'Sparkles': return <Sparkles className="w-8 h-8" />;
+      case 'Droplets': return <Droplets className="w-8 h-8" />;
+      case 'Flower2': return <Flower2 className="w-8 h-8" />;
+      case 'Gift': return <Gift className="w-8 h-8" />;
+      default: return <Sparkles className="w-8 h-8" />;
+    }
+  };
 
   return (
     <Layout>
@@ -56,7 +51,7 @@ export default function Index() {
                 to="/products"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#1A1A1A] hover:bg-[#C9A96E] text-white font-semibold px-8 py-4 rounded-xl transition-colors"
               >
-                تصفح المنتجات
+                تسوق الآن
                 <ArrowLeft className="w-5 h-5" />
               </Link>
               <a
@@ -66,7 +61,7 @@ export default function Index() {
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BD5A] text-white font-semibold px-8 py-4 rounded-xl transition-colors"
               >
                 <MessageCircle className="w-5 h-5" />
-                إتمام الطلب عبر واتساب
+                تواصل عبر واتساب
               </a>
             </div>
           </div>
@@ -77,24 +72,70 @@ export default function Index() {
       <section className="py-12 bg-white border-y border-[#E8E0D5]">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {features.map((feat, i) => {
-              const Icon = feat.icon;
-              return (
-                <div key={i} className="text-center">
-                  <div className="w-12 h-12 mx-auto mb-3 bg-[#C9A96E]/10 rounded-full flex items-center justify-center">
-                    <Icon className="w-6 h-6 text-[#C9A96E]" />
-                  </div>
-                  <h3 className="font-semibold text-[#1A1A1A] mb-1 text-sm">{feat.title}</h3>
-                  <p className="text-[#6B6B6B] text-xs">{feat.description}</p>
+            <div className="text-center">
+              <div className="w-12 h-12 mx-auto mb-3 bg-[#C9A96E]/10 rounded-full flex items-center justify-center">
+                <Star className="w-6 h-6 text-[#C9A96E]" />
+              </div>
+              <h3 className="font-semibold text-[#1A1A1A] mb-1 text-sm">منتجات مختارة بعناية</h3>
+              <p className="text-[#6B6B6B] text-xs">نختار لكم أفضل المنتجات العطرية</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 mx-auto mb-3 bg-[#C9A96E]/10 rounded-full flex items-center justify-center">
+                <Award className="w-6 h-6 text-[#C9A96E]" />
+              </div>
+              <h3 className="font-semibold text-[#1A1A1A] mb-1 text-sm">تجربة عطرية فاخرة</h3>
+              <p className="text-[#6B6B6B] text-xs">جودة عالية ورائحة لا تُنسى</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 mx-auto mb-3 bg-[#C9A96E]/10 rounded-full flex items-center justify-center">
+                <Truck className="w-6 h-6 text-[#C9A96E]" />
+              </div>
+              <h3 className="font-semibold text-[#1A1A1A] mb-1 text-sm">توصيل سريع</h3>
+              <p className="text-[#6B6B6B] text-xs">رسوم ثابتة لكل الطلبات</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 mx-auto mb-3 bg-[#C9A96E]/10 rounded-full flex items-center justify-center">
+                <CreditCard className="w-6 h-6 text-[#C9A96E]" />
+              </div>
+              <h3 className="font-semibold text-[#1A1A1A] mb-1 text-sm">دفع مرن</h3>
+              <p className="text-[#6B6B6B] text-xs">كاش عند الاستلام أو رابط دفع</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Categories Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-4">تسوق حسب الفئة</h2>
+            <p className="text-[#6B6B6B]">اختر الفئة المناسبة لك</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {categories.map((category) => (
+              <Link
+                key={category.slug}
+                to={`/products?category=${category.slug}`}
+                className="group bg-white rounded-2xl p-6 text-center hover:shadow-xl transition-all duration-300 border border-[#E8E0D5] hover:border-[#C9A96E]"
+              >
+                <div className={`w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br ${category.color} flex items-center justify-center text-white group-hover:scale-110 transition-transform`}>
+                  {getCategoryIcon(category.icon)}
                 </div>
-              );
-            })}
+                <h3 className="font-bold text-[#1A1A1A] mb-2">{category.name_ar}</h3>
+                <p className="text-xs text-[#6B6B6B] mb-3">{category.name_en}</p>
+                <p className="text-xs text-[#6B6B6B] line-clamp-2 mb-4">{category.description}</p>
+                <span className="inline-flex items-center gap-1 text-[#C9A96E] text-sm font-medium group-hover:gap-2 transition-all">
+                  تصفح المنتجات
+                  <ArrowRight className="w-4 h-4" />
+                </span>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Featured Products */}
-      <section className="py-16">
+      <section className="py-16 bg-[#F5F0E8]">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-4">منتجاتنا المميزة</h2>
@@ -118,51 +159,24 @@ export default function Index() {
       </section>
 
       {/* About Section */}
-      <section className="py-16 bg-[#F5F0E8]">
+      <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-6">عن نفائس</h2>
             <p className="text-[#6B6B6B] text-lg leading-relaxed mb-8">
-              في نفائس، نؤمن بأن الروائح имеют تأثير كبير على mood والمزاج. لهذا نقدم لكم مجموعة مختارة من أجهزة التعطير الذكية، معطرات الأعواد، وأطقم الهدايا العطرية التي تضفي على مساحاتكم لمسة من الفخامة والأناقة.
+              في نفائس، نؤمن بأن الروائح تؤثر على المزاج والمكان. لهذا نقدم لكم مجموعة مختارة من أجهزة التعطير الذكية، معطرات الأعواد، وأطقم الهدايا العطرية التي تضفي على مساحاتكم لمسة من الفخامة والأناقة.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <div className="bg-white px-6 py-3 rounded-full text-[#1A1A1A]">
+              <div className="bg-[#F5F0E8] px-6 py-3 rounded-full text-[#1A1A1A]">
                 <span className="font-bold text-[#C9A96E]">15+</span> منتجات فاخرة
               </div>
-              <div className="bg-white px-6 py-3 rounded-full text-[#1A1A1A]">
+              <div className="bg-[#F5F0E8] px-6 py-3 rounded-full text-[#1A1A1A]">
                 <span className="font-bold text-[#C9A96E]">2</span> د.ك توصيل
               </div>
-              <div className="bg-white px-6 py-3 rounded-full text-[#1A1A1A]">
+              <div className="bg-[#F5F0E8] px-6 py-3 rounded-full text-[#1A1A1A]">
                 <span className="font-bold text-[#C9A96E]">2</span> طريقة دفع
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Instagram Posts */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-center gap-3 mb-8">
-            <Instagram className="w-6 h-6 text-[#C9A96E]" />
-            <h2 className="text-2xl md:text-3xl font-bold text-[#1A1A1A]">منشورات نفائس</h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {instagramPosts.map((post) => (
-              <div
-                key={post.id}
-                className="bg-[#F5F0E8] rounded-xl p-4 text-center hover:shadow-lg transition-shadow"
-              >
-                <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-[#C9A96E]/20 to-[#D4AF37]/20 rounded-full flex items-center justify-center">
-                  <span className="text-2xl">✨</span>
-                </div>
-                <h4 className="font-bold text-[#1A1A1A] text-sm mb-1">{post.title}</h4>
-                <p className="text-[#6B6B6B] text-xs line-clamp-2">{post.text}</p>
-                {post.price && (
-                  <span className="text-[#C9A96E] font-bold text-sm">{post.price}</span>
-                )}
-              </div>
-            ))}
           </div>
         </div>
       </section>
