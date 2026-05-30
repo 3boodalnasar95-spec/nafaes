@@ -335,7 +335,7 @@ export const products: Product[] = [
 
   // ==================== SECTION 3: REED DIFFUSERS (معطرات أعواد) ====================
   {
-    id: 'amber-santal',
+    id: 'amber-santal-reed',
     name_ar: 'أمبر سانتال',
     name_en: 'AMBER SANTAL',
     type: 'معطر أعواد فاخر',
@@ -354,8 +354,8 @@ export const products: Product[] = [
   },
   {
     id: 'noir-oud-reed',
-    name_ar: 'بلاك عود - معطر أعواد',
-    name_en: 'BLACK OUD REED',
+    name_ar: 'بلاك عود',
+    name_en: 'BLACK OUD',
     type: 'معطر أعواد فاخر',
     price: 12.9,
     shortDescription: 'معطر أعواد برائحة عود فاخرة وعميقة.',
@@ -372,8 +372,8 @@ export const products: Product[] = [
   },
   {
     id: 'rose-garden-reed',
-    name_ar: 'روز جاردن - معطر أعواد',
-    name_en: 'ROSE GARDEN REED',
+    name_ar: 'روز جاردن',
+    name_en: 'ROSE GARDEN',
     type: 'معطر أعواد وردي',
     price: 11.9,
     shortDescription: 'معطر أعواد برائحة ورود منعشة ورومانسية.',
@@ -422,23 +422,6 @@ export const products: Product[] = [
     },
     features: ['هدية فاخرة', 'جهاز صغير', '3 زيوت عطرية', 'تغليف ذهبي'],
     image: '/images/luxury-gift-set.png',
-    category: 'gift',
-  },
-  {
-    id: 'starter-gift-set',
-    name_ar: 'طقم البدء',
-    name_en: 'STARTER GIFT SET',
-    type: 'طقم هدايا للمبتدئين',
-    price: 9.9,
-    shortDescription: 'طقم هدايا مثالي للمبتدئين مع معطر أعواد صغير.',
-    fullDescription: 'طقم هدايا بسيط وأنيق للمبتدئين في عالم التعطير.',
-    specs: {
-      'النوع': 'Gift Set Basic',
-      'المحتويات': 'معطر أعواد صغير',
-      'الاستخدام': 'هدية أنيقة',
-    },
-    features: ['هدية أنيقة', 'سهل الاستخدام', 'رائحة مميزة', 'تغليف جميل'],
-    image: '/images/starter-gift-set.png',
     category: 'gift',
   },
 ];

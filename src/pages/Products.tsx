@@ -135,17 +135,19 @@ export default function Products() {
             </div>
           </div>
 
-          {/* Section 1: Electrical Devices */}
+          {/* ========================================== */}
+          {/* SECTION 1: ELECTRICAL DEVICES (أجهزة كهربائية فاخرة) */}
+          {/* ========================================== */}
           {(selectedCategory === 'all' || selectedCategory === 'devices') && (
             <div className="mb-12">
               {selectedCategory === 'all' && (
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-br from-[#C9A96E] to-[#D4AF37] rounded-full flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-white" />
+                  <div className="w-12 h-12 bg-gradient-to-br from-[#C9A96E] to-[#D4AF37] rounded-full flex items-center justify-center">
+                    <Sparkles className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-[#1A1A1A]">أجهزة كهربائية فاخرة</h2>
-                    <p className="text-[#6B6B6B] text-sm">أجهزة تعطير ذكية ومتطورة للمنازل والمكاتب</p>
+                    <p className="text-[#6B6B6B] text-sm">أجهزة تعطير ذكية ومتطورة للمنازل والمكاتب - اضف زيتك المفضل</p>
                   </div>
                 </div>
               )}
@@ -157,17 +159,19 @@ export default function Products() {
             </div>
           )}
 
-          {/* Section 2: Flavor Oils */}
+          {/* ========================================== */}
+          {/* SECTION 2: FLAVOR OILS (زيوت عطرية) */}
+          {/* ========================================== */}
           {(selectedCategory === 'all' || selectedCategory === 'flavors') && (
             <div className="mb-12">
               {selectedCategory === 'all' && (
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
-                    <Droplets className="w-5 h-5 text-white" />
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
+                    <Droplets className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-[#1A1A1A]">زيوت عطرية</h2>
-                    <p className="text-[#6B6B6B] text-sm">زيوت عطرية مركزهة بأحجام مختلفة (20ml, 120ml, 500ml)</p>
+                    <p className="text-[#6B6B6B] text-sm">زيوت عطرية مركزهة - اختر الحجم المناسب لك (20ml, 120ml, 500ml)</p>
                   </div>
                 </div>
               )}
@@ -179,17 +183,19 @@ export default function Products() {
             </div>
           )}
 
-          {/* Section 3: Reed Diffusers */}
+          {/* ========================================== */}
+          {/* SECTION 3: REED DIFFUSERS (معطرات أعواد) */}
+          {/* ========================================== */}
           {(selectedCategory === 'all' || selectedCategory === 'reeds') && (
             <div className="mb-12">
               {selectedCategory === 'all' && (
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-700 rounded-full flex items-center justify-center">
-                    <Package className="w-5 h-5 text-white" />
+                  <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-700 rounded-full flex items-center justify-center">
+                    <Package className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-[#1A1A1A]">معطرات أعواد</h2>
-                    <p className="text-[#6B6B6B] text-sm">معطرات أعواد خشبية فاخرة للديكور والهدايا</p>
+                    <p className="text-[#6B6B6B] text-sm">معطرات أعواد خشبية فاخرة للديكور والهدايا - رائحة تدوم 60-90 يوم</p>
                   </div>
                 </div>
               )}
@@ -201,17 +207,19 @@ export default function Products() {
             </div>
           )}
 
-          {/* Section 4: Gift Sets */}
+          {/* ========================================== */}
+          {/* SECTION 4: GIFT SETS (أطقم هدايا) */}
+          {/* ========================================== */}
           {(selectedCategory === 'all' || selectedCategory === 'gifts') && (
             <div className="mb-12">
               {selectedCategory === 'all' && (
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center">
-                    <Gift className="w-5 h-5 text-white" />
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center">
+                    <Gift className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-[#1A1A1A]">أطقم هدايا</h2>
-                    <p className="text-[#6B6B6B] text-sm">أطقم هدايا فاخرة مثالية للمناسبات</p>
+                    <p className="text-[#6B6B6B] text-sm">أطقم هدايا فاخرة مثالية للمناسبات - جاهزة للإهداء</p>
                   </div>
                 </div>
               )}

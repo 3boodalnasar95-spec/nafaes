@@ -15,30 +15,26 @@ export default function ProductCard({ product }: ProductCardProps) {
     addToCart(product);
   };
 
-  // Check product category
-  const isElectricalDevice = product.category === 'device';
-  const isFlavorProduct = product.category === 'flavor';
-  const isReedProduct = product.category === 'reed';
-  const isGiftProduct = product.category === 'gift';
-
   // Get badge info based on category
   const getBadge = () => {
-    if (isElectricalDevice) {
+    if (product.category === 'device') {
       return { text: 'أجهزة فاخرة', color: 'bg-gradient-to-r from-[#C9A96E] to-[#D4AF37]', icon: Sparkles };
     }
-    if (isFlavorProduct) {
+    if (product.category === 'flavor') {
       return { text: 'زيوت عطرية', color: 'bg-gradient-to-r from-blue-500 to-blue-600', icon: Droplets };
     }
-    if (isReedProduct) {
+    if (product.category === 'reed') {
       return { text: 'معطر أعواد', color: 'bg-gradient-to-r from-amber-500 to-amber-600', icon: Package };
     }
-    if (isGiftProduct) {
+    if (product.category === 'gift') {
       return { text: 'طقم هدايا', color: 'bg-gradient-to-r from-purple-500 to-purple-600', icon: Gift };
     }
     return null;
   };
 
   const badge = getBadge();
+  const isFlavorProduct = product.category === 'flavor';
+  const isDeviceProduct = product.category === 'device';
 
   return (
     <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-[#E8E0D5]">
@@ -62,10 +58,17 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
         
-        {/* Size badge for flavors */}
+        {/* Info badge for flavors */}
         {isFlavorProduct && (
           <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm text-[#1A1A1A] text-xs px-2 py-1 rounded-full">
             أحجام متعددة
+          </div>
+        )}
+        
+        {/* Info badge for devices */}
+        {isDeviceProduct && (
+          <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm text-[#1A1A1A] text-xs px-2 py-1 rounded-full">
+            + 10 نكهات
           </div>
         )}
       </Link>
@@ -83,11 +86,6 @@ export default function ProductCard({ product }: ProductCardProps) {
           <span className="text-xl font-bold text-[#C9A96E]">
             {formatPrice(product.price)}
           </span>
-          {isElectricalDevice && (
-            <span className="text-xs text-[#6B6B6B] bg-[#F5F0E8] px-2 py-1 rounded-full">
-              + 10 نكهات
-            </span>
-          )}
         </div>
 
         <button
