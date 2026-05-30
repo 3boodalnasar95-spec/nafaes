@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { CheckCircle, MessageCircle, AlertCircle } from 'lucide-react';
@@ -18,22 +20,21 @@ export default function Checkout() {
     paymentMethod: 'cash',
   });
   const [submitted, setSubmitted] = useState(false);
+  const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [selectedImage, setSelectedImage] = useState('');
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const subtotal = cartTotal();
-  const total = subtotal + deliveryFee;
-
-  if (cartItems.length === 0 && !submitted) {
-    return (
-      <Layout>
-        <div className="container mx-auto px-4 py-20 text-center">
-          <h2 className="text-2xl font-bold text-[#1A1A1A] mb-4">السلة فارغة</h2>
-          <Link to="/products" className="text-[#C9A96E] hover:text-[#1A1A1A]">
-            تصفح المنتجات
-          </Link>
-        </div>
-      </Layout>
-    );
-  }
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setImagePreview(event.target.result as string);
+        setSelectedImage(event.target.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,10 +42,26 @@ export default function Checkout() {
   };
 
   const sendToWhatsApp = () => {
-    const message = generateWhatsAppMessage(cartItems, formData);
+    const message = generateWhatsAppMessage(cartItems, formData, invoiceNumber, selectedImage);
     window.open(`${whatsappLink}?text=${message}`, '_blank');
     clearCart();
   };
+
+  if (cartItems.length === 0 && !submitted) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-20 text-center">
+          <h2 className="text-2xl font-bold text-[#1A1A1A] mb-4">السلة فارغة</h2>
+          <Link            to="/products"
+            className="inline-flex items-center gap-2 bg-[#1A1A1A] hover:bg-[#C9A96E] text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+          >
+            تصفح المنتجات
+            <ArrowRight className="w-5 h-5" />
+          </Link>
+        </div>
+      </Layout>
+    );
+  }
 
   if (submitted) {
     return (
@@ -57,9 +74,15 @@ export default function Checkout() {
               </div>
               <h2 className="text-2xl font-bold text-[#1A1A1A] mb-4">تم استلام طلبك!</h2>
               <p className="text-[#6B6B6B] mb-6">
-                سيتم تأكيد الطلب والتوفر عبر واتساب
+                رقم الفاتورة: <strong className="text-[#C9A96E">{invoiceNumber}</strong>
               </p>
-              
+              {imagePreview && (
+                <img
+                  src={imagePreview}
+                  alt="Order Image"
+                  className="mt-2 w-24 h-24 object-contain"
+                />
+              )}
               <div className="bg-[#F5F0E8] rounded-xl p-6 text-right mb-6">
                 <h3 className="font-semibold text-[#1A1A1A] mb-4">ملخص الطلب:</h3>
                 {cartItems.map((item) => (
@@ -70,7 +93,7 @@ export default function Checkout() {
                 ))}
                 <div className="flex justify-between pt-2 mt-2">
                   <span className="font-bold text-[#1A1A1A]">الإجمالي</span>
-                  <span className="font-bold text-[#C9A96E]">{formatPrice(total)}</span>
+                  <span className="font-bold text-[#C9A96E]">{formatPrice(cartTotal())}</span>
                 </div>
               </div>
 
@@ -82,7 +105,7 @@ export default function Checkout() {
                 className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BD5A] text-white font-semibold py-4 rounded-xl transition-colors"
               >
                 <MessageCircle className="w-6 h-6" />
-                <span>إرسال الطلب عبر واتساب</span>
+                إرسال الطلب عبر واتساب
               </a>
             </div>
           </div>
@@ -107,102 +130,133 @@ export default function Checkout() {
             {/* Form */}
             <div className="lg:col-span-2">
               <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-[#E8E0D5] p-6 md:p-8">
-                <h2 className="text-xl font-bold text-[#1A1A1A] mb-6">بيانات العميل</h2>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-[#1A1A1A] font-medium mb-2">الاسم الكامل *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E] transition-colors"
-                      placeholder="أدخل اسمك الكامل"
-                    />
-                  </div>
+                {/* Customer Name */}
+                <div>
+                  <label className="block text-[#1A1A1A] font-medium mb-2">الاسم الكامل *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    disabled={submitted}
+                    className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E] transition-colors"
+                    placeholder="أدخل اسمك الكامل"
+                  />
+                </div>
 
-                  <div>
-                    <label className="block text-[#1A1A1A] font-medium mb-2">رقم الهاتف *</label>
-                    <input
-                      type="tel"
-                      required
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E] transition-colors"
-                      placeholder="رقم الهاتف"
-                    />
-                  </div>
+                {/* Phone */}
+                <div>
+                  <label className="block text-[#1A1A1A] font-medium mb-2">رقم الهاتف *</label>
+                  <input
+                    type="tel"
+                    required
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    disabled={submitted}
+                    className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E] transition-colors"
+                    placeholder="رقم الهاتف"
+                  />
+                </div>
 
-                  <div>
-                    <label className="block text-[#1A1A1A] font-medium mb-2">المنطقة *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.area}
-                      onChange={(e) => setFormData({ ...formData, area: e.target.value })}
-                      className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E] transition-colors"
-                      placeholder="مثال: حولي، الفروانية، الجهراء"
-                    />
-                  </div>
+                {/* Area */}
+                <div>
+                  <label className="block text-[#1A1A1A] font-medium mb-2">المنطقة *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.area}
+                    onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                    disabled={submitted}
+                    className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E] transition-colors"
+                    placeholder="مثال: حولي، الفروانية، الجهراء"
+                  />
+                </div>
 
-                  <div>
-                    <label className="block text-[#1A1A1A] font-medium mb-2">العنوان بالتفصيل *</label>
-                    <textarea
-                      required
-                      rows={3}
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E] transition-colors resize-none"
-                      placeholder="القطعة، الشارع، رقم المبنى، الدور، الشقة..."
-                    />
-                  </div>
+                {/* Address */}
+                <div>
+                  <label className="block text-[#1A1A1A] font-medium mb-2">العنوان بالتفصيل *</label>
+                  <textarea
+                    required
+                    rows={3}
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    disabled={submitted}
+                    className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E] transition-colors resize-none"
+                    placeholder="القطعة، الشارع، رقم المبنى، الدور، الشقة..."
+                  />
+                </div>
 
-                  <div>
-                    <label className="block text-[#1A1A1A] font-medium mb-2">ملاحظات إضافية (اختياري)</label>
-                    <textarea
-                      rows={2}
-                      value={formData.notes}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                      className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E] transition-colors resize-none"
-                      placeholder="أي ملاحظات خاصة بالطلب..."
-                    />
-                  </div>
+                {/* Notes */}
+                <div>
+                  <label className="block text-[#1A1A1A] font-medium mb-2">ملاحظات إضافية (اختياري)</label>
+                  <textarea                    rows={2}
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    disabled={submitted}
+                    className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E] transition-colors resize-none"
+                    placeholder="أي ملاحظات خاصة بالطلب..."
+                  />
+                </div>
 
-                  <div>
-                    <label className="block text-[#1A1A1A] font-medium mb-4">طريقة الدفع *</label>
-                    <div className="space-y-3">
-                      <label className="flex items-center gap-3 p-4 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl cursor-pointer hover:border-[#C9A96E] transition-colors">
-                        <input
-                          type="radio"
-                          name="payment"
-                          value="cash"
-                          checked={formData.paymentMethod === 'cash'}
-                          onChange={() => setFormData({ ...formData, paymentMethod: 'cash' })}
-                          className="w-5 h-5 accent-[#C9A96E]"
-                        />
-                        <span className="text-[#1A1A1A]">كاش عند الاستلام</span>
-                      </label>
-                      <label className="flex items-center gap-3 p-4 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl cursor-pointer hover:border-[#C9A96E] transition-colors">
-                        <input
-                          type="radio"
-                          name="payment"
-                          value="link"
-                          checked={formData.paymentMethod === 'link'}
-                          onChange={() => setFormData({ ...formData, paymentMethod: 'link' })}
-                          className="w-5 h-5 accent-[#C9A96E]"
-                        />
-                        <span className="text-[#1A1A1A]">رابط دفع</span>
-                      </label>
-                    </div>
+                {/* Payment Method */}
+                <div>
+                  <label className="block text-[#1A1A1A] font-medium mb-4">طريقة الدفع *</label>
+                  <div className="space-y-3">
+                    <label className="flex items-center gap-3 p-4 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl cursor-pointer hover:border-[#C9A96E] transition-colors">
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="cash"
+                        checked={formData.paymentMethod === 'cash'}
+                        onChange={() => setFormData({ ...formData, paymentMethod: 'cash' })}
+                        className="w-5 h-5 accent-[#C9A96E]"
+                      />
+                      <span className="text-[#1A1A1A]">كاش عند الاستلام</span>
+                    </label>
+                    <label className="flex items-center gap-3 p-4 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl cursor-pointer hover:border-[#C9A96E] transition-colors">
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="link"
+                        checked={formData.paymentMethod === 'link'}
+                        onChange={() => setFormData({ ...formData, paymentMethod: 'link' })}
+                        className="w-5 h-5 accent-[#C9A96E]"
+                      />
+                      <span className="text-[#1A1A1A]">رابط دفع</span>
+                    </label>
                   </div>
+                </div>
+
+                {/* Invoice Number */}
+                <div>
+                  <label className="block text-[#1A1A1A] font-medium mb-2">رقم الفاتورة *</label>
+                  <input                    type="text"
+                    required
+                    value={invoiceNumber}
+                    onChange={(e) => setInvoiceNumber(e.target.value)}
+                    disabled={submitted}
+                    className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E] transition-colors"
+                    placeholder="أدخل رقم الفاتورة"
+                  />
+                </div>
+
+                {/* Image Upload */}
+                <div>
+                  <label className="block text-[#1A1A1A] font-medium mb-2">صورة الطلب (اختياري)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    disabled={submitted}
+                    className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E] transition-colors"
+                  />
                 </div>
 
                 {/* Note */}
                 <div className="flex items-start gap-2 mt-6 p-4 bg-[#C9A96E]/10 rounded-xl">
                   <AlertCircle className="w-5 h-5 text-[#C9A96E] flex-shrink-0 mt-0.5" />
                   <p className="text-sm text-[#6B6B6B]">
-                    سيتم تأكيد الطلب والتوفر عبر واتساب قبل الشحن
+                    سيتم مراجعة الطلب وإرساله عبر واتساب
                   </p>
                 </div>
               </form>
@@ -244,17 +298,17 @@ export default function Checkout() {
                   </div>
                   <div className="flex justify-between items-center pt-3 border-t border-[#E8E0D5]">
                     <span className="text-[#1A1A1A] font-bold">الإجمالي</span>
-                    <span className="text-[#C9A96E] font-bold text-xl">{formatPrice(total)}</span>
+                    <span className="text-[#C9A96E] font-bold text-2xl">{formatPrice(total)}</span>
                   </div>
                 </div>
 
-                <button
-                  type="submit"
+                <button                  type="submit"
                   onClick={handleSubmit}
+                  disabled={submitted}
                   className="w-full flex items-center justify-center gap-2 bg-[#1A1A1A] hover:bg-[#C9A96E] text-white font-semibold py-4 rounded-xl transition-colors"
                 >
+                  {submitted ? 'تم إرسال الطلب' : 'إتمام الطلب عبر واتساب'}
                   <MessageCircle className="w-5 h-5" />
-                  إتمام الطلب عبر واتساب
                 </button>
               </div>
             </div>
