@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle, MessageCircle, AlertCircle, ArrowRight, Minus, Plus } from 'lucide-react';
+import { CheckCircle, MessageCircle, AlertCircle, ArrowRight } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import Layout from '../components/Layout';
 import { formatPrice, deliveryFee, whatsappLink, generateWhatsAppMessage } from '../data/products';
@@ -78,7 +78,7 @@ export default function Checkout() {
   };
 
   const sendToWhatsApp = () => {
-    const message = generateWhatsAppMessage(cartItems, formData, invoiceNumber, null);
+    const message = generateWhatsAppMessage(cartItems, formData, invoiceNumber);
     window.open(`${whatsappLink}?text=${message}`, '_blank');
     clearCart();
     setOrderSent(true);

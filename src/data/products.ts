@@ -138,30 +138,74 @@ export function formatPrice(price: number): string {
   return `${price.toFixed(3)} د.ك`;
 }
 
-export function generateWhatsAppMessage(cartItems: CartItem[], customerData: Order, invoiceNumber: string, selectedImage: string | null): string {
-  let message = `طلب جديد من موقع NAFAES | نفائس\n\n`;
-  message += `بيانات العميل:\n`;
-  message += `الاسم: ${customerData.name}\n`;
-  message += `الهاتف: ${customerData.phone}\n`;
-  message += `المنطقة: ${customerData.area}\n`;
-  message += `العنوان: ${customerData.address}\n`;
-  if (customerData.notes) {
-    message += `الملاحظات: ${customerData.notes}\n`;
-  }
-  message += `\nالمنتجات:\n`;
-  cartItems.forEach((item, index) => {
-    message += `${index + 1}. ${item.product.nameEn} - ${item.product.nameAr}\n`;
-    message += ` الكمية: ${item.quantity} | السعر: ${formatPrice(item.product.price)}\n`;
+export function generateWhatsAppMessage(
+  cartItems: CartItem[], 
+  customerData: Order, 
+  invoiceNumber: string
+): string {
+  const now = new Date();
+  const date = now.toLocaleDateString('ar-KW', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   });
+  const time = now.toLocaleTimeString('ar-KW', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
   const subtotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  message += `\nالمجموع الفرعي: ${formatPrice(subtotal)}\n`;
-  message += `رسوم التوصيل: ${formatPrice(deliveryFee)}\n`;
-  message += `الإجمالي النهائي: ${formatPrice(subtotal + deliveryFee)}\n\n`;
-  message += `طريقة الدفع: ${customerData.paymentMethod === 'cash' ? 'كاش عند الاستلام' : 'رابط دفع لينك'}\n\n`;
-  message += `رقم الفاتورة: ${invoiceNumber}\n`;
-  if (selectedImage) {
-    message += `صورة الطلب: مرفقة\n`;
+  const total = subtotal + deliveryFee;
+
+  let message = `━━━━━━━━━━━━━━━━━━━━━━\n`;
+  message += `    🏪 NAFAES | نفائس\n`;
+  message += `   فاخور العطور الذكية 🕌\n`;
+  message += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+  
+  message += `📋 ═══ فاتورة ضريبية ═══ 📋\n\n`;
+  message += `🔢 رقم الفاتورة: ${invoiceNumber}\n`;
+  message += `📅 التاريخ: ${date}\n`;
+  message += `🕐 الوقت: ${time}\n\n`;
+  
+  message += `━━━━━━━━━━━━━━━━━━━━━━\n`;
+  message += `   👤 بيانات العميل\n`;
+  message += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+  message += `👤 الاسم: ${customerData.name}\n`;
+  message += `📞 الهاتف: ${customerData.phone}\n`;
+  message += `📍 المنطقة: ${customerData.area}\n`;
+  message += `🏠 العنوان: ${customerData.address}\n`;
+  if (customerData.notes) {
+    message += `📝 الملاحظات: ${customerData.notes}\n`;
   }
-  message += `أرغب بتأكيد الطلب.`;
+  
+  message += `\n━━━━━━━━━━━━━━━━━━━━━━\n`;
+  message += `   🛒 تفاصيل المنتجات\n`;
+  message += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+  
+  cartItems.forEach((item, index) => {
+    const itemTotal = item.product.price * item.quantity;
+    message += `${index + 1}. ${item.product.nameAr}\n`;
+    message += `   ${item.product.nameEn}\n`;
+    message += `   الكمية: ${item.quantity} × ${formatPrice(item.product.price)}\n`;
+    message += `   المجموع: ${formatPrice(itemTotal)}\n\n`;
+  });
+  
+  message += `━━━━━━━━━━━━━━━━━━━━━━\n`;
+  message += `   💰 ملخص الفاتورة\n`;
+  message += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+  message += `📦 المجموع الفرعي: ${formatPrice(subtotal)}\n`;
+  message += `🚚 رسوم التوصيل: ${formatPrice(deliveryFee)}\n`;
+  message += `━━━━━━━━━━━━━━━━━━━━━━\n`;
+  message += `💵 الإجمالي النهائي: ${formatPrice(total)}\n`;
+  message += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+  
+  message += `💳 طريقة الدفع: ${customerData.paymentMethod === 'cash' ? 'كاش عند الاستلام 💵' : 'رابط دفع إلكتروني 🔗'}\n\n`;
+  
+  message += `━━━━━━━━━━━━━━━━━━━━━━\n`;
+  message += `شكراً لتعاملكم مع نفائس 🕌\n`;
+  message += `للتواصل: ${whatsappNumber}\n`;
+  message += `━━━━━━━━━━━━━━━━━━━━━━\n`;
+  message += `\n✅ أؤكد إتمام الطلب وأرغب بتأكيده.`;
+  
   return encodeURIComponent(message);
 }
