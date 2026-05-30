@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Search, Package, Sparkles, Gift } from 'lucide-react';
 import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
-import { products as localProducts, type Product } from '../data/products';
+import { products, type Product, getProductsByCategory } from '../data/products';
 
 export default function Products() {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -15,11 +15,19 @@ export default function Products() {
     filterAndSortProducts();
   }, [search, selectedCategory, sortBy]);
 
-  const allProducts = localProducts;
-
   const filterAndSortProducts = () => {
-    let result = [...allProducts];
+    let result = [...products];
     
+    // Filter by category
+    if (selectedCategory === 'devices') {
+      result = getProductsByCategory('device');
+    } else if (selectedCategory === 'flavors') {
+      result = getProductsByCategory('flavor');
+    } else if (selectedCategory === 'gifts') {
+      result = getProductsByCategory('gift');
+    }
+    
+    // Search filter
     if (search) {
       result = result.filter(p => 
         p.name_ar.includes(search) || 
@@ -28,10 +36,7 @@ export default function Products() {
       );
     }
     
-    if (selectedCategory !== 'all') {
-      result = result.filter(p => p.type.includes(selectedCategory));
-    }
-    
+    // Sort
     switch (sortBy) {
       case 'price-asc':
         result.sort((a, b) => a.price - b.price);
@@ -48,10 +53,10 @@ export default function Products() {
   };
 
   const categories = [
-    { id: 'all', name: 'الكل' },
-    { id: 'devices', name: 'أجهزة التعطير' },
-    { id: 'gifts', name: 'هدايا عطرية' },
-    { id: 'diffusers', name: 'معطرات الأعواد' },
+    { id: 'all', name: 'الكل', icon: Package },
+    { id: 'devices', name: 'أجهزة التعطير', icon: Sparkles },
+    { id: 'flavors', name: 'النكهات', icon: Package },
+    { id: 'gifts', name: 'هدايا عطرية', icon: Gift },
   ];
 
   return (
@@ -60,7 +65,7 @@ export default function Products() {
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-4">منتجاتنا</h1>
           <p className="text-[#6B6B6B] max-w-xl mx-auto">
-            اكتشف مجموعتنا المختارة من أجهزة التعطير الذكية والمعطرات الفاخرة
+            اكتشف مجموعتنا المختارة من أجهزة التعطير الذكية والنكهات الفاخرة والهدايا العطرية
           </p>
         </div>
       </section>
@@ -92,19 +97,23 @@ export default function Products() {
             </div>
 
             <div className="flex gap-2 mt-4 pt-4 border-t border-[#E8E0D5] overflow-x-auto">
-              {categories.map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
-                    selectedCategory === cat.id
-                      ? 'bg-[#C9A96E] text-white'
-                      : 'bg-[#F5F0E8] text-[#6B6B6B] hover:bg-[#E8E0D5]'
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              ))}
+              {categories.map(cat => {
+                const Icon = cat.icon;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${
+                      selectedCategory === cat.id
+                        ? 'bg-[#C9A96E] text-white'
+                        : 'bg-[#F5F0E8] text-[#6B6B6B] hover:bg-[#E8E0D5]'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {cat.name}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -124,7 +133,7 @@ export default function Products() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}

@@ -1,8 +1,8 @@
 "use client";
 
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowRight, Check, MessageCircle, Minus, Plus } from 'lucide-react';
-import { products, formatPrice, whatsappLink } from '../data/products';
+import { ArrowRight, Check, MessageCircle, Minus, Plus, Package, Droplets } from 'lucide-react';
+import { products, formatPrice, whatsappLink, deviceFlavors } from '../data/products';
 import { useStore } from '../store/useStore';
 import Layout from '../components/Layout';
 import { useState } from 'react';
@@ -12,6 +12,7 @@ export default function ProductDetails() {
   const navigate = useNavigate();
   const { addToCart } = useStore();
   const [quantity, setQuantity] = useState(1);
+  const [selectedFlavor, setSelectedFlavor] = useState<string | null>(null);
 
   const product = products.find(p => p.id === id);
 
@@ -28,7 +29,32 @@ export default function ProductDetails() {
     );
   }
 
-  const whatsappMessage = `أرغب بطلب منتج ${product.name_en} - ${product.name_ar}، السعر ${formatPrice(product.price)}.`;
+  // Check if this is an electrical device that can have flavors
+  const isElectricalDevice = ['elan-nomad', 'elan-prime', 'noir-majeste'].includes(product.id);
+
+  const handleAddToCart = () => {
+    // Add main product
+    for (let i = 0; i < quantity; i++) {
+      addToCart(product);
+    }
+    // If flavor selected, add flavor as separate product
+    if (selectedFlavor && isElectricalDevice) {
+      const flavor = deviceFlavors.find(f => f.id === selectedFlavor);
+      if (flavor) {
+        const flavorProduct = products.find(p => p.id === selectedFlavor);
+        if (flavorProduct) {
+          for (let i = 0; i < quantity; i++) {
+            addToCart(flavorProduct);
+          }
+        }
+      }
+    }
+    navigate('/cart');
+  };
+
+  const whatsappMessage = selectedFlavor 
+    ? `أرغب بطلب منتج ${product.name_en} - ${product.name_ar} مع نكهة ${deviceFlavors.find(f => f.id === selectedFlavor)?.name_ar || ''}، السعر ${formatPrice(product.price)} + ${formatPrice(deviceFlavors.find(f => f.id === selectedFlavor)?.price || 0)} النكهة.`
+    : `أرغب بطلب منتج ${product.name_en} - ${product.name_ar}، السعر ${formatPrice(product.price)}.`;
 
   return (
     <Layout>
@@ -77,6 +103,63 @@ export default function ProductDetails() {
                 </div>
               </div>
 
+              {/* Flavor Selection for Electrical Devices */}
+              {isElectricalDevice && (
+                <div className="mb-8">
+                  <h3 className="text-lg font-bold text-[#1A1A1A] mb-4 flex items-center gap-2">
+                    <Droplets className="w-5 h-5 text-[#C9A96E]" />
+                    اختر النكهة (اختياري)
+                  </h3>
+                  <p className="text-sm text-[#6B6B6B] mb-4">
+                    يمكنك إضافة بطارية معطرة بالنكهة التي تفضلها
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {deviceFlavors.map((flavor) => (
+                      <button
+                        key={flavor.id}
+                        onClick={() => setSelectedFlavor(selectedFlavor === flavor.id ? null : flavor.id)}
+                        className={`p-3 rounded-xl border-2 transition-all text-center ${
+                          selectedFlavor === flavor.id
+                            ? 'border-[#C9A96E] bg-[#C9A96E]/10'
+                            : 'border-[#E8E0D5] hover:border-[#C9A96E]/50'
+                        }`}
+                      >
+                        <div className="w-12 h-12 mx-auto mb-2 rounded-full overflow-hidden bg-white">
+                          <img 
+                            src={flavor.image} 
+                            alt={flavor.name_ar}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = `https://via.placeholder.com/50x50/F5F0E8/C9A96E?text=${flavor.name_en.charAt(0)}`;
+                            }}
+                          />
+                        </div>
+                        <p className="font-medium text-[#1A1A1A] text-sm">{flavor.name_ar}</p>
+                        <p className="text-[#C9A96E] text-xs font-bold">{formatPrice(flavor.price)}</p>
+                        {selectedFlavor === flavor.id && (
+                          <Check className="w-4 h-4 text-[#C9A96E] mx-auto mt-1" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  {selectedFlavor && (
+                    <div className="mt-4 p-4 bg-[#C9A96E]/10 rounded-xl flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-[#1A1A1A]">
+                          {deviceFlavors.find(f => f.id === selectedFlavor)?.name_ar}
+                        </p>
+                        <p className="text-sm text-[#6B6B6B]">
+                          بطارية معطرة ستُضاف للسلة
+                        </p>
+                      </div>
+                      <span className="text-[#C9A96E] font-bold">
+                        + {formatPrice(deviceFlavors.find(f => f.id === selectedFlavor)?.price || 0)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="mb-8">
                 <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">المميزات</h3>
                 <div className="grid grid-cols-2 gap-3">
@@ -122,12 +205,7 @@ export default function ProductDetails() {
                 </div>
 
                 <button
-                  onClick={() => {
-                    for (let i = 0; i < quantity; i++) {
-                      addToCart(product);
-                    }
-                    navigate('/cart');
-                  }}
+                  onClick={handleAddToCart}
                   className="w-full flex items-center justify-center gap-2 bg-[#1A1A1A] hover:bg-[#C9A96E] text-white font-semibold py-4 rounded-xl transition-colors"
                 >
                   أضف للسلة
