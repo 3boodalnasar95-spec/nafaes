@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, MessageCircle } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import Layout from '../components/Layout';
-import { formatPrice, whatsappLink } from '@/data';
+import { whatsappLink, formatPrice } from '@/data';
 
 export default function Cart() {
   const { cartItems, removeFromCart, updateQuantity, clearCart, cartTotal } = useStore();
@@ -33,7 +33,8 @@ export default function Cart() {
   }
 
   const whatsappMessage = `مرحباً، أرغب بالطلب من NAFAES:\n\n${cartItems.map((item, i) => {
-    return `${i + 1}. ${item.product.name_ar} (x${item.quantity})`;
+    const sizeInfo = item.selectedSize ? ` (${item.selectedSize})` : '';
+    return `${i + 1}. ${item.product.name_ar}${sizeInfo} x${item.quantity}`;
   }).join('\n')}\n\nالإجمالي: ${formatPrice(subtotal)}\n\nشكراً`;
 
   return (
@@ -51,7 +52,7 @@ export default function Cart() {
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-4">
               {cartItems.map((item) => (
-                <div key={item.product.id} className="bg-white rounded-xl border border-[#E8E0D5] p-4 flex flex-col sm:flex-row gap-4">
+                <div key={item.selectedSize ? `${item.product.id}-${item.selectedSize}` : item.product.id} className="bg-white rounded-xl border border-[#E8E0D5] p-4 flex flex-col sm:flex-row gap-4">
                   <Link to={`/products/${item.product.id}`} className="flex-shrink-0">
                     <div className="w-24 h-24 bg-[#F5F0E8] rounded-lg flex items-center justify-center p-2">
                       <img
@@ -70,24 +71,32 @@ export default function Cart() {
                         <Link to={`/products/${item.product.id}`} className="text-[#1A1A1A] font-bold text-lg hover:text-[#C9A96E]">
                           {item.product.name_ar}
                         </Link>
+                        {item.selectedSize && (
+                          <span className="text-sm text-[#C9A96E] bg-[#C9A96E]/10 px-2 py-0.5 rounded-full mr-2">
+                            {item.selectedSize}
+                          </span>
+                        )}
                         <p className="text-[#6B6B6B] text-sm">{item.product.name_en}</p>
                       </div>
-                      <button onClick={() => removeFromCart(item.product.id)} className="p-2 text-[#6B6B6B] hover:text-red-500">
+                      <button onClick={() => removeFromCart(item.product.id, item.selectedSize)} className="p-2 text-[#6B6B6B] hover:text-red-500">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div className="flex items-center bg-[#F5F0E8] rounded-lg">
-                        <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="p-2 text-[#6B6B6B] hover:text-[#1A1A1A]">
+                        <button onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.selectedSize)} className="p-2 text-[#6B6B6B] hover:text-[#1A1A1A]">
                           <Minus className="w-4 h-4" />
                         </button>
                         <span className="w-12 text-center font-medium text-[#1A1A1A]">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)} className="p-2 text-[#6B6B6B] hover:text-[#1A1A1A]">
+                        <button onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.selectedSize)} className="p-2 text-[#6B6B6B] hover:text-[#1A1A1A]">
                           <Plus className="w-4 h-4" />
                         </button>
                       </div>
                       <div className="text-left">
-                        <p className="text-[#C9A96E] font-bold text-xl">{formatPrice(item.product.price * item.quantity)}</p>
+                        <p className="text-[#C9A96E] font-bold text-xl">{formatPrice(item.finalPrice * item.quantity)}</p>
+                        {item.quantity > 1 && (
+                          <p className="text-xs text-[#6B6B6B]">{formatPrice(item.finalPrice)} لكل قطعة</p>
+                        )}
                       </div>
                     </div>
                   </div>

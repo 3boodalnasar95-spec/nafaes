@@ -6,12 +6,14 @@ import { products, formatPrice, whatsappLink, getCategoryInfo } from '@/data';
 import { useStore } from '@/store/useStore';
 import Layout from '../components/Layout';
 import { useState } from 'react';
+import { Product, SizeOption } from '@/data/types';
 
 export default function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useStore();
   const [quantity, setQuantity] = useState(1);
+  const [selectedSize, setSelectedSize] = useState<string>('');
 
   const product = products.find(p => p.id === id);
 
@@ -29,15 +31,19 @@ export default function ProductDetails() {
   }
 
   const categoryInfo = getCategoryInfo(product.categorySlug);
+  
+  const effectivePrice = selectedSize && product.sizes
+    ? (product.sizes.find(s => s.size === selectedSize)?.price || product.price)
+    : product.price;
 
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) {
-      addToCart(product);
+      addToCart(product, selectedSize || undefined);
     }
     navigate('/cart');
   };
 
-  const whatsappMessage = `أرغب بطلب ${product.name_ar} - ${product.name_en}`;
+  const whatsappMessage = `أرغب بطلب ${product.name_ar}${selectedSize ? ` - حجم ${selectedSize}` : ''}`;
 
   return (
     <Layout>
@@ -82,10 +88,39 @@ export default function ProductDetails() {
                 <p className="text-xl text-[#C9A96E] font-medium">{product.name_en}</p>
               </div>
 
+              {/* Size Selector */}
+              {product.hasSizeOptions && product.sizes && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold text-[#1A1A1A] mb-3">اختر الحجم:</h3>
+                  <div className="flex gap-3">
+                    {product.sizes.map((size: SizeOption) => (
+                      <button
+                        key={size.size}
+                        onClick={() => setSelectedSize(size.size)}
+                        className={`flex-1 p-4 rounded-xl border-2 transition-all ${
+                          selectedSize === size.size
+                            ? 'border-[#C9A96E] bg-[#C9A96E]/10'
+                            : 'border-[#E8E0D5] hover:border-[#C9A96E]/50'
+                        }`}
+                      >
+                        <p className="text-lg font-bold text-[#1A1A1A]">{size.size}</p>
+                        <p className="text-sm text-[#6B6B6B]">{size.ml} مل</p>
+                        <p className="text-[#C9A96E] font-bold mt-1">{formatPrice(size.price)} د.ك</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Price Display */}
               <div className="mb-6 p-6 bg-[#F5F0E8] rounded-2xl">
                 <div className="flex items-center justify-between">
-                  <span className="text-[#6B6B6B]">السعر</span>
-                  <span className="text-3xl font-bold text-[#C9A96E]">{formatPrice(product.price)}</span>
+                  <span className="text-[#6B6B6B]">
+                    {selectedSize ? `السعر لحجم ${selectedSize}` : 'السعر'}
+                  </span>
+                  <span className="text-3xl font-bold text-[#C9A96E]">
+                    {formatPrice(effectivePrice)} د.ك
+                  </span>
                 </div>
               </div>
 
@@ -140,12 +175,22 @@ export default function ProductDetails() {
                   </div>
                 </div>
 
+                {quantity > 1 && (
+                  <div className="p-4 bg-[#C9A96E]/10 rounded-xl text-center">
+                    <span className="text-[#6B6B6B]">الإجمالي لـ {quantity} قطع: </span>
+                    <span className="font-bold text-[#C9A96E] text-xl">
+                      {formatPrice(effectivePrice * quantity)} د.ك
+                    </span>
+                  </div>
+                )}
+
                 <button
                   onClick={handleAddToCart}
                   className="w-full flex items-center justify-center gap-2 bg-[#1A1A1A] hover:bg-[#C9A96E] text-white font-semibold py-4 rounded-xl transition-colors"
                 >
                   <ShoppingBag className="w-5 h-5" />
                   أضف للسلة
+                  {selectedSize && <span className="text-sm opacity-80">({selectedSize})</span>}
                   <ArrowRight className="w-5 h-5" />
                 </button>
 
@@ -157,6 +202,7 @@ export default function ProductDetails() {
                 >
                   <MessageCircle className="w-5 h-5" />
                   اطلب عبر واتساب
+                  {selectedSize && <span className="text-sm opacity-80">({selectedSize})</span>}
                 </a>
               </div>
             </div>

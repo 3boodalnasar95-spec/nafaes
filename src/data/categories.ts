@@ -1,4 +1,11 @@
-import { Category } from './types';
+export interface Category {
+  slug: string;
+  name_ar: string;
+  name_en: string;
+  description?: string;
+  icon: string;
+  color: string;
+}
 
 export const categories: Category[] = [
   {

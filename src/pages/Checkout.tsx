@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CheckCircle, MessageCircle, AlertCircle, ArrowRight, Search, Loader } from 'lucide-react';
+import { CheckCircle, MessageCircle, AlertCircle, ArrowRight, Search } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useOrders } from '@/contexts/OrderContext';
 import { 
-  formatPrice, 
   whatsappLink, 
   kuwaitGovernorates, 
   getAreasByGovernorate, 
   getAreaById,
   generateOrderNumber,
   generateWhatsAppMessage,
-  KuwaitArea
+  formatPrice,
 } from '@/data';
+import { KuwaitArea } from '@/data/types';
 import Layout from '../components/Layout';
 import { downloadInvoicePDF } from '@/utils/pdfGenerator';
 
@@ -45,7 +45,6 @@ export default function Checkout() {
   const [areaSearch, setAreaSearch] = useState('');
   const [showAreaDropdown, setShowAreaDropdown] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [orderId, setOrderId] = useState('');
   const [orderData, setOrderData] = useState<any>(null);
   const [orderSent, setOrderSent] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -117,16 +116,16 @@ export default function Checkout() {
         productNameAr: item.product.name_ar,
         productNameEn: item.product.name_en,
         quantity: item.quantity,
-        unitPrice: item.product.price,
-        totalPrice: item.product.price * item.quantity
+        unitPrice: item.finalPrice,
+        totalPrice: item.finalPrice * item.quantity,
+        selectedSize: item.selectedSize,
       })),
       subtotal,
       deliveryFee,
       total
     };
 
-    const newOrderId = addOrder(newOrderData);
-    setOrderId(newOrderId);
+    addOrder(newOrderData);
     setOrderData(newOrderData);
     setSubmitted(true);
   };
@@ -153,7 +152,7 @@ export default function Checkout() {
           nameEn: item.productNameEn,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
-          totalPrice: item.totalPrice
+          totalPrice: item.totalPrice,
         })),
         subtotal: orderData.subtotal,
         deliveryFee: orderData.deliveryFee,
@@ -203,7 +202,10 @@ export default function Checkout() {
                   <div key={index} className="flex items-center gap-3 p-3 bg-white rounded-lg mb-2">
                     <div className="flex-1">
                       <p className="text-[#1A1A1A] font-medium text-sm">{item.productNameAr}</p>
-                      <p className="text-[#6B6B6B] text-xs">الكمية: {item.quantity}</p>
+                      <p className="text-[#6B6B6B] text-xs">
+                        الكمية: {item.quantity}
+                        {item.selectedSize && <span className="text-[#C9A96E] mr-1">({item.selectedSize})</span>}
+                      </p>
                     </div>
                     <p className="text-[#C9A96E] font-bold">{formatPrice(item.totalPrice)}</p>
                   </div>
@@ -476,14 +478,17 @@ export default function Checkout() {
                 <h3 className="text-xl font-bold text-[#1A1A1A] mb-6">ملخص الطلب</h3>
                 <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
                   {cartItems.map((item) => (
-                    <div key={item.product.id} className="flex gap-3 p-3 bg-[#FAF8F5] rounded-xl">
+                    <div key={item.selectedSize ? `${item.product.id}-${item.selectedSize}` : item.product.id} className="flex gap-3 p-3 bg-[#FAF8F5] rounded-xl">
                       <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center p-1">
                         <img src={item.product.image} alt={item.product.name_ar} className="w-full h-full object-contain" />
                       </div>
                       <div className="flex-1">
                         <p className="text-[#1A1A1A] font-medium text-sm">{item.product.name_ar}</p>
+                        {item.selectedSize && (
+                          <span className="text-xs text-[#C9A96E]">{item.selectedSize}</span>
+                        )}
                         <p className="text-[#6B6B6B] text-xs">الكمية: {item.quantity}</p>
-                        <p className="text-[#C9A96E] font-bold text-sm">{formatPrice(item.product.price * item.quantity)}</p>
+                        <p className="text-[#C9A96E] font-bold text-sm">{formatPrice(item.finalPrice * item.quantity)}</p>
                       </div>
                     </div>
                   ))}

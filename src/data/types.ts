@@ -13,6 +13,13 @@ export interface Product {
   isFlavor?: boolean;
   hasSizeOptions?: boolean;
   basePrice?: number;
+  sizes?: SizeOption[];
+}
+
+export interface SizeOption {
+  size: string;
+  ml: number;
+  price: number;
 }
 
 export interface CartItem {
@@ -38,21 +45,6 @@ export interface Order {
   paymentMethod: 'cash' | 'link';
 }
 
-export interface SizeOption {
-  size: string;
-  ml: number;
-  price: number;
-}
-
-export interface Category {
-  slug: string;
-  name_ar: string;
-  name_en: string;
-  description: string;
-  icon: string;
-  color: string;
-}
-
 export interface KuwaitArea {
   id: string;
   governorate: string;
@@ -66,14 +58,4 @@ export interface Governorate {
   id: string;
   name: string;
   name_ar: string;
-}
-
-export interface FlavorOption {
-  id: string;
-  name_ar: string;
-  name_en: string;
-  basePrice: number;
-  image: string;
-  description: string;
-  sizes: SizeOption[];
 }

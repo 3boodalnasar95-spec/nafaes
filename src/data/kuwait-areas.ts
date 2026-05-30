@@ -123,20 +123,3 @@ export function getAreasByGovernorate(governorateId: string): KuwaitArea[] {
 export function getAreaById(areaId: string): KuwaitArea | undefined {
   return kuwaitAreas.find(area => area.id === areaId);
 }
-
-export function searchAreas(query: string, governorateId?: string): KuwaitArea[] {
-  let results = kuwaitAreas;
-  
-  if (governorateId) {
-    results = results.filter(area => area.governorate === governorateId);
-  }
-  
-  if (query) {
-    const lowerQuery = query.toLowerCase();
-    results = results.filter(area => 
-      area.name.toLowerCase().includes(lowerQuery)
-    );
-  }
-  
-  return results;
-}

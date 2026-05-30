@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { Search, Sparkles, Droplets, Flower2, Gift, Package } from 'lucide-react';
 import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
-import { products, categories, getProductsByCategory } from '@/data';
+import { products, getProductsByCategory, categories } from '@/data';
 
 export default function Products() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');

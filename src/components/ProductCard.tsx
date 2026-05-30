@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ShoppingBag, Sparkles, Droplets, Flower2, Gift, Package } from 'lucide-react';
-import { Product, formatPrice, getCategoryInfo } from '@/data';
+import { formatPrice, getCategoryInfo } from '@/data';
+import { Product } from '@/data/types';
 import { useStore } from '@/store/useStore';
 
 interface ProductCardProps {
@@ -43,21 +44,6 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
   };
 
-  const getIconColor = () => {
-    switch (product.categorySlug) {
-      case 'smart-aroma-diffusers':
-        return 'text-[#C9A96E]';
-      case 'fragrance-oils':
-        return 'text-blue-500';
-      case 'reed-diffusers':
-        return 'text-amber-600';
-      case 'gift-sets':
-        return 'text-purple-600';
-      default:
-        return 'text-[#C9A96E]';
-    }
-  };
-
   return (
     <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-[#E8E0D5] hover:border-[#C9A96E]/50">
       <Link to={`/products/${product.id}`} className="block relative overflow-hidden">
@@ -86,10 +72,15 @@ export default function ProductCard({ product }: ProductCardProps) {
         <p className="text-[#6B6B6B] text-sm mb-2">{product.name_en}</p>
         <p className="text-[#6B6B6B] text-xs mb-4 line-clamp-2 leading-relaxed">{product.shortDescription}</p>
 
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-2">
           <span className="text-lg font-bold text-[#C9A96E]">
-            {formatPrice(product.price)}
+            {formatPrice(product.price)} د.ك
           </span>
+          {product.hasSizeOptions && (
+            <span className="text-xs text-[#6B6B6B] bg-[#F5F0E8] px-2 py-1 rounded">
+              3 أحجام
+            </span>
+          )}
         </div>
 
         <button
