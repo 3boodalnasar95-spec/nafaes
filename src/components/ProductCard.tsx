@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ShoppingBag, Sparkles, Droplets, Flower2, Gift } from 'lucide-react';
+import { ShoppingBag, Sparkles, Droplets, Flower2, Gift, Package } from 'lucide-react';
 import { Product, formatPrice, getCategoryInfo } from '../data/products';
 import { useStore } from '../store/useStore';
 
@@ -18,28 +18,71 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const categoryInfo = getCategoryInfo(product.categorySlug);
 
+  // Determine icon and placeholder color based on category
   const getCategoryIcon = (icon: string) => {
     switch (icon) {
-      case 'Sparkles': return <Sparkles className="w-4 h-4" />;
-      case 'Droplets': return <Droplets className="w-4 h-4" />;
-      case 'Flower2': return <Flower2 className="w-4 h-4" />;
-      case 'Gift': return <Gift className="w-4 h-4" />;
-      default: return <Sparkles className="w-4 h-4" />;
+      case 'Sparkles': return <Sparkles className="w-8 h-8" />;
+      case 'Droplets': return <Droplets className="w-8 h-8" />;
+      case 'Flower2': return <Flower2 className="w-8 h-8" />;
+      case 'Gift': return <Gift className="w-8 h-8" />;
+      default: return <Package className="w-8 h-8" />;
+    }
+  };
+
+  // Get placeholder background based on category
+  const getPlaceholderBg = () => {
+    switch (product.categorySlug) {
+      case 'smart-aroma-diffusers':
+        return 'from-[#C9A96E]/20 to-[#D4AF37]/20';
+      case 'fragrance-oils':
+        return 'from-blue-100/30 to-blue-200/30';
+      case 'reed-diffusers':
+        return 'from-amber-100/30 to-amber-200/30';
+      case 'gift-sets':
+        return 'from-purple-100/30 to-purple-200/30';
+      default:
+        return 'from-[#F5F0E8] to-[#E8E0D5]';
+    }
+  };
+
+  // Get icon color based on category
+  const getIconColor = () => {
+    switch (product.categorySlug) {
+      case 'smart-aroma-diffusers':
+        return 'text-[#C9A96E]';
+      case 'fragrance-oils':
+        return 'text-blue-500';
+      case 'reed-diffusers':
+        return 'text-amber-600';
+      case 'gift-sets':
+        return 'text-purple-600';
+      default:
+        return 'text-[#C9A96E]';
     }
   };
 
   return (
     <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-[#E8E0D5]">
       <Link to={`/products/${product.id}`} className="block relative overflow-hidden">
-        <div className="aspect-square bg-gradient-to-br from-[#F5F0E8] to-[#E8E0D5] flex items-center justify-center p-6">
+        <div className={`aspect-square bg-gradient-to-br ${getPlaceholderBg()} flex items-center justify-center p-6`}>
           <img
             src={product.image}
             alt={product.name_ar}
             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
             onError={(e) => {
+              // Hide broken image and show placeholder
               (e.target as HTMLImageElement).style.display = 'none';
             }}
           />
+          {/* Fallback placeholder when image fails */}
+          <div className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br ${getPlaceholderBg()} hidden`}>
+            <div className="text-center">
+              <div className={`w-16 h-16 mx-auto mb-2 rounded-full bg-white/50 flex items-center justify-center ${getIconColor()}`}>
+                {categoryInfo && getCategoryIcon(categoryInfo.icon)}
+              </div>
+              <p className="text-sm text-[#6B6B6B] font-medium">{product.name_en}</p>
+            </div>
+          </div>
         </div>
         
         {/* Category Badge */}
