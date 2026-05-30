@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import { generatePdf } from "@/utils/generatePdf";
 import { sampleInvoiceData } from "@/data/sampleInvoice";
 
 export default function Invoice() {
+  const { id } = useParams<{ id: string }>();
   const [invoiceNumber] = useState(generateInvoiceNumber());
 
   const handleDownloadPdf = async () => {
