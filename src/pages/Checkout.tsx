@@ -4,10 +4,10 @@ import { ArrowRight, CheckCircle } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import Layout from '../components/Layout';
 import { formatPrice, deliveryFee, kuwaitGovernorates, getAreaById } from '../data/products';
-import { PersonalInfoForm, AddressForm, PaymentMethod, OrderSummary } from '../components/checkout';
-import { generateFixedWhatsAppMessage, getWhatsAppLink, type InvoiceData } from '@/utils/whatsappGenerator';
+import { PersonalInfoForm, AddressForm, PaymentMethod, OrderSummary } from '@/components/checkout';
+import { createOrder, getFormattedDate } from '@/lib/db-operations';
 import { downloadInvoicePDF } from '@/utils/pdfGenerator';
-import { generateOrderNumber, getFormattedDate } from '@/utils/orderUtils';
+import { generateFixedWhatsAppMessage, getWhatsAppLink, type InvoiceData } from '@/utils/whatsappGenerator';
 import { toast } from 'sonner';
 
 interface CheckoutFormData {
@@ -62,113 +62,92 @@ export default function Checkout() {
     e.preventDefault();
     if (!validateForm()) return;
 
-    const selectedGovernorate = kuwaitGovernorates.find(g => g.id === formData.governorate);
-    const newOrderNumber = generateOrderNumber();
-    const dateStr = getFormattedDate();
-    
-    // Create invoice data first
-    const invoiceData: InvoiceData = {
-      orderNumber: newOrderNumber,
-      date: dateStr,
-      customerName: formData.name,
-      customerPhone: formData.phone,
-      governorate: selectedGovernorate?.name || formData.governorate,
-      area: selectedArea?.name || formData.area,
-      address: formData.address,
-      notes: formData.notes,
-      paymentMethod: formData.paymentMethod,
-      items: cartItems.map(item => ({
-        nameAr: item.product.name_ar,
-        nameEn: item.product.name_en,
-        quantity: item.quantity,
-        unitPrice: item.product.price,
-        totalPrice: item.product.price * item.quantity
-      })),
-      subtotal,
-      deliveryFee: totalDeliveryFee,
-      total
-    };
-
-    // Create order object
-    const newOrder = {
-      id: `order_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-      orderNumber: newOrderNumber,
-      customerName: formData.name,
-      customerPhone: formData.phone,
-      governorate: selectedGovernorate?.name || formData.governorate,
-      area: selectedArea?.name || formData.area,
-      areaId: formData.area,
-      address: formData.address,
-      notes: formData.notes,
-      paymentMethod: formData.paymentMethod,
-      items: cartItems.map(item => ({
-        productId: item.product.id,
-        productNameAr: item.product.name_ar,
-        productNameEn: item.product.name_en,
-        quantity: item.quantity,
-        unitPrice: item.product.price,
-        totalPrice: item.product.price * item.quantity
-      })),
-      subtotal,
-      deliveryFee: totalDeliveryFee,
-      total,
-      status: 'pending' as const,
-      createdAt: new Date().toISOString(),
-      sentToWhatsApp: false
-    };
-
-    // Save order to localStorage
-    const existingOrders = JSON.parse(localStorage.getItem('nafaes_orders') || '[]');
-    const updatedOrders = [newOrder, ...existingOrders];
-    localStorage.setItem('nafaes_orders', JSON.stringify(updatedOrders));
-
-    // Create notification
-    const notification = {
-      id: `notif_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-      type: 'order' as const,
-      title: '🛒 طلب جديد!',
-      message: `طلب من: ${formData.name}\nالهاتف: +965 ${formData.phone}\nالمنطقة: ${selectedArea?.name || formData.area}\nالإجمالي: ${total.toFixed(3)} د.ك\nالمنتجات: ${cartItems.length}`,
-      orderId: newOrder.id,
-      read: false,
-      createdAt: new Date().toISOString()
-    };
-
-    const existingNotifications = JSON.parse(localStorage.getItem('nafaes_notifications') || '[]');
-    const updatedNotifications = [notification, ...existingNotifications];
-    localStorage.setItem('nafaes_notifications', JSON.stringify(updatedNotifications));
-
-    console.log('✅ Order saved:', newOrder);
-    console.log('📋 Order number:', newOrderNumber);
-
-    setOrderData(invoiceData);
-    setOrderNumber(newOrderNumber);
-    setSubmitted(true);
-
-    // Send WhatsApp and PDF automatically
     setSending(true);
-    
+
     try {
-      // 1. Generate and download PDF for customer
+      const selectedGovernorate = kuwaitGovernorates.find(g => g.id === formData.governorate);
+      const dateStr = getFormattedDate();
+
+      // Prepare order data
+      const orderInput = {
+        customer_name: formData.name,
+        customer_phone: formData.phone,
+        governorate: selectedGovernorate?.name || formData.governorate,
+        area: selectedArea?.name || formData.area,
+        area_id: formData.area,
+        address: formData.address,
+        notes: formData.notes,
+        payment_method: formData.paymentMethod,
+        subtotal,
+        delivery_fee: totalDeliveryFee,
+        total,
+      };
+
+      // Prepare items
+      const items = cartItems.map(item => ({
+        product_id: item.product.id,
+        product_name_ar: item.product.name_ar,
+        product_name_en: item.product.name_en,
+        quantity: item.quantity,
+        unit_price: item.product.price,
+        total_price: item.product.price * item.quantity,
+      }));
+
+      // Create order in Supabase
+      const newOrder = await createOrder(orderInput, items);
+
+      if (!newOrder) {
+        throw new Error('Failed to create order');
+      }
+
+      // Create invoice data
+      const invoiceData: InvoiceData = {
+        orderNumber: newOrder.order_number,
+        date: dateStr,
+        customerName: formData.name,
+        customerPhone: formData.phone,
+        governorate: selectedGovernorate?.name || formData.governorate,
+        area: selectedArea?.name || formData.area,
+        address: formData.address,
+        notes: formData.notes,
+        paymentMethod: formData.paymentMethod,
+        items: cartItems.map(item => ({
+          nameAr: item.product.name_ar,
+          nameEn: item.product.name_en,
+          quantity: item.quantity,
+          unitPrice: item.product.price,
+          totalPrice: item.product.price * item.quantity
+        })),
+        subtotal,
+        deliveryFee: totalDeliveryFee,
+        total
+      };
+
+      setOrderData(invoiceData);
+      setOrderNumber(newOrder.order_number);
+      setSubmitted(true);
+
+      // Generate and download PDF
       await downloadInvoicePDF(invoiceData);
-      console.log('📄 PDF generated and downloaded');
+      console.log('📄 PDF downloaded');
+
+      // Send WhatsApp message
+      const whatsappMessage = generateFixedWhatsAppMessage(invoiceData);
+      const whatsappUrl = getWhatsAppLink(whatsappMessage);
       
-      // 2. Send WhatsApp message to admin
-      const fixedMessage = generateFixedWhatsAppMessage(invoiceData);
-      const whatsappUrl = getWhatsAppLink(fixedMessage);
-      
-      console.log('📱 Opening WhatsApp with fixed message...');
       window.open(whatsappUrl, '_blank');
-      
-      toast.success('✅ تم إرسال الطلب بنجاح!\nرقم الطلب: ' + newOrderNumber);
-      
-      // Clear cart after successful submission
+      console.log('📱 WhatsApp opened');
+
+      toast.success('✅ تم إرسال الطلب بنجاح!\nرقم الطلب: ' + newOrder.order_number);
+
+      // Clear cart
       clearCart();
-      
+
     } catch (error) {
-      console.error('Error sending order:', error);
-      toast.error('حدث خطأ أثناء إرسال الطلب');
+      console.error('Error submitting order:', error);
+      toast.error('حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.');
     }
-    
+
     setSending(false);
   };
 

@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Search, Edit, Trash2, Package, AlertTriangle } from 'lucide-react';
 import AdminLayout from './AdminLayout';
-import { getProducts, updateProduct } from '@/lib/db-operations';
-import type { Product } from '@/types/database';
+import { getProducts, updateProduct, Product } from '@/lib/db-operations';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);

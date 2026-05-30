@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, TrendingDown, Plus, Download, Filter } from 'lucide-react';
 import AdminLayout from './AdminLayout';
-import { getTransactions, createTransaction } from '@/lib/db-operations';
-import type { Transaction } from '@/types/database';
+import { getTransactions, createTransaction, Transaction } from '@/lib/db-operations';
 
 export default function AdminAccounting() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);

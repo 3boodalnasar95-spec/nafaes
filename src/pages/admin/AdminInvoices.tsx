@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Receipt, Eye, Download, Search, Plus, Printer } from 'lucide-react';
 import AdminLayout from './AdminLayout';
-import { getInvoices } from '@/lib/db-operations';
-import type { Invoice } from '@/types/database';
+import { getInvoices, Invoice } from '@/lib/db-operations';
 
 export default function AdminInvoices() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -99,8 +98,7 @@ export default function AdminInvoices() {
                     <tr key={invoice.id} className="hover:bg-[#FAF8F5] transition-colors">
                       <td className="px-4 py-4 font-mono text-[#C9A96E] font-bold">{invoice.invoice_number}</td>
                       <td className="px-4 py-4">
-                        <p className="text-[#1A1A1A]">{invoice.customer?.name}</p>
-                        <p className="text-sm text-[#6B6B6B]">{invoice.customer?.phone}</p>
+                        <p className="text-[#1A1A1A]">{invoice.customer_id || 'غير محدد'}</p>
                       </td>
                       <td className="text-center px-4 py-4 text-[#6B6B6B]">{invoice.created_at?.split('T')[0]}</td>
                       <td className="text-center px-4 py-4">

@@ -1,40 +1,45 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   TrendingUp, ShoppingCart, Package, 
-  DollarSign, AlertTriangle, Bell, MessageCircle,
-  Clock, CheckCircle, X, RefreshCw, FileText
+  DollarSign, Bell, MessageCircle,
+  Clock, CheckCircle, X, RefreshCw
 } from 'lucide-react';
 import AdminLayout from './AdminLayout';
-import { formatPrice } from '@/data/products';
+import { getOrders, updateOrderStatus, getNotifications, markNotificationRead, markAllNotificationsRead, getDashboardStats, formatPrice } from '@/lib/db-operations';
+import { downloadInvoicePDF } from '@/utils/pdfGenerator';
+import { toast } from 'sonner';
 
 interface OrderItem {
-  productId: string;
-  productNameAr: string;
-  productNameEn: string;
+  id: string;
+  order_id: string;
+  product_id: string;
+  product_name_ar: string;
+  product_name_en: string;
   quantity: number;
-  unitPrice: number;
-  totalPrice: number;
+  unit_price: number;
+  total_price: number;
 }
 
 interface Order {
   id: string;
-  orderNumber: string;
-  customerName: string;
-  customerPhone: string;
+  order_number: string;
+  customer_name: string;
+  customer_phone: string;
   governorate: string;
   area: string;
-  areaId: string;
+  area_id: string;
   address: string;
   notes: string;
-  paymentMethod: 'cash' | 'link';
-  items: OrderItem[];
+  payment_method: 'cash' | 'link';
   subtotal: number;
-  deliveryFee: number;
+  delivery_fee: number;
   total: number;
   status: 'pending' | 'confirmed' | 'preparing' | 'shipped' | 'delivered' | 'cancelled';
-  createdAt: string;
-  sentToWhatsApp: boolean;
+  source: string;
+  created_at: string;
+  updated_at: string;
+  order_items?: OrderItem[];
 }
 
 interface Notification {
@@ -42,9 +47,9 @@ interface Notification {
   type: 'order' | 'alert' | 'system';
   title: string;
   message: string;
-  orderId?: string;
+  order_id?: string;
   read: boolean;
-  createdAt: string;
+  created_at: string;
 }
 
 export default function AdminDashboard() {
@@ -52,64 +57,56 @@ export default function AdminDashboard() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    pendingOrders: 0,
+    todayOrders: 0,
+    totalRevenue: 0,
+    unreadNotifications: 0,
+  });
 
-  // Load orders from localStorage
-  useEffect(() => {
-    loadData();
-    
-    // Poll for updates every 2 seconds
-    const interval = setInterval(loadData, 2000);
-    return () => clearInterval(interval);
+  const loadData = useCallback(async () => {
+    try {
+      const [ordersData, notificationsData, statsData] = await Promise.all([
+        getOrders(),
+        getNotifications(),
+        getDashboardStats(),
+      ]);
+
+      setOrders(ordersData);
+      setNotifications(notificationsData);
+      setStats(statsData);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
   }, []);
 
-  const loadData = () => {
-    try {
-      // Load orders
-      const storedOrders = localStorage.getItem('nafaes_orders');
-      if (storedOrders) {
-        const parsed = JSON.parse(storedOrders);
-        setOrders(parsed);
-        console.log('📦 Loaded orders:', parsed.length);
-      }
-      
-      // Load notifications
-      const storedNotifications = localStorage.getItem('nafaes_notifications');
-      if (storedNotifications) {
-        const parsed = JSON.parse(storedNotifications);
-        setNotifications(parsed);
-        console.log('🔔 Loaded notifications:', parsed.length);
-      }
-    } catch (e) {
-      console.error('Error loading data:', e);
+  useEffect(() => {
+    loadData();
+
+    // Poll for updates every 5 seconds
+    const interval = setInterval(loadData, 5000);
+    return () => clearInterval(interval);
+  }, [loadData]);
+
+  const handleUpdateStatus = async (orderId: string, status: Order['status']) => {
+    const success = await updateOrderStatus(orderId, status);
+    if (success) {
+      toast.success(`تم تحديث حالة الطلب إلى: ${getStatusLabel(status)}`);
+      loadData();
+    } else {
+      toast.error('حدث خطأ أثناء تحديث الحالة');
     }
   };
 
-  const updateOrderStatus = (orderId: string, status: Order['status']) => {
-    const storedOrders = localStorage.getItem('nafaes_orders');
-    const allOrders: Order[] = storedOrders ? JSON.parse(storedOrders) : [];
-    const updatedOrders = allOrders.map(order => 
-      order.id === orderId ? { ...order, status } : order
-    );
-    localStorage.setItem('nafaes_orders', JSON.stringify(updatedOrders));
-    setOrders(updatedOrders);
+  const handleMarkNotificationRead = async (notificationId: string) => {
+    await markNotificationRead(notificationId);
+    loadData();
   };
 
-  const markNotificationRead = (notificationId: string) => {
-    const storedNotifications = localStorage.getItem('nafaes_notifications');
-    const allNotifications: Notification[] = storedNotifications ? JSON.parse(storedNotifications) : [];
-    const updated = allNotifications.map(n =>
-      n.id === notificationId ? { ...n, read: true } : n
-    );
-    localStorage.setItem('nafaes_notifications', JSON.stringify(updated));
-    setNotifications(updated);
-  };
-
-  const markAllNotificationsRead = () => {
-    const storedNotifications = localStorage.getItem('nafaes_notifications');
-    const allNotifications: Notification[] = storedNotifications ? JSON.parse(storedNotifications) : [];
-    const updated = allNotifications.map(n => ({ ...n, read: true }));
-    localStorage.setItem('nafaes_notifications', JSON.stringify(updated));
-    setNotifications(updated);
+  const handleMarkAllRead = async () => {
+    await markAllNotificationsRead();
+    loadData();
   };
 
   const handleRefresh = () => {
@@ -117,16 +114,6 @@ export default function AdminDashboard() {
     loadData();
     setTimeout(() => setRefreshing(false), 500);
   };
-
-  // Calculate stats
-  const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
-  const pendingOrders = orders.filter(o => o.status === 'pending').length;
-  const todayOrders = orders.filter(o => {
-    const today = new Date().toDateString();
-    return new Date(o.createdAt).toDateString() === today;
-  });
-
-  const unreadCount = notifications.filter(n => !n.read).length;
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -142,12 +129,12 @@ export default function AdminDashboard() {
 
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
-      pending: 'معلق ⏳',
-      confirmed: 'مؤكد ✅',
-      preparing: 'قيد التجهيز 🔧',
-      shipped: 'تم الشحن 🚚',
-      delivered: 'تم التوصيل 📦',
-      cancelled: 'ملغي ❌'
+      pending: 'معلق',
+      confirmed: 'مؤكد',
+      preparing: 'قيد التجهيز',
+      shipped: 'تم الشحن',
+      delivered: 'تم التوصيل',
+      cancelled: 'ملغي'
     };
     return labels[status] || status;
   };
@@ -158,7 +145,7 @@ export default function AdminDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-[#1A1A1A]">لوحة التحكم</h2>
-            <p className="text-[#6B6B6B]">مرحباً بك في لوحة تحكم نفائس 🕌</p>
+            <p className="text-[#6B6B6B]">مرحباً بك في لوحة تحكم نفائس</p>
           </div>
           
           <div className="flex items-center gap-3">
@@ -176,9 +163,9 @@ export default function AdminDashboard() {
                 className="relative p-3 bg-white border border-[#E8E0D5] rounded-xl hover:bg-[#FAF8F5] transition-colors"
               >
                 <Bell className="w-6 h-6 text-[#6B6B6B]" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
-                    {unreadCount}
+                {stats.unreadNotifications > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                    {stats.unreadNotifications}
                   </span>
                 )}
               </button>
@@ -186,11 +173,11 @@ export default function AdminDashboard() {
               {showNotifications && (
                 <div className="absolute left-0 top-full mt-2 w-96 bg-white rounded-xl border border-[#E8E0D5] shadow-2xl z-50 max-h-96 overflow-y-auto">
                   <div className="p-4 border-b border-[#E8E0D5] flex items-center justify-between sticky top-0 bg-white">
-                    <h3 className="font-bold text-[#1A1A1A]">🔔 الإشعارات ({unreadCount} غير مقروءة)</h3>
-                    {unreadCount > 0 && (
+                    <h3 className="font-bold text-[#1A1A1A]">الإشعارات</h3>
+                    {stats.unreadNotifications > 0 && (
                       <button 
-                        onClick={markAllNotificationsRead}
-                        className="text-sm text-[#C9A96E] hover:text-[#D4AF37] font-medium"
+                        onClick={handleMarkAllRead}
+                        className="text-sm text-[#C9A96E] hover:text-[#D4AF37]"
                       >
                         تحديد الكل كمقروء
                       </button>
@@ -206,35 +193,19 @@ export default function AdminDashboard() {
                       notifications.map(notif => (
                         <div 
                           key={notif.id} 
-                          onClick={() => markNotificationRead(notif.id)}
-                          className={`p-4 border-b border-[#E8E0D5] last:border-0 hover:bg-[#FAF8F5] cursor-pointer transition-colors ${
+                          onClick={() => handleMarkNotificationRead(notif.id)}
+                          className={`p-4 border-b border-[#E8E0D5] last:border-0 hover:bg-[#FAF8F5] cursor-pointer ${
                             !notif.read ? 'bg-[#C9A96E]/5' : ''
                           }`}
                         >
-                          <div className="flex items-start gap-3">
-                            <div className={`p-2 rounded-full ${
-                              notif.type === 'order' ? 'bg-green-100 text-green-600' :
-                              notif.type === 'alert' ? 'bg-orange-100 text-orange-600' :
-                              'bg-blue-100 text-blue-600'
-                            }`}>
-                              {notif.type === 'order' ? <ShoppingCart className="w-4 h-4" /> :
-                               notif.type === 'alert' ? <AlertTriangle className="w-4 h-4" /> :
-                               <Bell className="w-4 h-4" />}
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-medium text-[#1A1A1A] text-sm">{notif.title}</p>
-                              <p className="text-sm text-[#6B6B6B] mt-1 whitespace-pre-line">{notif.message}</p>
-                              <p className="text-xs text-[#C9A96E] mt-2">
-                                {new Date(notif.createdAt).toLocaleDateString('ar-SA', {
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </p>
-                            </div>
-                            {!notif.read && (
-                              <div className="w-2 h-2 bg-[#C9A96E] rounded-full"></div>
-                            )}
-                          </div>
+                          <p className="font-medium text-[#1A1A1A] text-sm">{notif.title}</p>
+                          <p className="text-sm text-[#6B6B6B] mt-1 whitespace-pre-line">{notif.message}</p>
+                          <p className="text-xs text-[#C9A96E] mt-2">
+                            {new Date(notif.created_at).toLocaleDateString('ar-SA', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
                         </div>
                       ))
                     )}
@@ -253,10 +224,9 @@ export default function AdminDashboard() {
             <div className="p-3 bg-green-500 rounded-lg">
               <DollarSign className="w-6 h-6 text-white" />
             </div>
-            <span className="text-green-500 text-sm font-medium">💰 الإيرادات</span>
           </div>
-          <h3 className="text-2xl font-bold text-[#1A1A1A] mt-4">{formatPrice(totalRevenue)}</h3>
-          <p className="text-[#6B6B6B] text-sm">{orders.length} طلب</p>
+          <h3 className="text-2xl font-bold text-[#1A1A1A] mt-4">{formatPrice(stats.totalRevenue)}</h3>
+          <p className="text-[#6B6B6B] text-sm">إجمالي المبيعات ({stats.totalOrders} طلب)</p>
         </div>
 
         <div className="bg-white rounded-xl border border-[#E8E0D5] p-6 hover:shadow-lg transition-shadow">
@@ -264,10 +234,9 @@ export default function AdminDashboard() {
             <div className="p-3 bg-yellow-500 rounded-lg">
               <Clock className="w-6 h-6 text-white" />
             </div>
-            <span className="text-yellow-500 text-sm font-medium">⏳ معلقة</span>
           </div>
-          <h3 className="text-2xl font-bold text-yellow-500 mt-4">{pendingOrders}</h3>
-          <p className="text-[#6B6B6B] text-sm">تتطلب متابعة</p>
+          <h3 className="text-2xl font-bold text-yellow-500 mt-4">{stats.pendingOrders}</h3>
+          <p className="text-[#6B6B6B] text-sm">طلبات معلقة</p>
         </div>
 
         <div className="bg-white rounded-xl border border-[#E8E0D5] p-6 hover:shadow-lg transition-shadow">
@@ -275,9 +244,8 @@ export default function AdminDashboard() {
             <div className="p-3 bg-blue-500 rounded-lg">
               <TrendingUp className="w-6 h-6 text-white" />
             </div>
-            <span className="text-blue-500 text-sm font-medium">📅 اليوم</span>
           </div>
-          <h3 className="text-2xl font-bold text-[#1A1A1A] mt-4">{todayOrders.length}</h3>
+          <h3 className="text-2xl font-bold text-[#1A1A1A] mt-4">{stats.todayOrders}</h3>
           <p className="text-[#6B6B6B] text-sm">طلبات اليوم</p>
         </div>
 
@@ -286,7 +254,6 @@ export default function AdminDashboard() {
             <div className="p-3 bg-purple-500 rounded-lg">
               <Package className="w-6 h-6 text-white" />
             </div>
-            <span className="text-purple-500 text-sm font-medium">✅ مكتملة</span>
           </div>
           <h3 className="text-2xl font-bold text-[#1A1A1A] mt-4">{orders.filter(o => o.status === 'delivered').length}</h3>
           <p className="text-[#6B6B6B] text-sm">طلبات مكتملة</p>
@@ -294,11 +261,11 @@ export default function AdminDashboard() {
       </div>
 
       {/* Recent Orders */}
-      <div className="bg-white rounded-xl border border-[#E8E0D5] p-6 mb-6">
+      <div className="bg-white rounded-xl border border-[#E8E0D5] p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="font-bold text-[#1A1A1A] text-lg">📋 آخر الطلبات ({orders.length})</h3>
+          <h3 className="font-bold text-[#1A1A1A] text-lg">آخر الطلبات ({orders.length})</h3>
           <Link to="/admin/orders" className="text-[#C9A96E] text-sm hover:underline font-medium">
-            عرض الكل ←
+            عرض الكل
           </Link>
         </div>
 
@@ -313,15 +280,15 @@ export default function AdminDashboard() {
             {orders.slice(0, 5).map(order => (
               <div key={order.id} className="flex items-center justify-between p-4 bg-[#FAF8F5] rounded-xl hover:bg-[#F5F0E8] transition-colors">
                 <div className="flex items-center gap-4">
-                  <div className={`w-4 h-4 rounded-full ${
+                  <div className={`w-3 h-3 rounded-full ${
                     order.status === 'pending' ? 'bg-yellow-400 animate-pulse' : 
                     order.status === 'delivered' ? 'bg-green-400' : 
                     order.status === 'cancelled' ? 'bg-red-400' : 'bg-blue-400'
                   }`} />
                   <div>
-                    <p className="font-bold text-[#1A1A1A]">{order.orderNumber}</p>
-                    <p className="text-sm text-[#6B6B6B]">{order.customerName} - 📞 {order.customerPhone}</p>
-                    <p className="text-xs text-[#6B6B6B]">{order.items.length} منتجات | {order.area}</p>
+                    <p className="font-bold text-[#1A1A1A]">{order.order_number}</p>
+                    <p className="text-sm text-[#6B6B6B]">{order.customer_name} - {order.customer_phone}</p>
+                    <p className="text-xs text-[#6B6B6B]">{order.order_items?.length || 0} منتجات | {order.area}</p>
                   </div>
                 </div>
                 
@@ -331,40 +298,29 @@ export default function AdminDashboard() {
                   </span>
                   <p className="text-[#C9A96E] font-bold mt-2">{formatPrice(order.total)}</p>
                   <p className="text-xs text-[#6B6B6B] mt-1">
-                    {new Date(order.createdAt).toLocaleDateString('ar-SA')}
+                    {new Date(order.created_at).toLocaleDateString('ar-SA')}
                   </p>
                 </div>
 
                 {/* Quick Actions */}
-                <div className="flex gap-2">
-                  {order.status === 'pending' && (
-                    <>
-                      <button
-                        onClick={() => updateOrderStatus(order.id, 'confirmed')}
-                        className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                        title="تأكيد الطلب"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => updateOrderStatus(order.id, 'cancelled')}
-                        className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                        title="إلغاء الطلب"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </>
-                  )}
-                  {order.status !== 'pending' && order.status !== 'cancelled' && order.status !== 'delivered' && (
+                {order.status === 'pending' && (
+                  <div className="flex gap-2">
                     <button
-                      onClick={() => updateOrderStatus(order.id, 'delivered')}
+                      onClick={() => handleUpdateStatus(order.id, 'confirmed')}
                       className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                      title="تم التوصيل"
+                      title="تأكيد"
                     >
                       <CheckCircle className="w-4 h-4" />
                     </button>
-                  )}
-                </div>
+                    <button
+                      onClick={() => handleUpdateStatus(order.id, 'cancelled')}
+                      className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                      title="إلغاء"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -372,7 +328,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
         <Link 
           to="/admin/orders" 
           className="flex items-center justify-center gap-3 bg-gradient-to-r from-[#C9A96E] to-[#D4AF37] text-white p-4 rounded-xl hover:opacity-90 transition-opacity"

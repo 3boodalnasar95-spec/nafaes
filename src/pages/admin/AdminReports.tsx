@@ -1,12 +1,8 @@
 import { useState, useEffect } from 'react';
-import { 
-  BarChart3, Download, Calendar, Filter, TrendingUp, 
-  Package, Users, ShoppingCart, DollarSign, Eye, Printer
-} from 'lucide-react';
+import { BarChart3, Download, Calendar, Filter, TrendingUp, Package, Users, ShoppingCart, DollarSign } from 'lucide-react';
 import AdminLayout from './AdminLayout';
-import { getSalesReport, getTransactions, getOrders, exportOrders } from '@/lib/db-operations';
+import { getSalesReport, getTransactions, getOrders, exportOrders, Transaction } from '@/lib/db-operations';
 import { formatPrice } from '@/data/products';
-import type { Transaction } from '@/types/database';
 
 export default function AdminReports() {
   const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d' | 'custom'>('30d');

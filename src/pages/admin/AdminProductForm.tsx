@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowRight, Plus, Trash2 } from 'lucide-react';
 import AdminLayout from './AdminLayout';
-import { createProduct, updateProduct, getProducts } from '@/lib/db-operations';
-import type { Product } from '@/types/database';
+import { createProduct, updateProduct, getProducts, Product } from '@/lib/db-operations';
 
 export default function AdminProductForm() {
   const { id } = useParams();
@@ -48,10 +47,10 @@ export default function AdminProductForm() {
         type: product.type || '',
         price: product.price?.toString() || '',
         cost_price: product.cost_price?.toString() || '0',
-        description_short: product.description_short || '',
-        description_full: product.description_full || '',
+        description_short: '',
+        description_full: '',
         sku: product.sku || '',
-        category: product.category_id || 'general',
+        category: 'general',
         stock_quantity: product.stock_quantity?.toString() || '0',
         min_stock_level: product.min_stock_level?.toString() || '5',
         image: product.images?.[0] || '',
@@ -65,19 +64,16 @@ export default function AdminProductForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const productData = {
+    const productData: Partial<Product> = {
       name_ar: formData.name_ar,
       name_en: formData.name_en,
       type: formData.type,
       price: parseFloat(formData.price) || 0,
       cost_price: parseFloat(formData.cost_price) || 0,
-      description_short: formData.description_short,
-      description_full: formData.description_full,
       specs: formData.specs,
       features: formData.features,
       images: formData.image ? [formData.image] : [],
       sku: formData.sku,
-      category_id: formData.category,
       stock_quantity: parseInt(formData.stock_quantity) || 0,
       min_stock_level: parseInt(formData.min_stock_level) || 5,
       is_active: formData.is_active,
@@ -266,31 +262,6 @@ export default function AdminProductForm() {
                 placeholder="/images/product.png"
               />
             </div>
-          </div>
-        </div>
-
-        {/* Descriptions */}
-        <div className="mt-6 space-y-4">
-          <h3 className="font-bold text-[#1A1A1A] border-b border-[#E8E0D5] pb-2">الوصف</h3>
-          
-          <div>
-            <label className="block text-sm font-medium text-[#1A1A1A] mb-1">وصف مختصر</label>
-            <textarea
-              value={formData.description_short}
-              onChange={(e) => setFormData({ ...formData, description_short: e.target.value })}
-              className="w-full px-4 py-2 bg-[#FAF8F5] border border-[#E8E0D5] rounded-lg focus:outline-none focus:border-[#C9A96E] resize-none"
-              rows={2}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[#1A1A1A] mb-1">وصف كامل</label>
-            <textarea
-              value={formData.description_full}
-              onChange={(e) => setFormData({ ...formData, description_full: e.target.value })}
-              className="w-full px-4 py-2 bg-[#FAF8F5] border border-[#E8E0D5] rounded-lg focus:outline-none focus:border-[#C9A96E] resize-none"
-              rows={3}
-            />
           </div>
         </div>
 

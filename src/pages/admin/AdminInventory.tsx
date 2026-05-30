@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Warehouse, AlertTriangle, ArrowUpDown, Package, Plus, Minus, TrendingUp, TrendingDown } from 'lucide-react';
 import AdminLayout from './AdminLayout';
-import { getProducts, logInventoryChange, getInventoryLogs } from '@/lib/db-operations';
+import { getProducts, logInventoryChange, getInventoryLogs, Product } from '@/lib/db-operations';
 import { formatPrice } from '@/data/products';
-import type { Product, InventoryLog } from '@/types/database';
 
 export default function AdminInventory() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'stock' | 'name' | 'value'>('stock');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [inventoryLogs, setInventoryLogs] = useState<InventoryLog[]>([]);
+  const [inventoryLogs, setInventoryLogs] = useState<any[]>([]);
   const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
   const [adjustmentType, setAdjustmentType] = useState<'in' | 'out' | 'adjustment'>('in');
   const [adjustmentQty, setAdjustmentQty] = useState('');
@@ -301,17 +300,6 @@ export default function AdminInventory() {
                 className="w-full px-4 py-2 bg-[#FAF8F5] border border-[#E8E0D5] rounded-lg focus:outline-none focus:border-[#C9A96E]"
                 placeholder="أدخل الكمية"
               />
-              {adjustmentType !== 'adjustment' && adjustmentQty && (
-                <p className="text-sm text-[#6B6B6B] mt-1">
-                  المخزون بعد التعديل: {' '}
-                  <span className="font-bold text-[#C9A96E]">
-                    {adjustmentType === 'in' 
-                      ? selectedProduct.stock_quantity + parseInt(adjustmentQty || '0')
-                      : Math.max(0, selectedProduct.stock_quantity - parseInt(adjustmentQty || '0'))
-                    }
-                  </span>
-                </p>
-              )}
             </div>
 
             {/* Reason */}

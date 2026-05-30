@@ -1,37 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Search, Eye, Check, X, MessageCircle, Download, Package, Phone, MapPin } from 'lucide-react';
-import { formatPrice } from '@/data/products';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Search, Check, X, MessageCircle, Download, Package, Phone, MapPin } from 'lucide-react';
+import { getOrders, updateOrderStatus, formatPrice } from '@/lib/db-operations';
 import { downloadInvoicePDF } from '@/utils/pdfGenerator';
+import { toast } from 'sonner';
 import AdminLayout from './AdminLayout';
 
 interface OrderItem {
-  productId: string;
-  productNameAr: string;
-  productNameEn: string;
+  id: string;
+  order_id: string;
+  product_id: string;
+  product_name_ar: string;
+  product_name_en: string;
   quantity: number;
-  unitPrice: number;
-  totalPrice: number;
+  unit_price: number;
+  total_price: number;
 }
 
 interface Order {
   id: string;
-  orderNumber: string;
-  customerName: string;
-  customerPhone: string;
+  order_number: string;
+  customer_name: string;
+  customer_phone: string;
   governorate: string;
   area: string;
-  areaId: string;
+  area_id: string;
   address: string;
   notes: string;
-  paymentMethod: 'cash' | 'link';
-  items: OrderItem[];
+  payment_method: 'cash' | 'link';
   subtotal: number;
-  deliveryFee: number;
+  delivery_fee: number;
   total: number;
   status: 'pending' | 'confirmed' | 'preparing' | 'shipped' | 'delivered' | 'cancelled';
-  createdAt: string;
-  sentToWhatsApp: boolean;
+  source: string;
+  created_at: string;
+  updated_at: string;
+  order_items?: OrderItem[];
 }
 
 export default function AdminOrders() {
@@ -39,39 +42,34 @@ export default function AdminOrders() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  useEffect(() => {
-    loadOrders();
-    
-    // Poll for updates every 3 seconds
-    const interval = setInterval(loadOrders, 3000);
-    return () => clearInterval(interval);
+  const loadOrders = useCallback(async () => {
+    const data = await getOrders();
+    setOrders(data);
   }, []);
 
-  const loadOrders = () => {
-    try {
-      const storedOrders = localStorage.getItem('nafaes_orders');
-      if (storedOrders) {
-        const parsed = JSON.parse(storedOrders);
-        setOrders(parsed);
-      }
-    } catch (e) {
-      console.error('Error loading orders:', e);
-    }
-  };
+  useEffect(() => {
+    loadOrders();
 
-  const updateOrderStatus = (orderId: string, status: Order['status']) => {
-    const updatedOrders = orders.map(order => 
-      order.id === orderId ? { ...order, status } : order
-    );
-    setOrders(updatedOrders);
-    localStorage.setItem('nafaes_orders', JSON.stringify(updatedOrders));
+    // Poll for updates every 5 seconds
+    const interval = setInterval(loadOrders, 5000);
+    return () => clearInterval(interval);
+  }, [loadOrders]);
+
+  const handleUpdateStatus = async (orderId: string, status: Order['status']) => {
+    const success = await updateOrderStatus(orderId, status);
+    if (success) {
+      toast.success(`تم تحديث حالة الطلب`);
+      loadOrders();
+    } else {
+      toast.error('حدث خطأ أثناء تحديث الحالة');
+    }
   };
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
-      order.orderNumber.includes(search) ||
-      order.customerName.includes(search) ||
-      order.customerPhone.includes(search);
+      order.order_number.includes(search) ||
+      order.customer_name.includes(search) ||
+      order.customer_phone.includes(search);
     
     if (statusFilter === 'all') return matchesSearch;
     return matchesSearch && order.status === statusFilter;
@@ -91,85 +89,72 @@ export default function AdminOrders() {
 
   const handleDownloadPDF = async (order: Order) => {
     const invoiceData = {
-      orderNumber: order.orderNumber,
-      date: new Date(order.createdAt).toLocaleDateString('ar-SA', {
+      orderNumber: order.order_number,
+      date: new Date(order.created_at).toLocaleDateString('ar-SA', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit'
       }),
-      customerName: order.customerName,
-      customerPhone: order.customerPhone,
+      customerName: order.customer_name,
+      customerPhone: order.customer_phone,
       governorate: order.governorate,
       area: order.area,
       address: order.address,
       notes: order.notes,
-      paymentMethod: order.paymentMethod,
-      items: order.items.map(item => ({
-        nameAr: item.productNameAr,
-        nameEn: item.productNameEn,
+      paymentMethod: order.payment_method,
+      items: (order.order_items || []).map(item => ({
+        nameAr: item.product_name_ar,
+        nameEn: item.product_name_en,
         quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        totalPrice: item.totalPrice
+        unitPrice: item.unit_price,
+        totalPrice: item.total_price
       })),
       subtotal: order.subtotal,
-      deliveryFee: order.deliveryFee,
+      deliveryFee: order.delivery_fee,
       total: order.total
     };
     
     await downloadInvoicePDF(invoiceData);
+    toast.success('تم تحميل الفاتورة');
   };
 
   const sendWhatsApp = (order: Order) => {
-    const message = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🏪 NAFAES | نفائس - طلب جديد 🕌
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    const itemsList = (order.order_items || []).map((item, index) => 
+      `${index + 1}. ${item.product_name_ar} - الكمية: ${item.quantity} - السعر: ${item.total_price.toFixed(3)} د.ك`
+    ).join('\n');
 
-📋 ═══ بيانات الطلب ═══ 📋
+    const message = `🏪 NAFAES | نفائس - طلب جديد
 
-🔢 رقم الطلب: ${order.orderNumber}
-📅 التاريخ: ${new Date(order.createdAt).toLocaleDateString('ar-SA')}
-⏰ الحالة: قيد المراجعة
+━━━━━━━━━━━━━━━━━━━━━━
+📋 بيانات الطلب:
+━━━━━━━━━━━━━━━━━━━━━━
+🔢 رقم الطلب: ${order.order_number}
+📅 التاريخ: ${new Date(order.created_at).toLocaleDateString('ar-SA')}
+💰 الإجمالي: ${order.total.toFixed(3)} د.ك
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-👤 ═══ بيانات العميل ═══ 👤
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-👤 الاسم: ${order.customerName}
-📞 الهاتف: +965 ${order.customerPhone}
+━━━━━━━━━━━━━━━━━━━━━━
+👤 بيانات العميل:
+━━━━━━━━━━━━━━━━━━━━━━
+👤 الاسم: ${order.customer_name}
+📞 الهاتف: +965 ${order.customer_phone}
 📍 المحافظة: ${order.governorate}
 📍 المنطقة: ${order.area}
 🏠 العنوان: ${order.address}
 ${order.notes ? `📝 ملاحظات: ${order.notes}` : ''}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🛒 ═══ تفاصيل المنتجات ═══ 🛒
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━
+🛒 المنتجات:
+━━━━━━━━━━━━━━━━━━━━━━
+${itemsList}
 
-${order.items.map((item, index) => `${index + 1}. ${item.productNameAr}
-   📦 ${item.productNameEn}
-   الكمية: ${item.quantity} وحدة
-   السعر: ${item.unitPrice.toFixed(3)} د.ك/وحدة
-   💰 المجموع: ${item.totalPrice.toFixed(3)} د.ك`).join('\n\n')}
+━━━━━━━━━━━━━━━━━━━━━━
+💳 طريقة الدفع: ${order.payment_method === 'cash' ? 'كاش عند الاستلام' : 'رابط دفع'}
+━━━━━━━━━━━━━━━━━━━━━━
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💰 ═══ ملخص الفاتورة ═══ 💰
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📦 المجموع الفرعي: ${order.subtotal.toFixed(3)} د.ك
-🚚 رسوم التوصيل: ${order.deliveryFee.toFixed(3)} د.ك
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💵 الإجمالي النهائي: ${order.total.toFixed(3)} د.ك
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-💳 طريقة الدفع: ${order.paymentMethod === 'cash' ? '💵 كاش عند الاستلام' : '💳 رابط دفع إلكتروني'}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✅ شكراً لتعاملكم مع نفائس 🕌
-📱 للمتابعة: 66377312
-📸 @nafaes.q8
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+📱 للمتابعة: 66377312`;
 
     window.open(`https://wa.me/96566377312?text=${encodeURIComponent(message)}`, '_blank');
   };
@@ -179,7 +164,6 @@ ${order.items.map((item, index) => `${index + 1}. ${item.productNameAr}
     { key: 'pending', label: 'معلق', count: orders.filter(o => o.status === 'pending').length },
     { key: 'confirmed', label: 'مؤكد', count: orders.filter(o => o.status === 'confirmed').length },
     { key: 'preparing', label: 'تجهيز', count: orders.filter(o => o.status === 'preparing').length },
-    { key: 'shipped', label: 'شحن', count: orders.filter(o => o.status === 'shipped').length },
     { key: 'delivered', label: 'مكتمل', count: orders.filter(o => o.status === 'delivered').length },
   ];
 
@@ -238,12 +222,12 @@ ${order.items.map((item, index) => `${index + 1}. ${item.productNameAr}
                 <div className="flex flex-col lg:flex-row justify-between gap-4 mb-4">
                   <div className="flex items-center gap-4">
                     <div className="w-14 h-14 bg-gradient-to-br from-[#C9A96E]/20 to-[#D4AF37]/20 rounded-xl flex items-center justify-center">
-                      <span className="text-[#C9A96E] font-bold text-sm">{order.orderNumber.slice(-8)}</span>
+                      <span className="text-[#C9A96E] font-bold text-sm">{order.order_number.slice(-8)}</span>
                     </div>
                     <div>
-                      <p className="font-bold text-[#1A1A1A]">{order.orderNumber}</p>
+                      <p className="font-bold text-[#1A1A1A]">{order.order_number}</p>
                       <p className="text-sm text-[#6B6B6B]">
-                        {new Date(order.createdAt).toLocaleDateString('ar-SA', {
+                        {new Date(order.created_at).toLocaleDateString('ar-SA', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric',
@@ -266,25 +250,25 @@ ${order.items.map((item, index) => `${index + 1}. ${item.productNameAr}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex items-center gap-2">
                       <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-                        <span className="text-[#C9A96E] font-bold">{order.customerName.charAt(0)}</span>
+                        <span className="text-[#C9A96E] font-bold">{order.customer_name.charAt(0)}</span>
                       </div>
                       <div>
                         <p className="text-sm text-[#6B6B6B]">العميل</p>
-                        <p className="font-medium text-[#1A1A1A]">{order.customerName}</p>
+                        <p className="font-medium text-[#1A1A1A]">{order.customer_name}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Phone className="w-5 h-5 text-[#6B6B6B]" />
                       <div>
                         <p className="text-sm text-[#6B6B6B]">الهاتف</p>
-                        <p className="font-medium text-[#1A1A1A]" dir="ltr">+965 {order.customerPhone}</p>
+                        <p className="font-medium text-[#1A1A1A]" dir="ltr">+965 {order.customer_phone}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <MapPin className="w-5 h-5 text-[#6B6B6B]" />
                       <div>
                         <p className="text-sm text-[#6B6B6B]">العنوان</p>
-                        <p className="font-medium text-[#1A1A1A]">{order.area} - {order.address}</p>
+                        <p className="font-medium text-[#1A1A1A]">{order.area}</p>
                       </div>
                     </div>
                   </div>
@@ -292,11 +276,11 @@ ${order.items.map((item, index) => `${index + 1}. ${item.productNameAr}
 
                 {/* Order Items */}
                 <div className="mb-4">
-                  <p className="text-sm font-medium text-[#6B6B6B] mb-2">المنتجات ({order.items.length}):</p>
+                  <p className="text-sm font-medium text-[#6B6B6B] mb-2">المنتجات ({(order.order_items || []).length}):</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                    {order.items.map((item, index) => (
+                    {(order.order_items || []).map((item, index) => (
                       <div key={index} className="flex justify-between p-2 bg-[#FAF8F5] rounded-lg text-sm">
-                        <span className="text-[#1A1A1A]">{item.productNameAr}</span>
+                        <span className="text-[#1A1A1A]">{item.product_name_ar}</span>
                         <span className="text-[#6B6B6B]">x{item.quantity}</span>
                       </div>
                     ))}
@@ -323,14 +307,14 @@ ${order.items.map((item, index) => `${index + 1}. ${item.productNameAr}
                   {order.status === 'pending' && (
                     <>
                       <button
-                        onClick={() => updateOrderStatus(order.id, 'confirmed')}
+                        onClick={() => handleUpdateStatus(order.id, 'confirmed')}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                       >
                         <Check className="w-4 h-4" />
                         تأكيد
                       </button>
                       <button
-                        onClick={() => updateOrderStatus(order.id, 'cancelled')}
+                        onClick={() => handleUpdateStatus(order.id, 'cancelled')}
                         className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                       >
                         <X className="w-4 h-4" />
@@ -341,7 +325,7 @@ ${order.items.map((item, index) => `${index + 1}. ${item.productNameAr}
 
                   {order.status === 'confirmed' && (
                     <button
-                      onClick={() => updateOrderStatus(order.id, 'preparing')}
+                      onClick={() => handleUpdateStatus(order.id, 'preparing')}
                       className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
                     >
                       <Check className="w-4 h-4" />
@@ -351,7 +335,7 @@ ${order.items.map((item, index) => `${index + 1}. ${item.productNameAr}
 
                   {order.status === 'preparing' && (
                     <button
-                      onClick={() => updateOrderStatus(order.id, 'shipped')}
+                      onClick={() => handleUpdateStatus(order.id, 'shipped')}
                       className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
                     >
                       <Check className="w-4 h-4" />
@@ -361,7 +345,7 @@ ${order.items.map((item, index) => `${index + 1}. ${item.productNameAr}
 
                   {order.status === 'shipped' && (
                     <button
-                      onClick={() => updateOrderStatus(order.id, 'delivered')}
+                      onClick={() => handleUpdateStatus(order.id, 'delivered')}
                       className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
                     >
                       <Check className="w-4 h-4" />
@@ -370,7 +354,7 @@ ${order.items.map((item, index) => `${index + 1}. ${item.productNameAr}
                   )}
 
                   <a
-                    href={`https://wa.me/965${order.customerPhone}`}
+                    href={`https://wa.me/965${order.customer_phone}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 bg-[#25D366] text-white rounded-lg hover:bg-[#20BD5A] transition-colors mr-auto"
