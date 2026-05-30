@@ -1,97 +1,82 @@
-# TechStore - متجر التقنيات والأجهزة الإلكترونية
+# NAFAES | نفائس - متجر العطور والهدايا العطرية
 
 ## 1. Concept & Vision
 
-متجر إلكتروني احترافي متكامل للتقنيات والأجهزة الإلكترونية، يشبه نيوتيك في التصميم والوظائف. يجمع بين الأناقة العصرية والوظائف العملية، مع لوحة تحكم إدارية قوية لإدارة المنتجات والطلبات والمحتوى.
+متجر إلكتروني فاخر متكامل لبيع منتجات تعطير المنازل والهدايا العطرية في الكويت. التصميم يعكس الفخامة والرقي مع هوية بصرية متناسقة تجمع بين الأناقة الكلاسيكية والحداثة العصرية. الهدف: تقديم تجربة تسوق استثنائية تناسب العميل الكويتي الباحث عن التميز.
 
 ## 2. Design Language
 
 ### Aesthetic Direction
-- تصميم عصري وتقني بطابع Dark Tech
-- ألوان داكنة مع لمسات نيون زرقاء
-- خطوط نظيفة وظلال ناعمة
+- تصميم فاخر وراقي بطابع Luxury Minimal
+- ألوان دافئة وهادئة مع لمسات ذهبية
+- خلفيات رخامية ناعمة
 
 ### Color Palette
-- Primary: `#3B82F6` (أزرق تقني)
-- Secondary: `#10B981` (أخضر متجانس)
-- Accent: `#8B5CF6` (بنفسجي)
-- Background: `#0F172A` (كحلي داكن)
-- Surface: `#1E293B` (رمادي داكن)
-- Text Primary: `#F8FAFC`
-- Text Secondary: `#94A3B8`
-- Danger: `#EF4444`
-- Warning: `#F59E0B`
+- Primary: `#C9A96E` (ذهبي فاخر)
+- Secondary: `#8B7355` (بيج داكن)
+- Accent: `#D4AF37` (ذهبي لامع)
+- Background: `#FAF8F5` (كريمي فاتح)
+- Surface: `#F5F0E8` (عاجي)
+- Text Primary: `#1A1A1A` (أسود فاخر)
+- Text Secondary: `#6B6B6B` (رمادي داكن)
+- Success: `#7C9A6E` (أخضر زيتوني)
+- Gold Gradient: `linear-gradient(135deg, #C9A96E, #D4AF37)`
 
 ### Typography
-- Font: `Cairo` للعربية (Google Fonts)
-- Headings: Bold, tracking tight
-- Body: Regular, good line-height
+- Font: `Tajawal` للعربية (Google Fonts)
+- Headings: Bold, generous letter-spacing
+- Body: Regular, excellent readability
 
 ### Motion Philosophy
-- Smooth transitions 300ms ease
-- Hover effects with scale and glow
-- Page transitions with fade
-- Loading skeletons
+- Subtle fade-in animations
+- Smooth hover transitions (300ms)
+- Elegant scale effects on interactive elements
 
 ## 3. Layout & Structure
 
 ### Pages
-1. **الصفحة الرئيسية** - Hero section, products showcase, categories, features
-2. **صفحة المنتجات** - Grid display with filters and search
-3. **صفحة تفاصيل المنتج** - Full product info, gallery, add to cart
-4. **سلة التسوق** - Cart items, total, checkout
-5. **من نحن** - Company info, team, mission
-6. **خدماتنا** - Services offered
-7. **المدونة** - Articles and news
-8. **تواصل معنا** - Contact form, map, info
-9. **لوحة التحكم** - Admin dashboard with full management
+1. **الصفحة الرئيسية** - Hero, featured products, about, Instagram posts
+2. **صفحة المنتجات** - Grid display with all products
+3. **تفاصيل المنتج** - Full product info, add to cart
+4. **سلة التسوق** - Cart items, summary
+5. **إتمام الطلب** - Customer form, WhatsApp integration
+6. **التواصل** - Contact info, WhatsApp
 
-### Admin Panel Features
-- Dashboard with stats
-- إدارة المنتجات (CRUD)
-- إدارة الطلبات
-- إدارة المستخدمين
-- إدارة المدونة
-- الإعدادات
+### Floating Elements
+- WhatsApp floating button (bottom-left)
 
 ## 4. Features & Interactions
 
 ### Core Features
-- تصفح المنتجات والتصفية حسب الفئة والسعر
-- البحث الذكي
-- سلة التسوق مع إدارة الكميات
-- نموذج تواصل فعال
-- لوحة تحكم متكاملة
+- تصفح المنتجات بتصميم فاخر
+- إضافة للسلة مع تنبيهات
+- إتمام الطلب عبر واتساب
+- معلومات التواصل
 
-### Admin Capabilities
-- إضافة/تعديل/حذف المنتجات
-- إدارة الطلبات وتغيير حالتها
-- عرض الإحصائيات والرسوم البيانية
-- إدارة المحتوى
+### WhatsApp Integration
+- رقم الواتساب: 66377312
+- رابط: https://wa.me/96566377312
+- رسالة منظمة تتضمن جميع بيانات الطلب
 
-## 5. Component Inventory
+## 5. Products
 
-### Navigation
-- Header ثابت مع شعار وروابط وسلة
-- Mobile menu hamburger
-- Search bar
-
-### Product Cards
-- صورة + اسم + سعر + تقييم + زر إضافة
-- Hover effect مع scale
-
-### Admin Components
-- Sidebar navigation
-- Data tables with actions
-- Forms for CRUD operations
-- Charts and stats cards
+1. **ELAN 360 NOMAD** - جهاز تعطير ذكي قابل للشحن - 49 د.ك
+2. **ELAN 360 PRIME** - جهاز تعطير كهربائي - 42 د.ك
+3. **NOIR MAJESTÉ** - جهاز تعطير احترافي بشاشة LCD - 59 د.ك
+4. **FOREST RESERVE** - طقم هدايا عطري فاخر - 13.900 د.ك
+5. **AMBER SANTAL** - معطر أعواد فاخر - 10.900 د.ك
 
 ## 6. Technical Approach
 
 - React + TypeScript
 - React Router for navigation
-- Zustand for state management (cart, products)
+- Zustand for state management
 - Tailwind CSS for styling
+- RTL direction throughout
 - Lucide React for icons
-- Recharts for admin charts
 - Responsive design (mobile-first)
+
+## 7. Delivery & Payment
+
+- رسوم التوصيل: 2 د.ك ثابتة
+- طرق الدفع: كاش عند الاستلام / رابط دفع لينك

@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom';
-import { Star, ShoppingCart, Heart } from 'lucide-react';
+import { ShoppingBag, Star } from 'lucide-react';
 import { Product } from '../data/products';
 import { useStore } from '../store/useStore';
-import { useState } from 'react';
 
 interface ProductCardProps {
   product: Product;
@@ -10,88 +9,54 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useStore();
-  const [isHovered, setIsHovered] = useState(false);
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('ar-SA', {
-      style: 'currency',
-      currency: 'SAR',
-      minimumFractionDigits: 0,
-    }).format(price);
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    addToCart(product);
   };
 
   return (
-    <div
-      className="group bg-slate-800/50 rounded-xl overflow-hidden border border-slate-700/50 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-[#E8E0D5]">
       {/* Image */}
       <Link to={`/product/${product.id}`} className="block relative overflow-hidden">
-        <img
-          src={product.image}
-          alt={product.name}
-          className={`w-full h-48 object-cover transition-transform duration-500 ${
-            isHovered ? 'scale-110' : 'scale-100'
-          }`}
-        />
-        {product.originalPrice && (
-          <div className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg">
-            -{Math.round((1 - product.price / product.originalPrice) * 100)}%
-          </div>
-        )}
-        {product.featured && (
-          <div className="absolute top-3 left-3 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-lg">
-            مميز
-          </div>
-        )}
-        <div className={`absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`} />
+        <div className="aspect-square bg-gradient-to-br from-[#F5F0E8] to-[#E8E0D5] flex items-center justify-center p-8">
+          <img
+            src={product.image}
+            alt={product.nameAr}
+            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = `https://via.placeholder.com/400x400/F5F0E8/C9A96E?text=${encodeURIComponent(product.nameEn)}`;
+            }}
+          />
+        </div>
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
       </Link>
 
       {/* Content */}
-      <div className="p-4">
+      <div className="p-5">
         <Link to={`/product/${product.id}`}>
-          <h3 className="text-white font-semibold text-sm mb-2 line-clamp-2 hover:text-blue-400 transition-colors">
-            {product.name}
+          <h3 className="text-xl font-bold text-[#1A1A1A] mb-1 group-hover:text-[#C9A96E] transition-colors">
+            {product.nameAr}
           </h3>
         </Link>
-
-        {/* Rating */}
-        <div className="flex items-center gap-2 mb-2">
-          <div className="flex items-center">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={`w-3 h-3 ${
-                  i < Math.floor(product.rating)
-                    ? 'text-yellow-400 fill-yellow-400'
-                    : 'text-slate-600'
-                }`}
-              />
-            ))}
-          </div>
-          <span className="text-slate-500 text-xs">({product.reviews})</span>
-        </div>
+        <p className="text-[#6B6B6B] text-sm mb-3">{product.nameEn}</p>
+        <p className="text-[#6B6B6B] text-sm mb-4 line-clamp-2">{product.shortDescription}</p>
 
         {/* Price */}
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-blue-400 font-bold text-lg">{formatPrice(product.price)}</span>
-          {product.originalPrice && (
-            <span className="text-slate-500 text-sm line-through">{formatPrice(product.originalPrice)}</span>
-          )}
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-2xl font-bold text-[#C9A96E]">
+            {product.price.toFixed(3)} د.ك
+          </span>
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex gap-2">
           <button
-            onClick={() => addToCart(product)}
-            className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors"
+            onClick={handleAddToCart}
+            className="flex-1 flex items-center justify-center gap-2 bg-[#1A1A1A] hover:bg-[#C9A96E] text-white text-sm font-medium py-3 px-4 rounded-xl transition-colors"
           >
-            <ShoppingCart className="w-4 h-4" />
-            إضافة للسلة
-          </button>
-          <button className="p-2 bg-slate-700 hover:bg-slate-600 text-slate-400 hover:text-red-400 rounded-lg transition-colors">
-            <Heart className="w-4 h-4" />
+            <ShoppingBag className="w-4 h-4" />
+            أضف للسلة
           </button>
         </div>
       </div>
