@@ -15,16 +15,17 @@ export default function AdminProductForm() {
     name_en: '',
     type: '',
     price: '',
-    cost_price: '',
+    cost_price: '0',
     short_description: '',
     full_description: '',
     sku: '',
-    category: 'devices',
+    category: 'general',
     stock_quantity: '0',
     min_stock_level: '5',
     image: '',
     specs: {} as Record<string, string>,
     features: [] as string[],
+    is_active: true,
   });
 
   const [newSpecKey, setNewSpecKey] = useState('');
@@ -42,20 +43,21 @@ export default function AdminProductForm() {
     const product = products.find(p => p.id === productId);
     if (product) {
       setFormData({
-        name_ar: product.name_ar,
-        name_en: product.name_en,
-        type: product.type,
-        price: product.price.toString(),
+        name_ar: product.name_ar || '',
+        name_en: product.name_en || '',
+        type: product.type || '',
+        price: product.price?.toString() || '',
         cost_price: product.cost_price?.toString() || '0',
         short_description: product.short_description || '',
         full_description: product.full_description || '',
         sku: product.sku || '',
-        category: product.category || 'devices',
-        stock_quantity: product.stock_quantity.toString(),
-        min_stock_level: product.min_stock_level.toString(),
+        category: product.category || 'general',
+        stock_quantity: product.stock_quantity?.toString() || '0',
+        min_stock_level: product.min_stock_level?.toString() || '5',
         image: product.image || '',
         specs: product.specs || {},
         features: product.features || [],
+        is_active: product.is_active ?? true,
       });
     }
   };
@@ -67,7 +69,7 @@ export default function AdminProductForm() {
       name_ar: formData.name_ar,
       name_en: formData.name_en,
       type: formData.type,
-      price: parseFloat(formData.price),
+      price: parseFloat(formData.price) || 0,
       cost_price: parseFloat(formData.cost_price) || 0,
       short_description: formData.short_description,
       full_description: formData.full_description,
@@ -78,7 +80,7 @@ export default function AdminProductForm() {
       category: formData.category,
       stock_quantity: parseInt(formData.stock_quantity) || 0,
       min_stock_level: parseInt(formData.min_stock_level) || 5,
-      is_active: true,
+      is_active: formData.is_active,
     };
 
     if (isEditing && id) {

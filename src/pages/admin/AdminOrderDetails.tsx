@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowRight, Check, X, MessageCircle, Package, MapPin, Phone, User } from 'lucide-react';
+import { ArrowRight, Check, X, MessageCircle, Package, MapPin, Phone, User, Clock } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import { getOrder, updateOrderStatus } from '@/lib/db-operations';
-import { formatPrice } from '@/data/products';
 import type { Order } from '@/types/database';
 
 export default function AdminOrderDetails() {
@@ -85,15 +84,18 @@ export default function AdminOrderDetails() {
         <div className="flex items-start justify-between">
           <div>
             <h2 className="text-2xl font-bold text-[#1A1A1A]">{order.order_number}</h2>
-            <p className="text-[#6B6B6B]">
-              {new Date(order.created_at).toLocaleDateString('ar-SA', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </p>
+            <div className="flex items-center gap-2 text-[#6B6B6B] text-sm mt-1">
+              <Clock className="w-4 h-4" />
+              <span>
+                {new Date(order.created_at).toLocaleDateString('ar-SA', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
+            </div>
           </div>
           <span className={`px-4 py-2 rounded-full text-sm font-medium ${badge.color}`}>
             {badge.label}
@@ -115,7 +117,7 @@ export default function AdminOrderDetails() {
                 <div key={i} className="flex items-center gap-4 p-4 bg-[#FAF8F5] rounded-lg">
                   <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center overflow-hidden">
                     {item.product?.image ? (
-                      <img src={item.product.image} alt={item.product.name_ar} className="w-full h-full object-contain" />
+                      <img src={item.product.image} alt={item.product.name_ar || ''} className="w-full h-full object-contain" />
                     ) : (
                       <Package className="w-8 h-8 text-[#C9A96E]" />
                     )}
@@ -125,8 +127,8 @@ export default function AdminOrderDetails() {
                     <p className="text-sm text-[#6B6B6B]">{item.product?.name_en}</p>
                   </div>
                   <div className="text-left">
-                    <p className="font-bold text-[#1A1A1A]">{item.quantity} × {formatPrice(item.unit_price)}</p>
-                    <p className="text-[#C9A96E] font-bold">{formatPrice(item.total_price)}</p>
+                    <p className="font-bold text-[#1A1A1A]">{item.quantity} × {Number(item.unit_price).toFixed(3)} د.ك</p>
+                    <p className="text-[#C9A96E] font-bold">{Number(item.total_price).toFixed(3)} د.ك</p>
                   </div>
                 </div>
               ))}
@@ -136,41 +138,43 @@ export default function AdminOrderDetails() {
             <div className="mt-6 pt-6 border-t border-[#E8E0D5] space-y-2">
               <div className="flex justify-between text-[#6B6B6B]">
                 <span>المجموع الفرعي</span>
-                <span>{formatPrice(order.subtotal)}</span>
+                <span>{Number(order.subtotal).toFixed(3)} د.ك</span>
               </div>
               <div className="flex justify-between text-[#6B6B6B]">
                 <span>رسوم التوصيل</span>
-                <span>{formatPrice(order.delivery_fee)}</span>
+                <span>{Number(order.delivery_fee).toFixed(3)} د.ك</span>
               </div>
               <div className="flex justify-between items-center pt-2 border-t border-[#E8E0D5]">
                 <span className="font-bold text-[#1A1A1A]">الإجمالي</span>
-                <span className="text-2xl font-bold text-[#C9A96E]">{formatPrice(order.total)}</span>
+                <span className="text-2xl font-bold text-[#C9A96E]">{Number(order.total).toFixed(3)} د.ك</span>
               </div>
             </div>
           </div>
 
           {/* Status Timeline */}
-          <div className="bg-white rounded-xl border border-[#E8E0D5] p-6">
-            <h3 className="font-bold text-[#1A1A1A] mb-4">تتبع حالة الطلب</h3>
-            <div className="flex items-center justify-between">
-              {statusFlow.map((status, index) => {
-                const isActive = index <= currentStatusIndex;
-                const isCurrent = status === order.status;
-                return (
-                  <div key={status} className="flex flex-col items-center">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      isActive ? 'bg-[#C9A96E] text-white' : 'bg-[#E8E0D5] text-[#6B6B6B]'
-                    } ${isCurrent ? 'ring-4 ring-[#C9A96E]/30' : ''}`}>
-                      {isActive ? <Check className="w-5 h-5" /> : <span>{index + 1}</span>}
+          {order.status !== 'cancelled' && (
+            <div className="bg-white rounded-xl border border-[#E8E0D5] p-6">
+              <h3 className="font-bold text-[#1A1A1A] mb-4">تتبع حالة الطلب</h3>
+              <div className="flex items-center justify-between">
+                {statusFlow.map((status, index) => {
+                  const isActive = index <= currentStatusIndex;
+                  const isCurrent = status === order.status;
+                  return (
+                    <div key={status} className="flex flex-col items-center">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        isActive ? 'bg-[#C9A96E] text-white' : 'bg-[#E8E0D5] text-[#6B6B6B]'
+                      } ${isCurrent ? 'ring-4 ring-[#C9A96E]/30' : ''}`}>
+                        {isActive ? <Check className="w-5 h-5" /> : <span>{index + 1}</span>}
+                      </div>
+                      <span className={`text-xs mt-2 ${isActive ? 'text-[#C9A96E]' : 'text-[#6B6B6B]'}`}>
+                        {statusLabels[status]}
+                      </span>
                     </div>
-                    <span className={`text-xs mt-2 ${isActive ? 'text-[#C9A96E]' : 'text-[#6B6B6B]'}`}>
-                      {statusLabels[status]}
-                    </span>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Customer & Actions */}
@@ -183,19 +187,23 @@ export default function AdminOrderDetails() {
             </h3>
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-[#1A1A1A]">
-                <span className="font-medium">{order.customer?.name}</span>
+                <span className="font-medium">{order.customer?.name || 'غير متوفر'}</span>
               </div>
-              <div className="flex items-center gap-2 text-[#6B6B6B]">
-                <Phone className="w-4 h-4" />
-                <span dir="ltr">+965 {order.customer?.phone}</span>
-              </div>
-              <div className="flex items-start gap-2 text-[#6B6B6B]">
-                <MapPin className="w-4 h-4 mt-1" />
-                <div>
-                  <p>{order.customer?.area}</p>
-                  <p className="text-sm">{order.customer?.address}</p>
+              {order.customer?.phone && (
+                <div className="flex items-center gap-2 text-[#6B6B6B]">
+                  <Phone className="w-4 h-4" />
+                  <span dir="ltr">+965 {order.customer.phone}</span>
                 </div>
-              </div>
+              )}
+              {order.customer?.area && (
+                <div className="flex items-start gap-2 text-[#6B6B6B]">
+                  <MapPin className="w-4 h-4 mt-1" />
+                  <div>
+                    <p>{order.customer.area}</p>
+                    <p className="text-sm">{order.customer.address}</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {order.customer?.phone && (
