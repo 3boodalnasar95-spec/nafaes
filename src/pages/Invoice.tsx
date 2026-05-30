@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { Card, Button, Input, Label } from "@/components/ui";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { generateInvoiceNumber } from "@/utils/invoiceUtils";
 import { generatePdf } from "@/utils/generatePdf";
 import { sampleInvoiceData } from "@/data/sampleInvoice";
