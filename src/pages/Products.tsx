@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Sparkles, Droplets, Flower2, Gift, ArrowLeft, Package } from 'lucide-react';
+import { Search, Sparkles, Droplets, Flower2, Gift, Package } from 'lucide-react';
 import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
 import { products, categories, getProductsByCategory } from '../data/products';
@@ -8,6 +8,15 @@ import { products, categories, getProductsByCategory } from '../data/products';
 export default function Products() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    // Check URL params for category
+    const params = new URLSearchParams(window.location.search);
+    const category = params.get('category');
+    if (category) {
+      setSelectedCategory(category);
+    }
+  }, []);
 
   const filteredProducts = selectedCategory === 'all' 
     ? products 
@@ -52,10 +61,12 @@ export default function Products() {
           <h2 className="text-2xl font-bold text-[#1A1A1A] text-center mb-8">تسوق حسب الفئة</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {categories.map((category) => (
-              <Link
+              <button
                 key={category.slug}
-                to={`/products?category=${category.slug}`}
-                className="group bg-gradient-to-br from-[#FAF8F5] to-[#F5F0E8] rounded-2xl p-6 text-center hover:shadow-xl transition-all duration-300 border border-[#E8E0D5] hover:border-[#C9A96E]"
+                onClick={() => setSelectedCategory(category.slug)}
+                className={`group bg-gradient-to-br from-[#FAF8F5] to-[#F5F0E8] rounded-2xl p-6 text-center hover:shadow-xl transition-all duration-300 border border-[#E8E0D5] hover:border-[#C9A96E] ${
+                  selectedCategory === category.slug ? 'ring-2 ring-[#C9A96E]' : ''
+                }`}
               >
                 <div className={`w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br ${category.color} flex items-center justify-center text-white group-hover:scale-110 transition-transform`}>
                   {getCategoryIcon(category.icon)}
@@ -65,7 +76,7 @@ export default function Products() {
                 <span className="text-sm text-[#C9A96E] font-medium">
                   {getCategoryCount(category.slug)} منتجات
                 </span>
-              </Link>
+              </button>
             ))}
           </div>
         </div>
@@ -116,6 +127,18 @@ export default function Products() {
                 ))}
               </div>
             </div>
+          </div>
+
+          {/* Results count */}
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-[#6B6B6B]">
+              عرض <span className="font-bold text-[#1A1A1A]">{searchResults.length}</span> منتج
+              {selectedCategory !== 'all' && (
+                <span> في قسم <span className="font-bold text-[#C9A96E]">
+                  {categories.find(c => c.slug === selectedCategory)?.name_ar}
+                </span></span>
+              )}
+            </p>
           </div>
 
           {/* Products Grid */}

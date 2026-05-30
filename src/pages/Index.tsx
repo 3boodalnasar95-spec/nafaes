@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Star, Award, Truck, CreditCard, MessageCircle, Sparkles, Droplets, Flower2, Gift, ArrowRight } from 'lucide-react';
 import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
-import { products, categories, getProductsByCategory } from '../data/products';
+import { products, categories } from '../data/products';
 
 export default function Index() {
   // Get featured products (first 4)
@@ -123,7 +123,6 @@ export default function Index() {
                 </div>
                 <h3 className="font-bold text-[#1A1A1A] mb-2">{category.name_ar}</h3>
                 <p className="text-xs text-[#6B6B6B] mb-3">{category.name_en}</p>
-                <p className="text-xs text-[#6B6B6B] line-clamp-2 mb-4">{category.description}</p>
                 <span className="inline-flex items-center gap-1 text-[#C9A96E] text-sm font-medium group-hover:gap-2 transition-all">
                   تصفح المنتجات
                   <ArrowRight className="w-4 h-4" />
@@ -168,7 +167,7 @@ export default function Index() {
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <div className="bg-[#F5F0E8] px-6 py-3 rounded-full text-[#1A1A1A]">
-                <span className="font-bold text-[#C9A96E]">15+</span> منتجات فاخرة
+                <span className="font-bold text-[#C9A96E]">16+</span> منتجات فاخرة
               </div>
               <div className="bg-[#F5F0E8] px-6 py-3 rounded-full text-[#1A1A1A]">
                 <span className="font-bold text-[#C9A96E]">2</span> د.ك توصيل
