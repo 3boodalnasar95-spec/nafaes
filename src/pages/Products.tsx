@@ -3,14 +3,13 @@ import { Link } from 'react-router-dom';
 import { Search, Sparkles, Droplets, Flower2, Gift, Package } from 'lucide-react';
 import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
-import { products, categories, getProductsByCategory } from '../data/products';
+import { products, categories, getProductsByCategory } from '@/data';
 
 export default function Products() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    // Check URL params for category
     const params = new URLSearchParams(window.location.search);
     const category = params.get('category');
     if (category) {
@@ -87,7 +86,6 @@ export default function Products() {
         <div className="container mx-auto px-4">
           <div className="bg-white rounded-xl border border-[#E8E0D5] p-4 mb-6">
             <div className="flex flex-col md:flex-row gap-4 items-center">
-              {/* Search */}
               <div className="relative flex-1 w-full">
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B6B6B]" />
                 <input
@@ -99,7 +97,6 @@ export default function Products() {
                 />
               </div>
 
-              {/* Category Filter */}
               <div className="flex gap-2 overflow-x-auto pb-2 w-full md:w-auto">
                 <button
                   onClick={() => setSelectedCategory('all')}
@@ -129,7 +126,6 @@ export default function Products() {
             </div>
           </div>
 
-          {/* Results count */}
           <div className="flex items-center justify-between mb-4">
             <p className="text-[#6B6B6B]">
               عرض <span className="font-bold text-[#1A1A1A]">{searchResults.length}</span> منتج
@@ -141,14 +137,12 @@ export default function Products() {
             </p>
           </div>
 
-          {/* Products Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {searchResults.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
 
-          {/* Empty State */}
           {searchResults.length === 0 && (
             <div className="text-center py-16">
               <Package className="w-16 h-16 mx-auto mb-4 text-[#E8E0D5]" />

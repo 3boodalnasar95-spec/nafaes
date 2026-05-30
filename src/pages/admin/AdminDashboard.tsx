@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useOrders, Order, Notification } from '@/contexts/OrderContext';
 import AdminLayout from './AdminLayout';
-import { formatPrice } from '@/data/products';
+import { formatPrice } from '@/data';
 
 export default function AdminDashboard() {
   const { orders, notifications, unreadCount, markNotificationRead, markAllNotificationsRead } = useOrders();

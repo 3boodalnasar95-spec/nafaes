@@ -2,8 +2,8 @@
 
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, Check, MessageCircle, Minus, Plus, ShoppingBag } from 'lucide-react';
-import { products, formatPrice, whatsappLink, getCategoryInfo } from '../data/products';
-import { useStore } from '../store/useStore';
+import { products, formatPrice, whatsappLink, getCategoryInfo } from '@/data';
+import { useStore } from '@/store/useStore';
 import Layout from '../components/Layout';
 import { useState } from 'react';
 

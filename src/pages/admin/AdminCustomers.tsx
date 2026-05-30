@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Search, MessageCircle, Users, Phone, MapPin, Eye, ShoppingCart, DollarSign, Star } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import { getCustomers, createCustomer, getCustomerStats } from '@/lib/db-operations';
-import { formatPrice } from '@/data/products';
+import { formatPrice } from '@/data';
 import type { Customer } from '@/types/database';
 
 export default function AdminCustomers() {
@@ -304,38 +304,6 @@ export default function AdminCustomers() {
               </button>
             </div>
 
-            {/* Contact Info */}
-            <div className="bg-[#FAF8F5] rounded-xl p-4 mb-6">
-              <h4 className="font-bold text-[#1A1A1A] mb-3">معلومات التواصل</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-[#6B6B6B]" />
-                  <span dir="ltr">+965 {selectedCustomer.phone}</span>
-                </div>
-                {selectedCustomer.email && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-[#6B6B6B]">📧</span>
-                    <span>{selectedCustomer.email}</span>
-                  </div>
-                )}
-                {selectedCustomer.area && (
-                  <div className="flex items-center gap-2 col-span-2">
-                    <MapPin className="w-4 h-4 text-[#6B6B6B]" />
-                    <span>{selectedCustomer.area} - {selectedCustomer.address_text}</span>
-                  </div>
-                )}
-              </div>
-              <a
-                href={`https://wa.me/965${selectedCustomer.phone}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 w-full flex items-center justify-center gap-2 bg-[#25D366] text-white py-2 rounded-lg hover:bg-[#20BD5A] transition-colors"
-              >
-                <MessageCircle className="w-5 h-5" />
-                مراسلة عبر واتساب
-              </a>
-            </div>
-
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4 mb-6">
               <div className="bg-green-50 rounded-xl p-4 text-center">
@@ -349,37 +317,6 @@ export default function AdminCustomers() {
               <div className="bg-purple-50 rounded-xl p-4 text-center">
                 <p className="text-2xl font-bold text-purple-600">{formatPrice(customerStats.avgOrderValue)}</p>
                 <p className="text-sm text-[#6B6B6B]">متوسط الطلب</p>
-              </div>
-            </div>
-
-            {/* Orders by Status */}
-            <div className="bg-[#FAF8F5] rounded-xl p-4">
-              <h4 className="font-bold text-[#1A1A1A] mb-3">الطلبات حسب الحالة</h4>
-              <div className="grid grid-cols-4 gap-2">
-                {Object.entries(customerStats.ordersByStatus).map(([status, count]) => {
-                  const statusLabels: Record<string, string> = {
-                    pending: 'معلق',
-                    confirmed: 'مؤكد',
-                    preparing: 'قيد التجهيز',
-                    shipped: 'تم الشحن',
-                    delivered: 'مكتمل',
-                    cancelled: 'ملغي'
-                  };
-                  const colors: Record<string, string> = {
-                    pending: 'bg-yellow-100 text-yellow-700',
-                    confirmed: 'bg-blue-100 text-blue-700',
-                    preparing: 'bg-purple-100 text-purple-700',
-                    shipped: 'bg-cyan-100 text-cyan-700',
-                    delivered: 'bg-green-100 text-green-700',
-                    cancelled: 'bg-red-100 text-red-700'
-                  };
-                  return (
-                    <div key={status} className={`p-2 rounded-lg text-center ${colors[status] || 'bg-gray-100'}`}>
-                      <p className="font-bold">{count}</p>
-                      <p className="text-xs">{statusLabels[status] || status}</p>
-                    </div>
-                  );
-                })}
               </div>
             </div>
           </div>

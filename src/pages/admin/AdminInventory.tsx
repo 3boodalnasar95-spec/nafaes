@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Warehouse, AlertTriangle, ArrowUpDown, Package, Plus, Minus, TrendingUp, TrendingDown } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import { getProducts, logInventoryChange, getInventoryLogs } from '@/lib/db-operations';
-import { formatPrice } from '@/data/products';
+import { formatPrice } from '@/data';
 import type { Product, InventoryLog } from '@/types/database';
 
 export default function AdminInventory() {
@@ -269,79 +269,8 @@ export default function AdminInventory() {
               <p className="text-sm text-[#6B6B6B]">المخزون الحالي: <span className="font-bold text-[#C9A96E]">{selectedProduct.stock_quantity}</span></p>
             </div>
 
-            {/* Adjustment Type */}
-            <div className="flex gap-2 mb-4">
-              {(['in', 'out', 'adjustment'] as const).map(type => (
-                <button
-                  key={type}
-                  onClick={() => setAdjustmentType(type)}
-                  className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
-                    adjustmentType === type 
-                      ? type === 'in' ? 'bg-green-500 text-white'
-                        : type === 'out' ? 'bg-orange-500 text-white'
-                        : 'bg-blue-500 text-white'
-                      : 'bg-[#F5F0E8] text-[#6B6B6B]'
-                  }`}
-                >
-                  {type === 'in' ? 'إضافة' : type === 'out' ? 'إخراج' : 'تسوية'}
-                </button>
-              ))}
-            </div>
-
-            {/* Quantity */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-[#1A1A1A] mb-1">
-                {adjustmentType === 'adjustment' ? 'الكمية الجديدة' : 'الكمية'}
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={adjustmentQty}
-                onChange={(e) => setAdjustmentQty(e.target.value)}
-                className="w-full px-4 py-2 bg-[#FAF8F5] border border-[#E8E0D5] rounded-lg focus:outline-none focus:border-[#C9A96E]"
-                placeholder="أدخل الكمية"
-              />
-              {adjustmentType !== 'adjustment' && adjustmentQty && (
-                <p className="text-sm text-[#6B6B6B] mt-1">
-                  المخزون بعد التعديل: {' '}
-                  <span className="font-bold text-[#C9A96E]">
-                    {adjustmentType === 'in' 
-                      ? selectedProduct.stock_quantity + parseInt(adjustmentQty || '0')
-                      : Math.max(0, selectedProduct.stock_quantity - parseInt(adjustmentQty || '0'))
-                    }
-                  </span>
-                </p>
-              )}
-            </div>
-
-            {/* Reason */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-[#1A1A1A] mb-1">السبب *</label>
-              <select
-                value={adjustmentReason}
-                onChange={(e) => setAdjustmentReason(e.target.value)}
-                className="w-full px-4 py-2 bg-[#FAF8F5] border border-[#E8E0D5] rounded-lg focus:outline-none focus:border-[#C9A96E]"
-              >
-                <option value="">اختر السبب</option>
-                <option value="توريد جديد">توريد جديد</option>
-                <option value="مرتجع عميل">مرتجع عميل</option>
-                <option value="تلف">تلف</option>
-                <option value="بيع">بيع</option>
-                <option value="تجديد مخزون">تجديد مخزون</option>
-                <option value="تسوية">تسوية</option>
-                <option value="أخرى">أخرى</option>
-              </select>
-            </div>
-
             {/* Submit */}
             <div className="flex gap-3">
-              <button
-                onClick={handleAdjustment}
-                disabled={!adjustmentQty || !adjustmentReason}
-                className="flex-1 bg-[#C9A96E] hover:bg-[#D4AF37] text-white py-2 rounded-lg transition-colors disabled:opacity-50"
-              >
-                تأكيد
-              </button>
               <button
                 onClick={() => setShowAdjustmentModal(false)}
                 className="flex-1 bg-[#F5F0E8] text-[#1A1A1A] py-2 rounded-lg hover:bg-[#E8E0D5] transition-colors"
@@ -349,28 +278,6 @@ export default function AdminInventory() {
                 إلغاء
               </button>
             </div>
-
-            {/* Recent Logs */}
-            {inventoryLogs.length > 0 && (
-              <div className="mt-6 pt-6 border-t border-[#E8E0D5]">
-                <h4 className="font-bold text-[#1A1A1A] mb-3">آخر الحركات</h4>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {inventoryLogs.slice(0, 5).map(log => (
-                    <div key={log.id} className="flex items-center justify-between text-sm p-2 bg-[#FAF8F5] rounded-lg">
-                      <div>
-                        <span className={`font-bold ${log.type === 'in' ? 'text-green-600' : log.type === 'out' ? 'text-red-600' : 'text-blue-600'}`}>
-                          {log.type === 'in' ? '+' : log.type === 'out' ? '-' : ''}{log.quantity}
-                        </span>
-                        <span className="text-[#6B6B6B] mr-2">{log.reason}</span>
-                      </div>
-                      <span className="text-xs text-[#6B6B6B]">
-                        {new Date(log.created_at).toLocaleDateString('ar-SA')}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}

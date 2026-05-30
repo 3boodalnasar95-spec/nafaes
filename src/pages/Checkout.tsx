@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CheckCircle, MessageCircle, AlertCircle, ArrowRight, Search, MapPin, Loader } from 'lucide-react';
-import { useStore } from '../store/useStore';
-import { useOrders } from '../contexts/OrderContext';
+import { CheckCircle, MessageCircle, AlertCircle, ArrowRight, Search, Loader } from 'lucide-react';
+import { useStore } from '@/store/useStore';
+import { useOrders } from '@/contexts/OrderContext';
 import { 
   formatPrice, 
   whatsappLink, 
@@ -12,7 +12,7 @@ import {
   generateOrderNumber,
   generateWhatsAppMessage,
   KuwaitArea
-} from '../data/products';
+} from '@/data';
 import Layout from '../components/Layout';
 import { downloadInvoicePDF } from '@/utils/pdfGenerator';
 
@@ -55,14 +55,12 @@ export default function Checkout() {
   const deliveryFee = selectedArea?.deliveryFee || 0;
   const total = subtotal + deliveryFee;
 
-  // Update areas when governorate changes
   const handleGovernorateChange = (governorateId: string) => {
     setFormData({ ...formData, governorate: governorateId, area: '' });
     setFilteredAreas(getAreasByGovernorate(governorateId));
     setAreaSearch('');
   };
 
-  // Filter areas based on search
   const handleAreaSearch = (query: string) => {
     setAreaSearch(query);
     setShowAreaDropdown(true);
@@ -136,7 +134,6 @@ export default function Checkout() {
   const handleSendWhatsApp = async () => {
     if (!orderData) return;
 
-    // Generate and download PDF
     try {
       await downloadInvoicePDF({
         orderNumber: orderData.orderNumber,
@@ -166,7 +163,6 @@ export default function Checkout() {
       console.error('PDF generation failed:', error);
     }
 
-    // Send WhatsApp message
     const message = generateWhatsAppMessage(orderData);
     window.open(`${whatsappLink}?text=${message}`, '_blank');
     setOrderSent(true);
@@ -256,7 +252,6 @@ export default function Checkout() {
       <section className="py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Form */}
             <div className="lg:col-span-2">
               <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-[#E8E0D5] p-6 md:p-8">
                 <h2 className="text-xl font-bold text-[#1A1A1A] mb-6">البيانات الشخصية</h2>
@@ -476,7 +471,6 @@ export default function Checkout() {
               </form>
             </div>
 
-            {/* Order Summary */}
             <div>
               <div className="bg-white rounded-2xl border border-[#E8E0D5] p-6 sticky top-24">
                 <h3 className="text-xl font-bold text-[#1A1A1A] mb-6">ملخص الطلب</h3>

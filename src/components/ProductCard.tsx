@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ShoppingBag, Sparkles, Droplets, Flower2, Gift, Package } from 'lucide-react';
-import { Product, formatPrice, getCategoryInfo } from '../data/products';
-import { useStore } from '../store/useStore';
+import { Product, formatPrice, getCategoryInfo } from '@/data';
+import { useStore } from '@/store/useStore';
 
 interface ProductCardProps {
   product: Product;
@@ -18,7 +18,6 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const categoryInfo = getCategoryInfo(product.categorySlug);
 
-  // Get category icon
   const getCategoryIcon = (icon: string) => {
     switch (icon) {
       case 'Sparkles': return <Sparkles className="w-5 h-5" />;
@@ -29,7 +28,6 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
   };
 
-  // Get placeholder background based on category
   const getPlaceholderBg = () => {
     switch (product.categorySlug) {
       case 'smart-aroma-diffusers':
@@ -45,7 +43,6 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
   };
 
-  // Get icon color based on category
   const getIconColor = () => {
     switch (product.categorySlug) {
       case 'smart-aroma-diffusers':
@@ -72,7 +69,6 @@ export default function ProductCard({ product }: ProductCardProps) {
           />
         </div>
         
-        {/* Category Badge */}
         {categoryInfo && (
           <div className={`absolute top-3 right-3 bg-gradient-to-r ${categoryInfo.color} text-white text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md`}>
             {getCategoryIcon(categoryInfo.icon)}

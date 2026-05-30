@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, MessageCircle } from 'lucide-react';
-import { useStore } from '../store/useStore';
+import { useStore } from '@/store/useStore';
 import Layout from '../components/Layout';
-import { formatPrice, whatsappLink } from '../data/products';
+import { formatPrice, whatsappLink } from '@/data';
 
 export default function Cart() {
   const { cartItems, removeFromCart, updateQuantity, clearCart, cartTotal } = useStore();

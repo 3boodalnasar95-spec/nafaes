@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Product } from '../data/products';
+import { Product } from '@/data';
 
 interface StoreState {
   cartItems: { product: Product; quantity: number; selectedSize?: string }[];
@@ -15,14 +15,12 @@ export const useStore = create<StoreState>((set, get) => ({
   
   addToCart: (product, selectedSize) => {
     const { cartItems } = get();
-    // Create a unique key based on product id and size
     const itemKey = selectedSize ? `${product.id}-${selectedSize}` : product.id;
     const existingItemIndex = cartItems.findIndex(
       (item) => (selectedSize ? `${item.product.id}-${item.selectedSize}` : item.product.id) === itemKey
     );
     
     if (existingItemIndex >= 0) {
-      // Update quantity if item exists
       set({
         cartItems: cartItems.map((item, index) =>
           index === existingItemIndex
@@ -31,7 +29,6 @@ export const useStore = create<StoreState>((set, get) => ({
         ),
       });
     } else {
-      // Add new item
       set({ cartItems: [...cartItems, { product, quantity: 1, selectedSize }] });
     }
   },

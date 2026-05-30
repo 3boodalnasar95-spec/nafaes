@@ -2,10 +2,9 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Star, Award, Truck, CreditCard, MessageCircle, Sparkles, Droplets, Flower2, Gift, ArrowRight } from 'lucide-react';
 import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
-import { products, categories } from '../data/products';
+import { products, categories } from '@/data';
 
 export default function Index() {
-  // Get featured products (first 4)
   const featuredProducts = products.slice(0, 4);
 
   const getCategoryIcon = (icon: string) => {
@@ -30,7 +29,6 @@ export default function Index() {
         
         <div className="container mx-auto px-4 py-16 md:py-24 relative">
           <div className="max-w-2xl mx-auto text-center">
-            {/* Badge */}
             <div className="inline-flex items-center gap-2 bg-[#C9A96E]/10 text-[#C9A96E] px-4 py-2 rounded-full text-sm mb-6">
               <Star className="w-4 h-4" />
               <span>العطور الفاخرة</span>
