@@ -169,22 +169,27 @@ export default function Index() {
 
       {/* CTA */}
       <section className="py-16 bg-gradient-to-r from-[#1A1A1A] to-[#333]">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">جاهز للطلب؟</h2>
-          <p className="text-[#888] mb-8 max-w-xl mx-auto">
-            اطلب الآن عبر واتساب وسيتم تأكيد طلبك والتوصيل بأسرع وقت
-          </p>
-          <a
-            href="https://wa.me/96566377312"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#20BD5A] text-white font-semibold px-8 py-4 rounded-xl transition-colors"
-          >
-            <MessageCircle className="w-6 h-6" />
-            <span>اطلب الآن عبر واتساب</span>
-          </a>
-        </div>
-      </section>
+              <div className="container mx-auto px-4 text-center">
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">جاهز للطلب؟</h2>
+                <p className="text-[#888] mb-8 max-w-xl mx-auto">
+                  اطلب الآن عبر واتساب وسيتم تأكيد طلبك والتوصيل بأسرع وقت
+                </p>
+                <a
+                  href="https://wa.me/96566377312"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#20BD5A] text-white font-semibold px-8 py-4 rounded-xl transition-colors"
+                >
+                  <MessageCircle className="w-6 h-6" />
+                  <span>اطلب الآن عبر واتساب</span>
+                </a>
+                <div className="mt-6">
+                  <Link to="/invoice/1" className="inline-flex items-center gap-2 bg-[#C9A96E] hover:bg-[#B0895E] text-white font-semibold px-6 py-3 rounded-xl transition-colors">
+                    عرض عينة الفاتورة
+                  </Link>
+                </div>
+              </div>
+            </section>
     </Layout>
   );
 }

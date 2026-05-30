@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, Button, Input, Label } from "@/components/ui";
+import { Card, Button, Input, Label } from "@shadcn/ui";
 import { generateInvoiceNumber } from "@/utils/invoiceUtils";
 import { generatePdf } from "@/utils/generatePdf";
 import { sampleInvoiceData } from "@/data/sampleInvoice";
