@@ -5,7 +5,7 @@ import { useStore } from '../store/useStore';
 import { useOrders } from '../contexts/OrderContext';
 import { InvoiceData } from '@/utils/pdfGenerator';
 import Layout from '../components/Layout';
-import { formatPrice, deliveryFee, kuwaitGovernorates, getAreasByGovernorate, getAreaById, type KuwaitArea } from '../data/products';
+import { formatPrice, deliveryFee, kuwaitGovernorates, getAreasByGovernorate, getAreaById, type DeliveryArea } from '../data/products';
 import { downloadInvoicePDF } from '@/utils/pdfGenerator';
 import { generateWhatsAppMessage, generateAdminWhatsAppMessage, getWhatsAppLink } from '@/utils/whatsappGenerator';
 
@@ -26,7 +26,7 @@ export default function Checkout() {
   const [formData, setFormData] = useState<CheckoutFormData>({
     name: '', phone: '', governorate: '', area: '', address: '', notes: '', paymentMethod: 'cash'
   });
-  const [filteredAreas, setFilteredAreas] = useState<KuwaitArea[]>([]);
+  const [filteredAreas, setFilteredAreas] = useState<DeliveryArea[]>([]);
   const [areaSearch, setAreaSearch] = useState('');
   const [showAreaDropdown, setShowAreaDropdown] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -38,7 +38,7 @@ export default function Checkout() {
 
   const subtotal = cartTotal();
   const selectedArea = getAreaById(formData.area);
-  const totalDeliveryFee = selectedArea?.deliveryFee || deliveryFee;
+  const totalDeliveryFee = selectedArea?.delivery || deliveryFee;
   const total = subtotal + totalDeliveryFee;
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -337,7 +337,7 @@ export default function Checkout() {
                     />
                     {selectedArea && (
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C9A96E] text-sm">
-                        {formatPrice(selectedArea.deliveryFee)} توصيل
+                        {formatPrice(selectedArea.delivery)} توصيل
                       </span>
                     )}
                     
@@ -356,7 +356,7 @@ export default function Checkout() {
                             className="w-full px-4 py-3 text-right hover:bg-[#FAF8F5] border-b border-[#E8E0D5] last:border-0"
                           >
                             <span className="text-[#1A1A1A]">{area.name}</span>
-                            <span className="text-[#C9A96E] text-sm mr-2">{formatPrice(area.deliveryFee)}</span>
+                            <span className="text-[#C9A96E] text-sm mr-2">{formatPrice(area.delivery)}</span>
                           </button>
                         ))}
                       </div>
