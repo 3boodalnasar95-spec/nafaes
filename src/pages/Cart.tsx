@@ -35,70 +35,53 @@ export default function Cart() {
 
   return (
     <Layout>
-      {/* Hero */}
       <section className="bg-gradient-to-b from-[#F5F0E8] to-[#FAF8F5] py-12">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-2">سلة التسوق</h1>
-          <p className="text-[#6B6B6B]">لديك {cartItems.length} منتجات في السلة</p>
+          <p className="text-[#6B6B6B]">لديك {cartItems.length} {cartItems.length === 1 ? 'منتج' : 'منتجات'} في السلة</p>
         </div>
       </section>
 
       <section className="py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Cart Items */}
             <div className="lg:col-span-2 space-y-4">
               {cartItems.map((item) => (
-                <div
-                  key={item.product.id}
-                  className="bg-white rounded-xl border border-[#E8E0D5] p-4 flex flex-col sm:flex-row gap-4"
-                >
+                <div key={item.product.id} className="bg-white rounded-xl border border-[#E8E0D5] p-4 flex flex-col sm:flex-row gap-4">
                   <Link to={`/product/${item.product.id}`} className="flex-shrink-0">
-                    <img
-                      src={item.product.image}
-                      alt={item.product.nameAr}
-                      className="w-full sm:w-28 h-28 object-contain bg-[#F5F0E8] rounded-lg p-2"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = `https://via.placeholder.com/200x200/F5F0E8/C9A96E?text=${encodeURIComponent(item.product.nameEn)}`;
-                      }}
-                    />
+                    <div className="w-full sm:w-28 h-28 bg-[#F5F0E8] rounded-lg flex items-center justify-center overflow-hidden p-2">
+                      <img
+                        src={item.product.image}
+                        alt={item.product.name_ar}
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = `https://via.placeholder.com/200x200/F5F0E8/C9A96E?text=${encodeURIComponent(item.product.name_en)}`;
+                        }}
+                      />
+                    </div>
                   </Link>
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <Link
-                          to={`/product/${item.product.id}`}
-                          className="text-[#1A1A1A] font-bold text-lg hover:text-[#C9A96E] transition-colors"
-                        >
-                          {item.product.nameAr}
+                        <Link to={`/product/${item.product.id}`} className="text-[#1A1A1A] font-bold text-lg hover:text-[#C9A96E]">
+                          {item.product.name_ar}
                         </Link>
-                        <p className="text-[#6B6B6B] text-sm">{item.product.nameEn}</p>
+                        <p className="text-[#6B6B6B] text-sm">{item.product.name_en}</p>
                       </div>
-                      <button
-                        onClick={() => removeFromCart(item.product.id)}
-                        className="p-2 text-[#6B6B6B] hover:text-red-500 transition-colors"
-                      >
+                      <button onClick={() => removeFromCart(item.product.id)} className="p-2 text-[#6B6B6B] hover:text-red-500">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                     <div className="flex flex-wrap items-center justify-between gap-4">
-                      {/* Quantity */}
                       <div className="flex items-center bg-[#F5F0E8] rounded-lg">
-                        <button
-                          onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                          className="p-2 text-[#6B6B6B] hover:text-[#1A1A1A] transition-colors"
-                        >
+                        <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="p-2 text-[#6B6B6B] hover:text-[#1A1A1A]">
                           <Minus className="w-4 h-4" />
                         </button>
                         <span className="w-12 text-center font-medium text-[#1A1A1A]">{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                          className="p-2 text-[#6B6B6B] hover:text-[#1A1A1A] transition-colors"
-                        >
+                        <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)} className="p-2 text-[#6B6B6B] hover:text-[#1A1A1A]">
                           <Plus className="w-4 h-4" />
                         </button>
                       </div>
-                      {/* Price */}
                       <div className="text-left">
                         <p className="text-[#C9A96E] font-bold text-xl">{formatPrice(item.product.price * item.quantity)}</p>
                         {item.quantity > 1 && (
@@ -109,20 +92,14 @@ export default function Cart() {
                   </div>
                 </div>
               ))}
-
-              <button
-                onClick={clearCart}
-                className="text-red-500 hover:text-red-600 text-sm font-medium transition-colors"
-              >
+              <button onClick={clearCart} className="text-red-500 hover:text-red-600 text-sm font-medium">
                 إفراغ السلة
               </button>
             </div>
 
-            {/* Summary */}
             <div>
               <div className="bg-white rounded-xl border border-[#E8E0D5] p-6 sticky top-24">
                 <h3 className="text-xl font-bold text-[#1A1A1A] mb-6">ملخص الطلب</h3>
-
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between text-[#6B6B6B]">
                     <span>المجموع الفرعي</span>
@@ -133,26 +110,15 @@ export default function Cart() {
                     <span>{formatPrice(deliveryFee)}</span>
                   </div>
                 </div>
-
                 <div className="flex justify-between items-center py-4 border-t border-[#E8E0D5] mb-6">
                   <span className="text-[#1A1A1A] font-bold text-lg">الإجمالي</span>
                   <span className="text-[#C9A96E] font-bold text-2xl">{formatPrice(total)}</span>
                 </div>
-
-                <Link
-                  to="/checkout"
-                  className="w-full flex items-center justify-center gap-2 bg-[#1A1A1A] hover:bg-[#C9A96E] text-white font-semibold py-4 rounded-xl transition-colors mb-3"
-                >
+                <Link to="/checkout" className="w-full flex items-center justify-center gap-2 bg-[#1A1A1A] hover:bg-[#C9A96E] text-white font-semibold py-4 rounded-xl transition-colors mb-3">
                   إتمام الطلب
                   <ArrowRight className="w-5 h-5" />
                 </Link>
-
-                <a
-                  href={whatsappLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BD5A] text-white font-semibold py-4 rounded-xl transition-colors"
-                >
+                <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BD5A] text-white font-semibold py-4 rounded-xl transition-colors">
                   <MessageCircle className="w-5 h-5" />
                   إتمام عبر واتساب
                 </a>

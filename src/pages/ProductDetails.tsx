@@ -1,7 +1,6 @@
 "use client";
 
-import { useParams, useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, Check, MessageCircle, Minus, Plus } from 'lucide-react';
 import { products, formatPrice, whatsappLink } from '../data/products';
 import { useStore } from '../store/useStore';
@@ -29,36 +28,33 @@ export default function ProductDetails() {
     );
   }
 
-  const whatsappMessage = `أرغب بطلب منتج ${product.nameEn} - ${product.nameAr}، السعر ${formatPrice(product.price)}.`;
+  const whatsappMessage = `أرغب بطلب منتج ${product.name_en} - ${product.name_ar}، السعر ${formatPrice(product.price)}.`;
 
   return (
     <Layout>
-      {/* Hero */}
       <section className="bg-gradient-to-b from-[#F5F0E8] to-[#FAF8F5] py-8">
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-2 text-sm text-[#6B6B6B]">
-            <Link to="/" className="hover:text-[#C9A96E] transition-colors">الرئيسية</Link>
+            <Link to="/" className="hover:text-[#C9A96E]">الرئيسية</Link>
             <span>/</span>
-            <Link to="/products" className="hover:text-[#C9A96E] transition-colors">المنتجات</Link>
+            <Link to="/products" className="hover:text-[#C9A96E]">المنتجات</Link>
             <span>/</span>
-            <span className="text-[#1A1A1A]">{product.nameAr}</span>
+            <span className="text-[#1A1A1A]">{product.name_ar}</span>
           </div>
         </div>
       </section>
 
-      {/* Product Details */}
       <section className="py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Product Image */}
             <div className="relative">
               <div className="aspect-square bg-gradient-to-br from-[#F5F0E8] to-[#E8E0D5] rounded-3xl flex items-center justify-center p-8 sticky top-24">
                 <img
                   src={product.image}
-                  alt={product.nameAr}
+                  alt={product.name_ar}
                   className="w-full h-full object-contain"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = `https://via.placeholder.com/600x600/F5F0E8/C9A96E?text=${encodeURIComponent(product.nameEn)}`;
+                    (e.target as HTMLImageElement).src = `https://via.placeholder.com/600x600/F5F0E8/C9A96E?text=${encodeURIComponent(product.name_en)}`;
                   }}
                 />
                 <div className="absolute top-4 right-4 bg-[#C9A96E] text-white text-sm font-bold px-4 py-2 rounded-full">
@@ -67,16 +63,13 @@ export default function ProductDetails() {
               </div>
             </div>
 
-            {/* Product Info */}
             <div>
-              {/* Title */}
               <div className="mb-6">
-                <p className="text-[#C9A96E] font-medium mb-2">{product.nameEn}</p>
-                <h1 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-3">{product.nameAr}</h1>
+                <p className="text-[#C9A96E] font-medium mb-2">{product.name_en}</p>
+                <h1 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-3">{product.name_ar}</h1>
                 <p className="text-[#6B6B6B] text-lg leading-relaxed">{product.fullDescription}</p>
               </div>
 
-              {/* Price */}
               <div className="mb-8 p-6 bg-[#F5F0E8] rounded-2xl">
                 <div className="flex items-center justify-between">
                   <span className="text-[#6B6B6B]">السعر</span>
@@ -84,7 +77,6 @@ export default function ProductDetails() {
                 </div>
               </div>
 
-              {/* Features */}
               <div className="mb-8">
                 <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">المميزات</h3>
                 <div className="grid grid-cols-2 gap-3">
@@ -97,7 +89,6 @@ export default function ProductDetails() {
                 </div>
               </div>
 
-              {/* Specs */}
               <div className="mb-8">
                 <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">المواصفات</h3>
                 <div className="bg-white rounded-2xl border border-[#E8E0D5] overflow-hidden">
@@ -110,21 +101,20 @@ export default function ProductDetails() {
                 </div>
               </div>
 
-              {/* Quantity & Actions */}
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
                   <span className="text-[#1A1A1A] font-medium">الكمية</span>
                   <div className="flex items-center bg-[#F5F0E8] rounded-xl">
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="p-3 text-[#6B6B6B] hover:text-[#1A1A1A] transition-colors"
+                      className="p-3 text-[#6B6B6B] hover:text-[#1A1A1A]"
                     >
                       <Minus className="w-5 h-5" />
                     </button>
                     <span className="w-12 text-center font-bold text-[#1A1A1A] text-lg">{quantity}</span>
                     <button
                       onClick={() => setQuantity(quantity + 1)}
-                      className="p-3 text-[#6B6B6B] hover:text-[#1A1A1A] transition-colors"
+                      className="p-3 text-[#6B6B6B] hover:text-[#1A1A1A]"
                     >
                       <Plus className="w-5 h-5" />
                     </button>
