@@ -5,6 +5,9 @@ import { getCustomers, createCustomer, getCustomerStats } from '@/lib/db-operati
 import { formatPrice } from '@/data/products';
 import type { Customer } from '@/types/database';
 
+// WhatsApp number from environment variables
+const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '96566377312';
+
 export default function AdminCustomers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -199,7 +202,7 @@ export default function AdminCustomers() {
               
               <div className="flex gap-2 mt-4">
                 <a
-                  href={`https://wa.me/965${customer.phone}`}
+                  href={`https://wa.me/${WHATSAPP_NUMBER.replace('965', '965')}${customer.phone}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] text-white py-2 rounded-lg hover:bg-[#20BD5A] transition-colors"
@@ -326,7 +329,7 @@ export default function AdminCustomers() {
                 )}
               </div>
               <a
-                href={`https://wa.me/965${selectedCustomer.phone}`}
+                href={`https://wa.me/${WHATSAPP_NUMBER.replace('965', '965')}${selectedCustomer.phone}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-4 w-full flex items-center justify-center gap-2 bg-[#25D366] text-white py-2 rounded-lg hover:bg-[#20BD5A] transition-colors"

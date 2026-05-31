@@ -151,8 +151,9 @@ export const localProducts: Product[] = [
 
 export const products = localProducts;
 
+// Get WhatsApp number from environment variables
+export const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '96566377312';
 export const deliveryFee = 2;
-export const whatsappNumber = '96566377312';
 export const whatsappLink = `https://wa.me/${whatsappNumber}`;
 
 export function getAreasByGovernorate(governorateId: string): DeliveryArea[] {

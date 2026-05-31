@@ -1,6 +1,9 @@
 import { MessageCircle, Instagram } from 'lucide-react';
 import Layout from '../components/Layout';
 
+// WhatsApp number from environment variables
+const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '96566377312';
+
 export default function Contact() {
   return (
     <Layout>
@@ -20,7 +23,7 @@ export default function Contact() {
           <div className="max-w-2xl mx-auto">
             {/* WhatsApp */}
             <a
-              href="https://wa.me/96566377312"
+              href={`https://wa.me/${WHATSAPP_NUMBER}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-4 bg-[#25D366] hover:bg-[#20BD5A] text-white font-bold text-xl py-8 px-6 rounded-2xl mb-6 transition-colors shadow-lg hover:shadow-xl"
@@ -28,7 +31,7 @@ export default function Contact() {
               <MessageCircle className="w-10 h-10" />
               <div className="text-right">
                 <span className="block text-lg">واتساب الطلبات</span>
-                <span className="text-3xl font-bold">66377312</span>
+                <span className="text-3xl font-bold">{WHATSAPP_NUMBER}</span>
               </div>
             </a>
 

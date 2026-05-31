@@ -51,6 +51,7 @@ interface OrderContextType {
   markNotificationRead: (notificationId: string) => void;
   markAllNotificationsRead: () => void;
   clearNotifications: () => void;
+  clearAllOrders: () => void;
   stats: {
     totalOrders: number;
     pendingOrders: number;
@@ -72,44 +73,51 @@ function generateNotificationId(): string {
   return `notif_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
 
+// Secure storage helper functions - use sessionStorage for sensitive data
+function saveToStorage<T>(key: string, data: T): void {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(data));
+  } catch (e) {
+    console.error('Error saving to sessionStorage:', e);
+  }
+}
+
+function loadFromStorage<T>(key: string): T | null {
+  try {
+    const data = sessionStorage.getItem(key);
+    return data ? JSON.parse(data) : null;
+  } catch (e) {
+    console.error('Error loading from sessionStorage:', e);
+    return null;
+  }
+}
+
 export function OrderProvider({ children }: { children: React.ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  // Load from localStorage on mount
+  // Load from sessionStorage on mount
   useEffect(() => {
-    const storedOrders = localStorage.getItem(ORDERS_KEY);
-    const storedNotifications = localStorage.getItem(NOTIFICATIONS_KEY);
+    const storedOrders = loadFromStorage<Order[]>(ORDERS_KEY);
+    const storedNotifications = loadFromStorage<Notification[]>(NOTIFICATIONS_KEY);
     
     if (storedOrders) {
-      try {
-        const parsed = JSON.parse(storedOrders);
-        setOrders(parsed);
-      } catch (e) {
-        console.error('Error loading orders:', e);
-        setOrders([]);
-      }
+      setOrders(storedOrders);
     }
     
     if (storedNotifications) {
-      try {
-        const parsed = JSON.parse(storedNotifications);
-        setNotifications(parsed);
-      } catch (e) {
-        console.error('Error loading notifications:', e);
-        setNotifications([]);
-      }
+      setNotifications(storedNotifications);
     }
   }, []);
 
-  // Save to localStorage when orders change
+  // Save to sessionStorage when orders change
   useEffect(() => {
-    localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+    saveToStorage(ORDERS_KEY, orders);
   }, [orders]);
 
-  // Save to localStorage when notifications change
+  // Save to sessionStorage when notifications change
   useEffect(() => {
-    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
+    saveToStorage(NOTIFICATIONS_KEY, notifications);
   }, [notifications]);
 
   const addOrder = useCallback((orderData: Omit<Order, 'id' | 'orderNumber' | 'status' | 'createdAt' | 'sentToWhatsApp'>): Order => {
@@ -145,7 +153,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     setNotifications(prev => [notification, ...prev]);
 
     // Also store current order for PDF generation
-    localStorage.setItem('current_order_for_pdf', JSON.stringify(newOrder));
+    saveToStorage('current_order_for_pdf', newOrder);
 
     console.log('✅ Order saved:', newOrder);
     console.log('📋 Order number:', orderNumber);
@@ -181,6 +189,11 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     setNotifications([]);
   }, []);
 
+  const clearAllOrders = useCallback(() => {
+    setOrders([]);
+    sessionStorage.removeItem(ORDERS_KEY);
+  }, []);
+
   // Calculate stats
   const stats = {
     totalOrders: orders.length,
@@ -206,6 +219,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
       markNotificationRead,
       markAllNotificationsRead,
       clearNotifications,
+      clearAllOrders,
       stats,
     }}>
       {children}

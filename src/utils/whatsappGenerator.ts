@@ -20,17 +20,23 @@ export interface InvoiceData {
   total: number;
 }
 
+// WhatsApp number from environment variables
+export const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '96566377312';
+export const WHATSAPP_BASE_LINK = `https://wa.me/${WHATSAPP_NUMBER}`;
+
 // Sanitize user input to prevent injection
 function sanitizeInput(input: string): string {
   if (!input) return '';
   
   return input
     .trim()
-    // Remove or escape potentially dangerous characters
-    .replace(/[\n\r\t]/g, ' ') // Replace newlines/tabs with space
-    .replace(/\u200B/g, '') // Remove zero-width spaces
-    .replace(/[^\u0600-\u06FF\u0750-\u077F\w\s.,!?؟\-]/g, '') // Keep only Arabic, basic Latin, numbers, punctuation
-    .slice(0, 500); // Limit length to prevent abuse
+    // Replace newlines/tabs with space
+    .replace(/[\n\r\t]/g, ' ')
+    // Remove zero-width spaces
+    .replace(/\u200B/g, '')
+    // Keep only Arabic, basic Latin, numbers, punctuation
+    .replace(/[^\u0600-\u06FF\u0750-\u077F\w\s.,!?؟\-]/g, '')
+    .slice(0, 500);
 }
 
 // Mask phone number for privacy (show only last 4 digits)
@@ -42,7 +48,6 @@ function maskPhoneNumber(phone: string): string {
 // Mask address for privacy (show only area)
 function maskAddress(address: string, area: string): string {
   if (!address) return '';
-  // Only show the area, not full address in WhatsApp
   return `${area}`;
 }
 
@@ -113,6 +118,12 @@ export function generateAdminWhatsAppMessage(orderData: InvoiceData): string {
   message += '📸 @nafaes.q8\n';
   message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
   
+  // Overall message length limit (WhatsApp limit is ~65,000 chars)
+  const MAX_MESSAGE_LENGTH = 60000;
+  if (message.length > MAX_MESSAGE_LENGTH) {
+    return message.slice(0, MAX_MESSAGE_LENGTH) + '\n... (تم اختصار الرسالة)';
+  }
+  
   return message;
 }
 
@@ -149,31 +160,15 @@ export function validateKuwaitiPhone(phone: string): { valid: boolean; formatted
     };
   }
 
-  // Check for valid second digit based on prefix
-  const secondDigit = digitsOnly[1];
-  const validPrefixes: Record<string, string[]> = {
-    '5': ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], // Mobile
-    '6': ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], // Mobile
-    '9': ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], // Mobile/Satellite
-  };
-
-  if (!validPrefixes[firstDigit]?.includes(secondDigit)) {
-    return { 
-      valid: false, 
-      formatted: '', 
-      error: 'رقم الهاتف غير صحيح' 
-    };
-  }
-
   return {
     valid: true,
     formatted: digitsOnly,
   };
 }
 
-export const WHATSAPP_NUMBER = '96566377312';
-export const WHATSAPP_BASE_LINK = `https://wa.me/${WHATSAPP_NUMBER}`;
-
 export function getWhatsAppLink(message: string): string {
-  return `${WHATSAPP_BASE_LINK}?text=${encodeURIComponent(message)}`;
+  // Truncate message if too long
+  const MAX_URL_LENGTH = 8000; // Leave room for base URL
+  const truncatedMessage = message.slice(0, MAX_URL_LENGTH - WHATSAPP_BASE_LINK.length - 100);
+  return `${WHATSAPP_BASE_LINK}?text=${encodeURIComponent(truncatedMessage)}`;
 }
