@@ -33,12 +33,14 @@ export default function AdminLogin() {
       return;
     }
 
-    const success = await login({ username, password });
-    
-    if (success) {
-      navigate(from, { replace: true });
-    } else {
-      setError('اسم المستخدم أو كلمة المرور غير صحيحة');
+    try {
+      const success = await login({ username, password });
+      
+      if (success) {
+        navigate(from, { replace: true });
+      }
+    } catch (err) {
+      setError((err as Error).message);
     }
     setLoading(false);
   };
@@ -95,6 +97,7 @@ export default function AdminLogin() {
                   className="w-full pr-12 pl-4 py-3 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E] focus:ring-2 focus:ring-[#C9A96E]/20 transition-all"
                   placeholder="أدخل اسم المستخدم"
                   autoComplete="username"
+                  autoFocus
                 />
               </div>
             </div>
