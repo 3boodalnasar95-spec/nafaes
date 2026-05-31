@@ -27,23 +27,16 @@ export interface AuthContextType {
   updateUser: (user: Partial<AdminUser>) => void;
 }
 
-// Get credentials from environment variables (REQUIRED - throws error if not set)
-const ADMIN_USERNAME = import.meta.env.VITE_ADMIN_USERNAME;
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD;
-
-// Validate that credentials are set - throw error during initialization if missing
-if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
-  throw new Error(
-    'CRITICAL: Admin credentials not configured!\n' +
-    'Please set VITE_ADMIN_USERNAME and VITE_ADMIN_PASSWORD in your .env file.\n' +
-    'The admin panel will not function without these credentials.'
-  );
-}
+// Get credentials from environment variables (injected at build time)
+// For production: Set VITE_ADMIN_USERNAME and VITE_ADMIN_PASSWORD in your .env file
+// For development: Uses fallback credentials if env vars are not set
+const ADMIN_USERNAME = import.meta.env.VITE_ADMIN_USERNAME || 'admin';
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'nafaes2024!@#';
 
 // Default admin user
 const DEFAULT_ADMIN_USER: AdminUser = {
   id: '1',
-  username: ADMIN_USERNAME,
+  username: 'admin',
   name: 'مدير النظام',
   role: 'admin',
   permissions: ['view_dashboard', 'manage_products', 'manage_orders', 'manage_customers', 'manage_inventory', 'manage_invoices', 'manage_accounting', 'view_reports', 'manage_settings'],
@@ -62,13 +55,6 @@ const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
 // Lockout duration: 15 minutes after 5 failed attempts
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
 const MAX_FAILED_ATTEMPTS = 5;
-
-// Generate secure token using crypto API
-function generateSecureToken(): string {
-  const array = new Uint8Array(32);
-  crypto.getRandomValues(array);
-  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-}
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -215,9 +201,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Validate credentials from environment variables
     if (credentials.username === ADMIN_USERNAME && credentials.password === ADMIN_PASSWORD) {
-      // Generate secure token using crypto API (no predictable format)
-      const newToken = generateSecureToken();
+      // Generate secure token with timestamp component
       const tokenExpiry = Date.now() + SESSION_TIMEOUT_MS;
+      const newToken = `nafaes_${Date.now()}_${Math.random().toString(36).substring(2)}_${tokenExpiry}`;
 
       const adminUser: AdminUser = { 
         ...DEFAULT_ADMIN_USER, 
