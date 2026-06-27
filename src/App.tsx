@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { OrderProvider } from "./contexts/OrderContext";
 import { Toaster } from "sonner";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
@@ -13,6 +14,7 @@ import NotFound from "./pages/NotFound";
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOrders from "./pages/admin/AdminOrders";
+import AdminOrderDetails from "./pages/admin/AdminOrderDetails";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminProductForm from "./pages/admin/AdminProductForm";
 import AdminCustomers from "./pages/admin/AdminCustomers";
@@ -23,6 +25,8 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminSeedProducts from "./pages/admin/AdminSeedProducts";
 import AdminLogin from "./pages/admin/AdminLogin";
+import AdminCoupons from "./pages/admin/AdminCoupons";
+import AdminReviews from "./pages/admin/AdminReviews";
 import { useAuth } from "./contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 
@@ -52,6 +56,7 @@ function AdminRoutes() {
       <Routes>
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/orders" element={<AdminOrders />} />
+        <Route path="/admin/orders/:id" element={<AdminOrderDetails />} />
         <Route path="/admin/products" element={<AdminProducts />} />
         <Route path="/admin/products/new" element={<AdminProductForm />} />
         <Route path="/admin/products/:id" element={<AdminProductForm />} />
@@ -62,6 +67,8 @@ function AdminRoutes() {
         <Route path="/admin/settings" element={<AdminSettings />} />
         <Route path="/admin/reports" element={<AdminReports />} />
         <Route path="/admin/seed" element={<AdminSeedProducts />} />
+        <Route path="/admin/coupons" element={<AdminCoupons />} />
+        <Route path="/admin/reviews" element={<AdminReviews />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
     </ProtectedRoute>
@@ -81,32 +88,34 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <BrowserRouter>
-          <Toaster 
-            position="top-center"
-            toastOptions={{
-              style: {
-                fontFamily: 'Tajawal, sans-serif',
-              },
-            }}
-          />
-          <Routes>
-            {/* Main Site */}
-            <Route path="/" element={<Index />} />
-            <Route path="/products" element={<Products />} />
-            <Route path="/product/:id" element={<ProductDetails />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/contact" element={<Contact />} />
-            
-            {/* Admin Panel */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin/*" element={<AdminRoutes />} />
-            
-            {/* 404 */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <OrderProvider>
+          <BrowserRouter>
+            <Toaster 
+              position="top-center"
+              toastOptions={{
+                style: {
+                  fontFamily: 'Tajawal, sans-serif',
+                },
+              }}
+            />
+            <Routes>
+              {/* Main Site */}
+              <Route path="/" element={<Index />} />
+              <Route path="/products" element={<Products />} />
+              <Route path="/product/:id" element={<ProductDetails />} />
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/contact" element={<Contact />} />
+              
+              {/* Admin Panel */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin/*" element={<AdminRoutes />} />
+              
+              {/* 404 */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </OrderProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

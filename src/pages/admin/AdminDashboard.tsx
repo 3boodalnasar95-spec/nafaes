@@ -8,6 +8,7 @@ import {
 import AdminLayout from './AdminLayout';
 import { getOrders, updateOrderStatus, getNotifications, markNotificationRead, markAllNotificationsRead, getDashboardStats, formatPrice } from '@/lib/db-operations';
 import { downloadInvoicePDF } from '@/utils/pdfGenerator';
+import { useOrders } from '@/contexts/OrderContext';
 import { toast } from 'sonner';
 
 interface OrderItem {
@@ -57,13 +58,15 @@ export default function AdminDashboard() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [stats, setStats] = useState({
+  const [dbStats, setDbStats] = useState({
     totalOrders: 0,
     pendingOrders: 0,
     todayOrders: 0,
     totalRevenue: 0,
     unreadNotifications: 0,
   });
+
+  const { orders: localOrders, stats: localStats, getOrderStats } = useOrders();
 
   const loadData = useCallback(async () => {
     try {
@@ -75,11 +78,23 @@ export default function AdminDashboard() {
 
       setOrders(ordersData);
       setNotifications(notificationsData);
-      setStats(statsData);
+      setDbStats(statsData);
     } catch (error) {
       console.error('Error loading data:', error);
     }
   }, []);
+
+  const stats = {
+    totalOrders: dbStats.totalOrders + getOrderStats().totalOrders,
+    pendingOrders: dbStats.pendingOrders + getOrderStats().pendingOrders,
+    todayOrders: dbStats.todayOrders + getOrderStats().todayOrders,
+    totalRevenue: dbStats.totalRevenue + getOrderStats().totalRevenue,
+    unreadNotifications: dbStats.unreadNotifications,
+  };
+
+  const localCount = localStats.totalOrders;
+  const dbCount = dbStats.totalOrders;
+  const showSourceSplit = localCount > 0 && dbCount > 0;
 
   useEffect(() => {
     loadData();
@@ -146,6 +161,11 @@ export default function AdminDashboard() {
           <div>
             <h2 className="text-2xl font-bold text-[#1A1A1A]">لوحة التحكم</h2>
             <p className="text-[#6B6B6B]">مرحباً بك في لوحة تحكم نفائس</p>
+            {showSourceSplit && (
+              <p className="text-xs text-[#C9A96E] mt-1">
+                {localCount} طلب من الذاكرة المحلية + {dbCount} طلب من قاعدة البيانات
+              </p>
+            )}
           </div>
           
           <div className="flex items-center gap-3">

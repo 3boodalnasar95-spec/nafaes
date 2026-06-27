@@ -1,0 +1,23 @@
+{
+  "name": "NAFAES | نفائس",
+  "short_name": "NAFAES",
+  "description": "متجرك الأول للعطور والهدايا العطرية الفاخرة في الكويت",
+  "start_url": "/",
+  "display": "standalone",
+  "lang": "ar",
+  "dir": "rtl",
+  "theme_color": "#C9A96E",
+  "background_color": "#FAF8F5",
+  "icons": [
+    {
+      "src": "/images/elan-nomad.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/elan-nomad.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

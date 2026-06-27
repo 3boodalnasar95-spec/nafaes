@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Receipt, Eye, Download, Search, Plus, Printer } from 'lucide-react';
+import { Receipt, Eye, Download, Search, Plus, Printer, AlertCircle, Database, FileText, DollarSign, Clock, CheckCircle2 } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import { getInvoices, Invoice } from '@/lib/db-operations';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { formatPrice } from '@/data/products';
 
 export default function AdminInvoices() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -20,10 +22,14 @@ export default function AdminInvoices() {
     setLoading(false);
   };
 
-  const filteredInvoices = invoices.filter(inv => 
+  const filteredInvoices = invoices.filter(inv =>
     inv.invoice_number?.toLowerCase().includes(search.toLowerCase()) ||
     inv.customer_id?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const totalAmount = invoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
+  const paidCount = invoices.filter(inv => inv.status === 'paid').length;
+  const pendingCount = invoices.filter(inv => ['draft', 'sent', 'viewed'].includes(inv.status)).length;
 
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { label: string; color: string }> = {
@@ -39,6 +45,18 @@ export default function AdminInvoices() {
 
   return (
     <AdminLayout>
+      {!isSupabaseConfigured && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-bold text-amber-900">قاعدة البيانات غير مهيأة</p>
+            <p className="text-sm text-amber-800 mt-1">
+              Supabase غير مهيأ. لا يمكن إنشاء أو عرض الفواتير. أضف VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY في ملف .env ثم أعد تشغيل التطبيق.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
@@ -52,6 +70,54 @@ export default function AdminInvoices() {
             <Plus className="w-5 h-5" />
             إنشاء فاتورة
           </Link>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white rounded-xl border border-[#E8E0D5] p-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-[#C9A96E]/10 rounded-lg">
+              <FileText className="w-6 h-6 text-[#C9A96E]" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-[#1A1A1A]">{invoices.length}</p>
+              <p className="text-sm text-[#6B6B6B]">إجمالي الفواتير</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-[#E8E0D5] p-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-green-100 rounded-lg">
+              <CheckCircle2 className="w-6 h-6 text-green-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-[#1A1A1A]">{paidCount}</p>
+              <p className="text-sm text-[#6B6B6B]">مدفوعة</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-[#E8E0D5] p-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-yellow-100 rounded-lg">
+              <Clock className="w-6 h-6 text-yellow-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-[#1A1A1A]">{pendingCount}</p>
+              <p className="text-sm text-[#6B6B6B]">قيد الانتظار</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-[#E8E0D5] p-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-purple-100 rounded-lg">
+              <DollarSign className="w-6 h-6 text-purple-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-[#1A1A1A]">{formatPrice(totalAmount)}</p>
+              <p className="text-sm text-[#6B6B6B]">إجمالي المبالغ</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -74,9 +140,27 @@ export default function AdminInvoices() {
         {loading ? (
           <div className="p-8 text-center text-[#6B6B6B]">جاري التحميل...</div>
         ) : filteredInvoices.length === 0 ? (
-          <div className="p-8 text-center text-[#6B6B6B]">
-            <Receipt className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>لا توجد فواتير</p>
+          <div className="p-12 text-center text-[#6B6B6B]">
+            {isSupabaseConfigured ? (
+              <>
+                <Receipt className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-medium text-[#1A1A1A]">لا توجد فواتير بعد</p>
+                <p className="text-sm mt-2 mb-4">قم بإنشاء أول فاتورة من زر "إنشاء فاتورة" أعلاه.</p>
+                <Link
+                  to="/admin/invoices/new"
+                  className="inline-flex items-center gap-2 bg-[#C9A96E] hover:bg-[#D4AF37] text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  إنشاء فاتورة جديدة
+                </Link>
+              </>
+            ) : (
+              <>
+                <Database className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-medium text-[#1A1A1A]">قاعدة البيانات غير مهيأة</p>
+                <p className="text-sm mt-2">قم بتهيئة Supabase في ملف .env لعرض وإنشاء الفواتير.</p>
+              </>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -106,7 +190,7 @@ export default function AdminInvoices() {
                           {badge.label}
                         </span>
                       </td>
-                      <td className="text-left px-4 py-4 text-[#C9A96E] font-bold">{invoice.total.toFixed(3)} د.ك</td>
+                      <td className="text-left px-4 py-4 text-[#C9A96E] font-bold">{formatPrice(invoice.total)}</td>
                       <td className="text-center px-4 py-4">
                         <div className="flex items-center justify-center gap-2">
                           <Link

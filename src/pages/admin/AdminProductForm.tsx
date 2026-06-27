@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowRight, Plus, Trash2 } from 'lucide-react';
+import { ArrowRight, Plus, Trash2, Save, Info } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import { createProduct, updateProduct, getProducts, Product } from '@/lib/db-operations';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 export default function AdminProductForm() {
   const { id } = useParams();
@@ -12,14 +14,14 @@ export default function AdminProductForm() {
   const [formData, setFormData] = useState({
     name_ar: '',
     name_en: '',
-    type: '',
+    type: 'devices',
     price: '',
     cost_price: '0',
     description_short: '',
     description_full: '',
     sku: '',
-    category: 'general',
-    stock_quantity: '0',
+    category: 'devices',
+    stock_quantity: '10',
     min_stock_level: '5',
     image: '',
     specs: {} as Record<string, string>,
@@ -30,62 +32,91 @@ export default function AdminProductForm() {
   const [newSpecKey, setNewSpecKey] = useState('');
   const [newSpecValue, setNewSpecValue] = useState('');
   const [newFeature, setNewFeature] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [dbAvailable, setDbAvailable] = useState(false);
 
   useEffect(() => {
-    if (isEditing && id) {
-      loadProduct(id);
+    setDbAvailable(isSupabaseConfigured && !!supabase);
+    if (isEditing && id && dbAvailable) {
+      void loadProduct(id);
     }
-  }, [id, isEditing]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, isEditing, dbAvailable]);
 
   const loadProduct = async (productId: string) => {
     const products = await getProducts();
-    const product = products.find(p => p.id === productId);
+    const product = products.find(p => p.id === productId) as unknown as Product | undefined;
     if (product) {
       setFormData({
         name_ar: product.name_ar || '',
         name_en: product.name_en || '',
-        type: product.type || '',
+        type: product.type || 'devices',
         price: product.price?.toString() || '',
         cost_price: product.cost_price?.toString() || '0',
-        description_short: '',
-        description_full: '',
+        description_short: (product as unknown as { shortDescription?: string }).shortDescription || '',
+        description_full: (product as unknown as { fullDescription?: string }).fullDescription || '',
         sku: product.sku || '',
-        category: 'general',
+        category: product.type || 'devices',
         stock_quantity: product.stock_quantity?.toString() || '0',
         min_stock_level: product.min_stock_level?.toString() || '5',
-        image: product.images?.[0] || '',
+        image: (product as unknown as { image?: string }).image || product.images?.[0] || '',
         specs: product.specs || {},
         features: product.features || [],
         is_active: product.is_active ?? true,
       });
+    } else {
+      toast.error('لم يتم العثور على المنتج');
+      navigate('/admin/products');
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const productData: Partial<Product> = {
+
+    if (!formData.name_ar || !formData.name_en || !formData.price) {
+      toast.error('الرجاء إكمال الحقول المطلوبة');
+      return;
+    }
+
+    if (!dbAvailable) {
+      toast.error('قاعدة البيانات غير متاحة. الإضافة والتعديل يعملان فقط بعد إعداد Supabase.');
+      return;
+    }
+
+    setSaving(true);
+
+    const productData: Record<string, unknown> = {
       name_ar: formData.name_ar,
       name_en: formData.name_en,
+      slug: formData.name_en.toLowerCase().replace(/\s+/g, '-'),
       type: formData.type,
       price: parseFloat(formData.price) || 0,
       cost_price: parseFloat(formData.cost_price) || 0,
       specs: formData.specs,
       features: formData.features,
       images: formData.image ? [formData.image] : [],
-      sku: formData.sku,
+      sku: formData.sku || null,
       stock_quantity: parseInt(formData.stock_quantity) || 0,
       min_stock_level: parseInt(formData.min_stock_level) || 5,
       is_active: formData.is_active,
     };
 
+    let success = false;
     if (isEditing && id) {
-      await updateProduct(id, productData);
+      success = await updateProduct(id, productData as Partial<Product>);
     } else {
-      await createProduct(productData);
+      const created = await createProduct(productData as Partial<Product>);
+      success = !!created;
     }
 
-    navigate('/admin/products');
+    setSaving(false);
+
+    if (success) {
+      toast.success(isEditing ? 'تم تحديث المنتج' : 'تم إضافة المنتج');
+      navigate('/admin/products');
+    } else {
+      toast.error('حدث خطأ أثناء الحفظ');
+    }
   };
 
   const addSpec = () => {
@@ -133,12 +164,23 @@ export default function AdminProductForm() {
         </p>
       </div>
 
+      {!dbAvailable && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+          <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-bold text-amber-900">قاعدة البيانات غير متاحة</p>
+            <p className="text-sm text-amber-800 mt-1">
+              لا يمكن إضافة أو تعديل المنتجات بدون اتصال بـ Supabase. أضف بيانات Supabase في ملف <code className="bg-amber-100 px-1 rounded">.env</code> ثم أعد المحاولة.
+            </p>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-[#E8E0D5] p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Basic Info */}
           <div className="space-y-4">
             <h3 className="font-bold text-[#1A1A1A] border-b border-[#E8E0D5] pb-2">المعلومات الأساسية</h3>
-            
+
             <div>
               <label className="block text-sm font-medium text-[#1A1A1A] mb-1">الاسم بالعربية *</label>
               <input
@@ -162,28 +204,15 @@ export default function AdminProductForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#1A1A1A] mb-1">النوع *</label>
-              <input
-                type="text"
-                required
+              <label className="block text-sm font-medium text-[#1A1A1A] mb-1">التصنيف *</label>
+              <select
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                className="w-full px-4 py-2 bg-[#FAF8F5] border border-[#E8E0D5] rounded-lg focus:outline-none focus:border-[#C9A96E]"
-                placeholder="مثال: جهاز تعطير ذكي"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#1A1A1A] mb-1">التصنيف</label>
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 className="w-full px-4 py-2 bg-[#FAF8F5] border border-[#E8E0D5] rounded-lg focus:outline-none focus:border-[#C9A96E]"
               >
                 <option value="devices">أجهزة تعطير</option>
                 <option value="diffusers">معطرات أعواد</option>
                 <option value="gifts">هدايا عطرية</option>
-                <option value="general">عام</option>
               </select>
             </div>
 
@@ -194,15 +223,26 @@ export default function AdminProductForm() {
                 value={formData.sku}
                 onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
                 className="w-full px-4 py-2 bg-[#FAF8F5] border border-[#E8E0D5] rounded-lg focus:outline-none focus:border-[#C9A96E]"
-                placeholder="رمز المنتج"
+                placeholder="مثال: ELAN-NOMAD-360"
               />
+            </div>
+
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-[#1A1A1A]">
+                <input
+                  type="checkbox"
+                  checked={formData.is_active}
+                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  className="w-4 h-4 accent-[#C9A96E]"
+                />
+                المنتج مفعّل ومعروض في المتجر
+              </label>
             </div>
           </div>
 
-          {/* Pricing & Stock */}
           <div className="space-y-4">
             <h3 className="font-bold text-[#1A1A1A] border-b border-[#E8E0D5] pb-2">السعر والمخزون</h3>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[#1A1A1A] mb-1">السعر (د.ك) *</label>
@@ -260,15 +300,18 @@ export default function AdminProductForm() {
                 onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                 className="w-full px-4 py-2 bg-[#FAF8F5] border border-[#E8E0D5] rounded-lg focus:outline-none focus:border-[#C9A96E]"
                 placeholder="/images/product.png"
+                dir="ltr"
               />
+              <p className="text-xs text-[#6B6B6B] mt-1">
+                ضع الصورة في <code>public/images/</code> ثم أدخل مسارها هنا
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Specs */}
         <div className="mt-6 space-y-4">
           <h3 className="font-bold text-[#1A1A1A] border-b border-[#E8E0D5] pb-2">المواصفات</h3>
-          
+
           <div className="flex gap-2">
             <input
               type="text"
@@ -311,10 +354,9 @@ export default function AdminProductForm() {
           </div>
         </div>
 
-        {/* Features */}
         <div className="mt-6 space-y-4">
           <h3 className="font-bold text-[#1A1A1A] border-b border-[#E8E0D5] pb-2">المميزات</h3>
-          
+
           <div className="flex gap-2">
             <input
               type="text"
@@ -322,7 +364,12 @@ export default function AdminProductForm() {
               onChange={(e) => setNewFeature(e.target.value)}
               className="flex-1 px-4 py-2 bg-[#FAF8F5] border border-[#E8E0D5] rounded-lg focus:outline-none focus:border-[#C9A96E]"
               placeholder="أضف ميزة..."
-              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFeature())}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  addFeature();
+                }
+              }}
             />
             <button
               type="button"
@@ -352,14 +399,20 @@ export default function AdminProductForm() {
           </div>
         </div>
 
-        {/* Submit */}
         <div className="mt-8 flex gap-4">
           <button
             type="submit"
-            className="flex-1 flex items-center justify-center gap-2 bg-[#C9A96E] hover:bg-[#D4AF37] text-white py-3 rounded-lg transition-colors font-medium"
+            disabled={saving || !dbAvailable}
+            className="flex-1 flex items-center justify-center gap-2 bg-[#C9A96E] hover:bg-[#D4AF37] text-white py-3 rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isEditing ? 'حفظ التغييرات' : 'إضافة المنتج'}
-            <ArrowRight className="w-5 h-5" />
+            {saving ? (
+              <>جاري الحفظ...</>
+            ) : (
+              <>
+                <Save className="w-5 h-5" />
+                {isEditing ? 'حفظ التغييرات' : 'إضافة المنتج'}
+              </>
+            )}
           </button>
           <button
             type="button"

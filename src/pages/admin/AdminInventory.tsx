@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Warehouse, AlertTriangle, ArrowUpDown, Package, Plus, Minus, TrendingUp, TrendingDown } from 'lucide-react';
+import { Warehouse, AlertTriangle, ArrowUpDown, Package, Plus, Minus, TrendingUp, TrendingDown, Database } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import AdminLayout from './AdminLayout';
 import { getProducts, logInventoryChange, getInventoryLogs, Product } from '@/lib/db-operations';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import { formatPrice } from '@/data/products';
 
 export default function AdminInventory() {
@@ -74,6 +76,25 @@ export default function AdminInventory() {
 
   return (
     <AdminLayout>
+      {!isSupabaseConfigured && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-bold text-amber-900">قاعدة البيانات غير مهيأة</p>
+            <p className="text-sm text-amber-800 mt-1">
+              Supabase غير مهيأ. لا توجد بيانات مخزون لعرضها. أضف VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY في ملف .env ثم استخدم صفحة "إضافة المنتجات" لنقل المنتجات إلى قاعدة البيانات.
+            </p>
+            <Link
+              to="/admin/seed"
+              className="inline-flex items-center gap-2 mt-3 text-sm font-medium text-amber-900 hover:text-amber-700"
+            >
+              <Database className="w-4 h-4" />
+              الذهاب لصفحة إضافة المنتجات
+            </Link>
+          </div>
+        </div>
+      )}
+
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-[#1A1A1A]">إدارة المخزون</h2>
         <p className="text-[#6B6B6B]">تتبع ومراقبة مستويات المخزون</p>

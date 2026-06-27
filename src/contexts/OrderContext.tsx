@@ -52,6 +52,12 @@ interface OrderContextType {
   markAllNotificationsRead: () => void;
   clearNotifications: () => void;
   clearAllOrders: () => void;
+  getOrderStats: () => {
+    totalOrders: number;
+    pendingOrders: number;
+    todayOrders: number;
+    totalRevenue: number;
+  };
   stats: {
     totalOrders: number;
     pendingOrders: number;
@@ -61,7 +67,9 @@ interface OrderContextType {
 }
 
 const ORDERS_KEY = 'nafaes_orders';
+const ORDERS_LOCAL_KEY = 'nafaes_orders_local';
 const NOTIFICATIONS_KEY = 'nafaes_notifications';
+const NOTIFICATIONS_LOCAL_KEY = 'nafaes_notifications_local';
 
 export const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
@@ -73,12 +81,19 @@ function generateNotificationId(): string {
   return `notif_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
 
-// Secure storage helper functions - use sessionStorage for sensitive data
 function saveToStorage<T>(key: string, data: T): void {
   try {
     sessionStorage.setItem(key, JSON.stringify(data));
   } catch (e) {
     console.error('Error saving to sessionStorage:', e);
+  }
+}
+
+function saveToLocalStorage<T>(key: string, data: T): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (e) {
+    console.error('Error saving to localStorage:', e);
   }
 }
 
@@ -92,32 +107,53 @@ function loadFromStorage<T>(key: string): T | null {
   }
 }
 
+function loadFromLocalStorage<T>(key: string): T | null {
+  try {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : null;
+  } catch (e) {
+    console.error('Error loading from localStorage:', e);
+    return null;
+  }
+}
+
 export function OrderProvider({ children }: { children: React.ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  // Load from sessionStorage on mount
+  // Load from sessionStorage and localStorage on mount
   useEffect(() => {
-    const storedOrders = loadFromStorage<Order[]>(ORDERS_KEY);
-    const storedNotifications = loadFromStorage<Notification[]>(NOTIFICATIONS_KEY);
-    
-    if (storedOrders) {
-      setOrders(storedOrders);
+    const sessionOrders = loadFromStorage<Order[]>(ORDERS_KEY);
+    const localOrders = loadFromLocalStorage<Order[]>(ORDERS_LOCAL_KEY);
+    const sessionNotifications = loadFromStorage<Notification[]>(NOTIFICATIONS_KEY);
+    const localNotifications = loadFromLocalStorage<Notification[]>(NOTIFICATIONS_LOCAL_KEY);
+
+    const mergedOrders = localOrders && localOrders.length > 0
+      ? localOrders
+      : sessionOrders;
+    const mergedNotifications = localNotifications && localNotifications.length > 0
+      ? localNotifications
+      : sessionNotifications;
+
+    if (mergedOrders) {
+      setOrders(mergedOrders);
     }
-    
-    if (storedNotifications) {
-      setNotifications(storedNotifications);
+
+    if (mergedNotifications) {
+      setNotifications(mergedNotifications);
     }
   }, []);
 
-  // Save to sessionStorage when orders change
+  // Save to sessionStorage and localStorage when orders change
   useEffect(() => {
     saveToStorage(ORDERS_KEY, orders);
+    saveToLocalStorage(ORDERS_LOCAL_KEY, orders);
   }, [orders]);
 
-  // Save to sessionStorage when notifications change
+  // Save to sessionStorage and localStorage when notifications change
   useEffect(() => {
     saveToStorage(NOTIFICATIONS_KEY, notifications);
+    saveToLocalStorage(NOTIFICATIONS_LOCAL_KEY, notifications);
   }, [notifications]);
 
   const addOrder = useCallback((orderData: Omit<Order, 'id' | 'orderNumber' | 'status' | 'createdAt' | 'sentToWhatsApp'>): Order => {
@@ -192,10 +228,10 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
   const clearAllOrders = useCallback(() => {
     setOrders([]);
     sessionStorage.removeItem(ORDERS_KEY);
+    localStorage.removeItem(ORDERS_LOCAL_KEY);
   }, []);
 
-  // Calculate stats
-  const stats = {
+  const calculateStats = useCallback(() => ({
     totalOrders: orders.length,
     pendingOrders: orders.filter(o => o.status === 'pending').length,
     todayOrders: orders.filter(o => {
@@ -203,7 +239,11 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
       return new Date(o.createdAt).toDateString() === today;
     }).length,
     totalRevenue: orders.reduce((sum, o) => sum + o.total, 0),
-  };
+  }), [orders]);
+
+  const getOrderStats = useCallback(() => calculateStats(), [calculateStats]);
+
+  const stats = calculateStats();
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -220,6 +260,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
       markAllNotificationsRead,
       clearNotifications,
       clearAllOrders,
+      getOrderStats,
       stats,
     }}>
       {children}

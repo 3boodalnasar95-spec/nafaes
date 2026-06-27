@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabase';
+import { generateOrderNumber } from '@/utils/orderUtils';
 import { formatPrice } from '@/data/products';
 import { toast } from 'sonner';
 
@@ -252,17 +253,6 @@ export async function getInventoryLogs(productId: string): Promise<any[]> {
 
 // ==================== ORDERS ====================
 
-function generateOrderNumber(): string {
-  const now = new Date();
-  const year = now.getFullYear().toString().slice(-2);
-  const month = (now.getMonth() + 1).toString().padStart(2, '0');
-  const day = now.getDate().toString().padStart(2, '0');
-  const hours = now.getHours().toString().padStart(2, '0');
-  const minutes = now.getMinutes().toString().padStart(2, '0');
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-  return `NAF-${year}${month}${day}-${hours}${minutes}-${random}`;
-}
-
 export async function getOrders(): Promise<Order[]> {
   if (!isSupabaseConfigured || !supabase) {
     console.log('Supabase not configured, returning empty orders');
@@ -455,13 +445,55 @@ export async function getCustomerStats(customerId: string): Promise<{
   lastOrder: string | null;
   ordersByStatus: Record<string, number>;
 }> {
-  return { 
-    totalOrders: 0, 
-    totalSpent: 0, 
-    avgOrderValue: 0, 
-    lastOrder: null, 
-    ordersByStatus: {} 
-  };
+  if (!isSupabaseConfigured || !supabase) {
+    return {
+      totalOrders: 0,
+      totalSpent: 0,
+      avgOrderValue: 0,
+      lastOrder: null,
+      ordersByStatus: {}
+    };
+  }
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('total, status, created_at')
+      .eq('customer_id', customerId);
+    if (error) {
+      console.error('Error fetching customer stats:', error);
+      return {
+        totalOrders: 0,
+        totalSpent: 0,
+        avgOrderValue: 0,
+        lastOrder: null,
+        ordersByStatus: {}
+      };
+    }
+
+    const orders = data || [];
+    const totalOrders = orders.length;
+    const totalSpent = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+    const avgOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
+    const lastOrder = orders.length > 0
+      ? orders.reduce((max, o) => (o.created_at > max ? o.created_at : max), orders[0].created_at)
+      : null;
+
+    const ordersByStatus: Record<string, number> = {};
+    orders.forEach(o => {
+      ordersByStatus[o.status] = (ordersByStatus[o.status] || 0) + 1;
+    });
+
+    return { totalOrders, totalSpent, avgOrderValue, lastOrder, ordersByStatus };
+  } catch (err) {
+    console.error('Exception fetching customer stats:', err);
+    return {
+      totalOrders: 0,
+      totalSpent: 0,
+      avgOrderValue: 0,
+      lastOrder: null,
+      ordersByStatus: {}
+    };
+  }
 }
 
 // ==================== INVOICES ====================
@@ -626,16 +658,62 @@ export async function getSalesReport(startDate: string, endDate: string): Promis
   try {
     const { data, error } = await supabase
       .from('orders')
-      .select('*')
+      .select('*, order_items(product_id, quantity, total_price)')
       .gte('created_at', startDate)
       .lte('created_at', endDate);
-    if (error) return { daily: [], byStatus: {}, topProducts: [] };
-    
+    if (error) {
+      console.error('Error fetching sales report:', error);
+      return { daily: [], byStatus: {}, topProducts: [] };
+    }
+
     const orders = data || [];
+
     const byStatus: Record<string, number> = {};
     orders.forEach(o => { byStatus[o.status] = (byStatus[o.status] || 0) + 1; });
-    
-    return { daily: [], byStatus, topProducts: [] };
+
+    const dailyMap: Record<string, { orders: number; revenue: number }> = {};
+    orders.forEach(o => {
+      const date = o.created_at?.split('T')[0];
+      if (!date) return;
+      if (!dailyMap[date]) dailyMap[date] = { orders: 0, revenue: 0 };
+      dailyMap[date].orders += 1;
+      dailyMap[date].revenue += o.total || 0;
+    });
+    const daily = Object.entries(dailyMap)
+      .map(([date, v]) => ({ date, orders: v.orders, revenue: v.revenue }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    const productAgg: Record<string, { quantity: number; revenue: number }> = {};
+    orders.forEach(o => {
+      (o.order_items || []).forEach((item: { product_id?: string; quantity?: number; total_price?: number }) => {
+        const pid = item.product_id;
+        if (!pid) return;
+        if (!productAgg[pid]) productAgg[pid] = { quantity: 0, revenue: 0 };
+        productAgg[pid].quantity += item.quantity || 0;
+        productAgg[pid].revenue += item.total_price || 0;
+      });
+    });
+
+    const productIds = Object.keys(productAgg);
+    const productNameMap: Record<string, string> = {};
+    if (productIds.length > 0 && supabase) {
+      const { data: products, error: productsError } = await supabase
+        .from('products')
+        .select('id, name_ar, name_en')
+        .in('id', productIds);
+      if (!productsError && products) {
+        products.forEach((p: { id: string; name_ar?: string; name_en?: string }) => {
+          productNameMap[p.id] = p.name_ar || p.name_en || 'Unknown';
+        });
+      }
+    }
+
+    const topProducts = Object.entries(productAgg)
+      .map(([id, v]) => ({ name: productNameMap[id] || 'Unknown', quantity: v.quantity, revenue: v.revenue }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 10);
+
+    return { daily, byStatus, topProducts };
   } catch (err) {
     console.error('Exception fetching sales report:', err);
     return { daily: [], byStatus: {}, topProducts: [] };

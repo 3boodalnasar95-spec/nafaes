@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Save, Store, Truck, MessageCircle, Check, Bell, Globe, CreditCard } from 'lucide-react';
+import { Save, Store, Truck, MessageCircle, Check, Bell, Globe, CreditCard, AlertCircle } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import { getSettings, updateSetting, updateSettings } from '@/lib/db-operations';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 export default function AdminSettings() {
   const [settings, setSettings] = useState<Record<string, string>>({
@@ -34,10 +36,19 @@ export default function AdminSettings() {
   };
 
   const handleSave = async () => {
+    if (!isSupabaseConfigured) {
+      toast.error('قاعدة البيانات غير مهيأة. لا يمكن حفظ الإعدادات. أضف VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY في ملف .env.');
+      return;
+    }
     setSaved(false);
-    await updateSettings(settings);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    const success = await updateSettings(settings);
+    if (success) {
+      setSaved(true);
+      toast.success('تم حفظ الإعدادات بنجاح');
+      setTimeout(() => setSaved(false), 3000);
+    } else {
+      toast.error('حدث خطأ أثناء حفظ الإعدادات');
+    }
   };
 
   const handleChange = (key: string, value: string) => {
@@ -63,6 +74,22 @@ export default function AdminSettings() {
 
   return (
     <AdminLayout>
+      {!isSupabaseConfigured && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-bold text-amber-900">قاعدة البيانات غير مهيأة</p>
+            <p className="text-sm text-amber-800 mt-1">
+              Supabase غير مهيأ. لا يمكن حفظ الإعدادات. يلزم إضافة المتغيرات التالية في ملف <code className="bg-amber-100 px-1 rounded">.env</code>:
+            </p>
+            <ul className="text-sm text-amber-800 mt-2 list-disc list-inside space-y-1">
+              <li><code className="bg-amber-100 px-1 rounded">VITE_SUPABASE_URL</code></li>
+              <li><code className="bg-amber-100 px-1 rounded">VITE_SUPABASE_ANON_KEY</code></li>
+            </ul>
+          </div>
+        </div>
+      )}
+
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-[#1A1A1A]">الإعدادات</h2>
         <p className="text-[#6B6B6B]">إعدادات المتجر العامة</p>
@@ -289,7 +316,8 @@ export default function AdminSettings() {
             <div className="border-t border-[#E8E0D5] pt-6 mt-6">
               <button
                 onClick={handleSave}
-                className="w-full flex items-center justify-center gap-2 bg-[#C9A96E] hover:bg-[#D4AF37] text-white py-3 rounded-lg transition-colors"
+                disabled={!isSupabaseConfigured}
+                className="w-full flex items-center justify-center gap-2 bg-[#C9A96E] hover:bg-[#D4AF37] text-white py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saved ? (
                   <>

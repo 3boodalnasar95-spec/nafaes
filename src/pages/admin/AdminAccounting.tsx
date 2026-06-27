@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, TrendingDown, Plus, Download, Filter } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Plus, Download, Filter, AlertCircle, Database } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import { getTransactions, createTransaction, Transaction } from '@/lib/db-operations';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 export default function AdminAccounting() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -67,6 +68,18 @@ export default function AdminAccounting() {
 
   return (
     <AdminLayout>
+      {!isSupabaseConfigured && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-bold text-amber-900">قاعدة البيانات غير مهيأة</p>
+            <p className="text-sm text-amber-800 mt-1">
+              Supabase غير مهيأ. لا يمكن تسجيل أو عرض المعاملات المالية. أضف VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY في ملف .env ثم أعد تشغيل التطبيق.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
@@ -166,7 +179,21 @@ export default function AdminAccounting() {
                 </tr>
               ) : transactions.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-[#6B6B6B]">لا توجد معاملات</td>
+                  <td colSpan={4} className="px-4 py-12 text-center text-[#6B6B6B]">
+                    {isSupabaseConfigured ? (
+                      <>
+                        <DollarSign className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                        <p className="font-medium text-[#1A1A1A]">لا توجد معاملات</p>
+                        <p className="text-sm mt-1">قم بتسجيل أول معاملة من زر "تسجيل عملية" أعلاه.</p>
+                      </>
+                    ) : (
+                      <>
+                        <Database className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                        <p className="font-medium text-[#1A1A1A]">قاعدة البيانات غير مهيأة</p>
+                        <p className="text-sm mt-1">قم بتهيئة Supabase لعرض المعاملات.</p>
+                      </>
+                    )}
+                  </td>
                 </tr>
               ) : (
                 transactions.map(transaction => (

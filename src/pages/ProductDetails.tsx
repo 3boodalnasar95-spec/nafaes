@@ -1,19 +1,67 @@
-"use client";
-
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, Check, MessageCircle, Minus, Plus } from 'lucide-react';
-import { products, formatPrice, whatsappLink } from '../data/products';
+import { localProducts, formatPrice, whatsappLink, type Product } from '../data/products';
+import { getProduct as getProductFromDb } from '@/lib/db-operations';
 import { useStore } from '../store/useStore';
 import Layout from '../components/Layout';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useStore();
   const [quantity, setQuantity] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [dbProduct, setDbProduct] = useState<Product | null>(null);
 
-  const product = products.find(p => p.id === id);
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      if (!id) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      const data = await getProductFromDb(id);
+      if (cancelled) return;
+      if (data) {
+        const mapped = {
+          id: data.id,
+          name_ar: data.name_ar,
+          name_en: data.name_en,
+          type: data.type || 'devices',
+          price: data.price,
+          shortDescription: data.specs?.['الوصف'] || data.features?.[0] || '',
+          fullDescription: data.features?.join(' | ') || '',
+          specs: data.specs || {},
+          features: data.features || [],
+          image: data.images?.[0] || '',
+          images: data.images || [],
+        };
+        setDbProduct(mapped);
+      } else {
+        setDbProduct(null);
+      }
+      setLoading(false);
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  const localProduct = localProducts.find(p => p.id === id);
+  const product = dbProduct || localProduct;
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-20 text-center">
+          <div className="text-[#6B6B6B]">جاري التحميل...</div>
+        </div>
+      </Layout>
+    );
+  }
 
   if (!product) {
     return (

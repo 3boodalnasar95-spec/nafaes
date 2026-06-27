@@ -1,7 +1,11 @@
 import { Link } from 'react-router-dom';
-import { Instagram, MessageCircle } from 'lucide-react';
+import { Instagram, MessageCircle, Database } from 'lucide-react';
 
-export default function Footer() {
+interface FooterProps {
+  localMode?: boolean;
+}
+
+export default function Footer({ localMode = false }: FooterProps) {
   return (
     <footer className="bg-[#1A1A1A] text-white">
       <div className="container mx-auto px-4 py-12">
@@ -61,10 +65,16 @@ export default function Footer() {
         </div>
 
         {/* Bottom */}
-        <div className="mt-12 pt-6 border-t border-[#333] text-center">
+        <div className="mt-12 pt-6 border-t border-[#333] flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-[#666] text-sm">
             © 2024 NAFAES | نفائس. جميع الحقوق محفوظة.
           </p>
+          {localMode && (
+            <span className="inline-flex items-center gap-2 bg-[#C9A96E]/20 text-[#C9A96E] text-xs font-medium px-3 py-1.5 rounded-full border border-[#C9A96E]/40">
+              <Database className="w-3.5 h-3.5" />
+              <span>حالة النظام: وضع محلي</span>
+            </span>
+          )}
         </div>
       </div>
     </footer>

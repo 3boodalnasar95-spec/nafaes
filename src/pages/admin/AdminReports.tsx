@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { BarChart3, Download, Calendar, Filter, TrendingUp, Package, Users, ShoppingCart, DollarSign } from 'lucide-react';
+import { BarChart3, Download, Calendar, Filter, TrendingUp, Package, Users, ShoppingCart, DollarSign, AlertCircle, Database, FileBarChart } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import { getSalesReport, getTransactions, getOrders, exportOrders, Transaction } from '@/lib/db-operations';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import { formatPrice } from '@/data/products';
 
 export default function AdminReports() {
@@ -73,8 +74,37 @@ export default function AdminReports() {
     URL.revokeObjectURL(url);
   };
 
+  const handleGenerateReport = async () => {
+    const now = new Date();
+    const end = now.toISOString().split('T')[0];
+    const start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    setDateRange('30d');
+    setCustomFrom('');
+    setCustomTo('');
+    setLoading(true);
+    const [report, trans] = await Promise.all([
+      getSalesReport(start, end),
+      getTransactions({ date_from: start, date_to: end })
+    ]);
+    setReportData(report);
+    setTransactions(trans);
+    setLoading(false);
+  };
+
   return (
     <AdminLayout>
+      {!isSupabaseConfigured && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-bold text-amber-900">قاعدة البيانات غير مهيأة</p>
+            <p className="text-sm text-amber-800 mt-1">
+              Supabase غير مهيأ. لا يمكن عرض التقارير. أضف VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY في ملف .env ثم أعد تشغيل التطبيق.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-[#1A1A1A]">التقارير والإحصائيات</h2>
         <p className="text-[#6B6B6B]">تحليل أداء المتجر</p>
@@ -119,8 +149,17 @@ export default function AdminReports() {
           </div>
         )}
         <button
+          onClick={handleGenerateReport}
+          disabled={!isSupabaseConfigured}
+          className="flex items-center gap-2 px-4 py-2 bg-[#C9A96E] text-white rounded-lg hover:bg-[#D4AF37] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <FileBarChart className="w-4 h-4" />
+          إنشاء تقرير (آخر 30 يوم)
+        </button>
+        <button
           onClick={() => handleExport('csv')}
-          className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors mr-auto"
+          disabled={!isSupabaseConfigured}
+          className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mr-auto"
         >
           <Download className="w-4 h-4" />
           تصدير CSV
@@ -181,6 +220,25 @@ export default function AdminReports() {
         {/* Sales Chart */}
         <div className="bg-white rounded-xl border border-[#E8E0D5] p-6">
           <h3 className="font-bold text-[#1A1A1A] mb-4">المبيعات اليومية</h3>
+          {reportData.daily.length > 0 && (
+            <div className="flex items-end gap-1 h-32 mb-4 px-2">
+              {(() => {
+                const maxRevenue = Math.max(...reportData.daily.map(d => d.revenue), 1);
+                return reportData.daily.slice(-14).map((day, i) => {
+                  const heightPct = (day.revenue / maxRevenue) * 100;
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1 min-w-0">
+                      <div
+                        className="w-full bg-gradient-to-t from-[#C9A96E] to-[#D4AF37] rounded-t-md min-h-[4px] transition-all"
+                        style={{ height: `${Math.max(heightPct, 3)}%` }}
+                        title={`${day.date}: ${formatPrice(day.revenue)}`}
+                      />
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          )}
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-[#F5F0E8]">
@@ -201,7 +259,7 @@ export default function AdminReports() {
                 {reportData.daily.length === 0 && (
                   <tr>
                     <td colSpan={3} className="px-4 py-8 text-center text-[#6B6B6B]">
-                      لا توجد بيانات
+                      {isSupabaseConfigured ? 'لا توجد بيانات في هذه الفترة' : 'قاعدة البيانات غير مهيأة'}
                     </td>
                   </tr>
                 )}
@@ -241,8 +299,14 @@ export default function AdminReports() {
       {/* Orders by Status */}
       <div className="mt-6 bg-white rounded-xl border border-[#E8E0D5] p-6">
         <h3 className="font-bold text-[#1A1A1A] mb-4">الطلبات حسب الحالة</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {Object.entries(reportData.byStatus).map(([status, count]) => {
+        {Object.keys(reportData.byStatus).length === 0 ? (
+          <div className="py-8 text-center text-[#6B6B6B]">
+            <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p>{isSupabaseConfigured ? 'لا توجد طلبات في هذه الفترة' : 'قاعدة البيانات غير مهيأة'}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Object.entries(reportData.byStatus).map(([status, count]) => {
             const statusLabels: Record<string, string> = {
               pending: 'معلق',
               confirmed: 'مؤكد',
@@ -268,7 +332,8 @@ export default function AdminReports() {
               </div>
             );
           })}
-        </div>
+          </div>
+        )}
       </div>
     </AdminLayout>
   );

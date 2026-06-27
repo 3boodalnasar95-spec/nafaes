@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { Search, Check, X, MessageCircle, Download, Package, Phone, MapPin } from 'lucide-react';
 import { getOrders, updateOrderStatus, formatPrice } from '@/lib/db-operations';
 import { downloadInvoicePDF } from '@/utils/pdfGenerator';
@@ -219,7 +220,7 @@ ${itemsList}
             const badge = getStatusBadge(order.status);
             return (
               <div key={order.id} className="bg-white rounded-xl border border-[#E8E0D5] p-6">
-                <div className="flex flex-col lg:flex-row justify-between gap-4 mb-4">
+                <Link to={`/admin/orders/${order.id}`} className="flex flex-col lg:flex-row justify-between gap-4 mb-4 cursor-pointer hover:bg-[#FAF8F5] -m-2 p-2 rounded-lg transition-colors">
                   <div className="flex items-center gap-4">
                     <div className="w-14 h-14 bg-gradient-to-br from-[#C9A96E]/20 to-[#D4AF37]/20 rounded-xl flex items-center justify-center">
                       <span className="text-[#C9A96E] font-bold text-sm">{order.order_number.slice(-8)}</span>
@@ -243,7 +244,7 @@ ${itemsList}
                     </span>
                     <p className="text-2xl font-bold text-[#C9A96E] mt-2">{formatPrice(order.total)}</p>
                   </div>
-                </div>
+                </Link>
 
                 {/* Customer Info */}
                 <div className="bg-[#FAF8F5] rounded-xl p-4 mb-4">

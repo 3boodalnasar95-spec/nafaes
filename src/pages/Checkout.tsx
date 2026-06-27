@@ -112,6 +112,12 @@ export default function Checkout() {
       // Create order in Supabase
       const result = await createOrder(orderInput, items);
 
+      if (!result.success && result.error === 'Database not configured') {
+        toast.warning('تم إرسال الطلب عبر واتساب. لتنظيم الطلبات، يرجى إعداد Supabase (راجع DEPLOYMENT.md).');
+      } else if (!result.success) {
+        throw new Error(result.error || 'Failed to create order');
+      }
+
       // Generate order number
       const newOrderNumber = result.order_number || `NAF-${Date.now()}`;
 

@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, MessageCircle, Users, Phone, MapPin, Eye, ShoppingCart, DollarSign, Star } from 'lucide-react';
+import { Plus, Search, MessageCircle, Users, Phone, MapPin, Eye, ShoppingCart, DollarSign, Star, AlertCircle } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import { getCustomers, createCustomer, getCustomerStats } from '@/lib/db-operations';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import { formatPrice } from '@/data/products';
 import type { Customer } from '@/types/database';
-
-// WhatsApp number from environment variables
-const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '96566377312';
 
 export default function AdminCustomers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -56,6 +54,18 @@ export default function AdminCustomers() {
 
   return (
     <AdminLayout>
+      {!isSupabaseConfigured && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-bold text-amber-900">قاعدة البيانات غير مهيأة</p>
+            <p className="text-sm text-amber-800 mt-1">
+              Supabase غير مهيأ. يتم عرض البيانات من الذاكرة المحلية فقط. أضف VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY في ملف .env ثم أعد تشغيل التطبيق.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
@@ -202,7 +212,7 @@ export default function AdminCustomers() {
               
               <div className="flex gap-2 mt-4">
                 <a
-                  href={`https://wa.me/${WHATSAPP_NUMBER.replace('965', '965')}${customer.phone}`}
+                  href={`https://wa.me/965${customer.phone}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] text-white py-2 rounded-lg hover:bg-[#20BD5A] transition-colors"
@@ -329,7 +339,7 @@ export default function AdminCustomers() {
                 )}
               </div>
               <a
-                href={`https://wa.me/${WHATSAPP_NUMBER.replace('965', '965')}${selectedCustomer.phone}`}
+                href={`https://wa.me/965${selectedCustomer.phone}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-4 w-full flex items-center justify-center gap-2 bg-[#25D366] text-white py-2 rounded-lg hover:bg-[#20BD5A] transition-colors"
