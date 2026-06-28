@@ -12,6 +12,10 @@ export interface Product {
   features?: string[];
   image?: string;
   images?: string[];
+  variant?: string;
+  sku?: string;
+  stock_quantity?: number;
+  min_stock_level?: number;
 }
 
 export interface CartItem {
@@ -28,8 +32,6 @@ export interface Order {
   paymentMethod: 'cash' | 'link';
 }
 
-// ==================== DELIVERY AREAS ====================
-
 export interface DeliveryArea {
   id: string;
   name: string;
@@ -42,116 +44,218 @@ export interface Governorate {
 }
 
 export const kuwaitGovernorates: Governorate[] = governorates.map(g => ({ id: g.id, name: g.name_ar }));
-
 export const kuwaitAreas: DeliveryArea[] = deliveryAreas.map(area => ({
   id: area.id,
   name: area.name_ar,
-  delivery: area.delivery_fee
+  delivery: area.delivery_fee,
 }));
 
-// Local products data
-export const localProducts: Product[] = [
+export type ProductCatalog = {
+  id: string;
+  name_ar: string;
+  name_en: string;
+  type: 'oils' | 'devices' | 'gifts' | 'diffusers';
+  description_short: string;
+  description_full: string;
+  features: string[];
+  image: string;
+  variants: { id: string; size: string; price: number; sku: string; stock: number }[];
+};
+
+export const PRODUCT_CATALOG: ProductCatalog[] = [
   {
-    id: 'elan-nomad',
-    name_ar: 'إيلان 360 نوماد',
-    name_en: 'ELAN 360 NOMAD',
-    type: 'devices',
-    price: 49,
-    shortDescription: 'جهاز تعطير ذكي قابل للشحن يمنحك تجربة عطرية متنقلة وأنيقة.',
-    fullDescription: 'إيلان 360 نوماد مصمم لمن يبحث عن الفخامة والراحة في جهاز واحد. يعمل ببطارية ليثيوم مدمجة، ويدعم الشحن Type-C، مع انتشار عطري 360° لتوزيع الرائحة بشكل متوازن.',
-    specs: {
-      'السعة': '120 مل',
-      'نوع التشغيل': 'بطارية ليثيوم قابلة للشحن',
-      'الشحن': 'Type-C',
-      'الانتشار': '360°',
-      'مستويات التحكم': '3 مستويات',
-      'التحكم': 'Wi-Fi + Bluetooth',
-      'التغطية': 'حتى 100 م²',
-      'مستوى الصوت': 'أقل من 28 dB',
-    },
-    features: ['رفاهية متنقلة', 'تشغيل ذكي', 'تصميم فاخر', 'سهل الحمل', 'مناسب للاستخدام اليومي'],
-    image: '/images/elan-nomad.png',
-    images: ['/images/elan-nomad.png'],
+    id: 'shangri-la',
+    name_ar: 'شانغريلا',
+    name_en: 'Shangri-La',
+    type: 'oils',
+    description_short: 'زيت عطري للأجهزة',
+    description_full: 'همس الزنجبيل الأبيض مع الأوركيد والياسمن لمسية ناعمة لاُدوَاء، سِا تُزهر في النفس سكينة دافئة.',
+    features: ['نفحات زنجبيل أبيض', 'خلاصة أوركيد', 'ياسمن ناعم', 'سكينة دافئة'],
+    image: '/images/shangri-la.png',
+    variants: [
+      { id: 'shangri-la-20', size: '20ml', price: 1.750, sku: 'SHL-20', stock: 50 },
+      { id: 'shangri-la-120', size: '120ml', price: 4.750, sku: 'SHL-120', stock: 40 },
+      { id: 'shangri-la-500', size: '500ml', price: 12.900, sku: 'SHL-500', stock: 25 },
+    ],
   },
   {
-    id: 'elan-prime',
-    name_ar: 'إيلان 360 برايم',
-    name_en: 'ELAN 360 PRIME',
-    type: 'devices',
-    price: 42,
-    shortDescription: 'جهاز تعطير كهربائي ثابت بتصميم أنيق، مناسب للمنازل والمكاتب.',
-    fullDescription: 'إيلان 360 برايم هو جهاز تعطير كهربائي يمنح المكان رائحة ثابتة ومنتظمة طوال اليوم.',
-    specs: {
-      'السعة': '120 مل',
-      'نوع التشغيل': 'كهربائي مباشر',
-      'الانتشار': '360°',
-      'التحكم': 'Touch / Bluetooth / Remote',
-      'مستوى الصوت': 'أقل من 34 dB',
-      'التغطية': 'حتى 120 م²',
-    },
-    features: ['فخامة يومية', 'تشغيل ثابت', 'رائحة متوازنة', 'تصميم أنيق', 'مناسب للمنازل والمكاتب'],
-    image: '/images/elan-prime.png',
-    images: ['/images/elan-prime.png'],
+    id: 'landmark-hotel',
+    name_ar: 'فندق لاندمارك',
+    name_en: 'Landmark Hotel',
+    type: 'oils',
+    description_short: 'زيت عطري فاخر برائحة الفندق',
+    description_full: 'حمضيات منتعشة ترقص مع لمسات راقية في قاعة فندق لاندمارك تخلق أجواء من الفخامة.',
+    features: ['حمضيات منتعشة', 'لمسات راقية', 'أجواء فاخرة', 'ثبات طويل'],
+    image: '/images/landmark-hotel.png',
+    variants: [
+      { id: 'landmark-hotel-20', size: '20ml', price: 1.750, sku: 'LMH-20', stock: 50 },
+      { id: 'landmark-hotel-120', size: '120ml', price: 4.750, sku: 'LMH-120', stock: 40 },
+      { id: 'landmark-hotel-500', size: '500ml', price: 12.900, sku: 'LMH-500', stock: 25 },
+    ],
   },
   {
-    id: 'noir-majeste',
-    name_ar: 'نوار ماجستيه',
-    name_en: 'NOIR MAJESTÉ',
-    type: 'devices',
-    price: 59,
-    shortDescription: 'جهاز تعطير احترافي للمساحات الراقية والكبيرة، مزود بشاشة LCD وتحكم ذكي.',
-    fullDescription: 'نوار ماجستيه جهاز تعطير فاخر مناسب للمنازل الكبيرة، المكاتب، الصالونات، العيادات.',
-    specs: {
-      'السعة': '200 مل',
-      'التغطية': '300–500m³',
-      'مستوى الصوت': 'أقل من 40 dBA',
-      'التحكم': 'Touch Buttons / Bluetooth',
-      'الشاشة': 'LCD',
-    },
-    features: ['مناسب للمساحات الكبيرة', 'تصميم احترافي', 'تحكم ذكي', 'تشغيل هادئ'],
-    image: '/images/noir-majeste.png',
-    images: ['/images/noir-majeste.png'],
+    id: 'marriott',
+    name_ar: 'ماريوت',
+    name_en: 'Marriott',
+    type: 'oils',
+    description_short: 'زيت عطري برائحة الفنادق الفاخرة',
+    description_full: 'أجواء فندقية لامعة تجمع بين الدفء والرائحة الزهرية الراقية وأخشاب غامقة.',
+    features: ['أخشاب غامقة', 'لمسات زهرية', 'دفء فاخر', 'ثبات عالي'],
+    image: '/images/marriott.png',
+    variants: [
+      { id: 'marriott-20', size: '20ml', price: 1.750, sku: 'MRT-20', stock: 50 },
+      { id: 'marriott-120', size: '120ml', price: 4.750, sku: 'MRT-120', stock: 40 },
+      { id: 'marriott-500', size: '500ml', price: 12.900, sku: 'MRT-500', stock: 25 },
+    ],
   },
   {
-    id: 'forest-reserve',
-    name_ar: 'فورست ريزيرف',
-    name_en: 'FOREST RESERVE',
-    type: 'gifts',
-    price: 13.9,
-    shortDescription: 'طقم هدايا عطري أنيق يجمع بين زجاجة معطر، شمعة معطرة، وأعواد خشبية.',
-    fullDescription: 'فورست ريزيرف طقم هدايا عطري فاخر مناسب للإهداء والمناسبات.',
-    specs: {
-      'النوع': 'Gift Set',
-      'الطابع العطري': 'خشبي / دافئ',
-      'الاستخدام': 'هدية جاهزة وأنيقة',
-    },
-    features: ['هدية فاخرة', 'جاهز للإهداء', 'تغليف أنيق', 'رائحة خشبية دافئة'],
-    image: '/images/forest-reserve.png',
-    images: ['/images/forest-reserve.png'],
+    id: 'ocean',
+    name_ar: 'أوشن',
+    name_en: 'Ocean',
+    type: 'oils',
+    description_short: 'زيت عطري بحري منعش',
+    description_full: 'سير بحر منعش مع نفحات المسك والأخشاب المنعشة، فاكهي ناعم ولمسة جميلة منعشة.',
+    features: ['نسيم البحر', 'مسك منعش', 'أخشاب فاتحة', 'إحساس بالصفاء'],
+    image: '/images/ocean.png',
+    variants: [
+      { id: 'ocean-20', size: '20ml', price: 1.500, sku: 'OCN-20', stock: 60 },
+      { id: 'ocean-120', size: '120ml', price: 4.250, sku: 'OCN-120', stock: 45 },
+      { id: 'ocean-500', size: '500ml', price: 11.900, sku: 'OCN-500', stock: 30 },
+    ],
   },
   {
-    id: 'amber-santal',
-    name_ar: 'أمبر سانتال',
-    name_en: 'AMBER SANTAL',
-    type: 'diffusers',
-    price: 10.9,
-    shortDescription: 'معطر أعواد فاخر برائحة دافئة وخشبية، مناسب للديكور والهدايا.',
-    fullDescription: 'أمبر سانتال معطر أعواد بتصميم أنيق ورائحة دافئة وخشبية.',
-    specs: {
-      'النوع': 'Reed Diffuser',
-      'الانتشار': 'أعواد خشبية',
-      'مدة الاستخدام': 'أكثر من 60 يوم',
-      'التغطية': '20–30 م²',
-    },
-    features: ['زجاجة أنيقة', 'أعواد طبيعية', 'رائحة دافئة وخشبية', 'تغليف فاخر'],
-    image: '/images/amber-santal.png',
-    images: ['/images/amber-santal.png'],
+    id: 'amber-pegasus',
+    name_ar: 'أمير بيغاسوس',
+    name_en: 'Amber Pegasus',
+    type: 'oils',
+    description_short: 'زيت عنبري فاخر للجو',
+    description_full: 'عطر ميثاق يلتقي بالياسمن والفانيليا الراقية في تركيبة دافئة وقوية.',
+    features: ['عطر ميثاق', 'ياسمين دافئ', 'فانيليا راقية', 'ثبات قوي'],
+    image: '/images/amber-pegasus.png',
+    variants: [
+      { id: 'amber-pegasus-20', size: '20ml', price: 1.950, sku: 'AMP-20', stock: 40 },
+      { id: 'amber-pegasus-120', size: '120ml', price: 5.250, sku: 'AMP-120', stock: 30 },
+      { id: 'amber-pegasus-500', size: '500ml', price: 13.900, sku: 'AMP-500', stock: 20 },
+    ],
+  },
+  {
+    id: 'amor-m',
+    name_ar: 'أمور إم',
+    name_en: 'Amor M',
+    type: 'oils',
+    description_short: 'زيت عطري للحياة العائلية',
+    description_full: 'امتزاج التفاح والحب مع لمسات المسك والفانيلا، لمسة آمنة وقوية وعطرة.',
+    features: ['تفاح طازج', 'مسك دافئ', 'فانيلا ناعمة', 'للاستخدام العائلي'],
+    image: '/images/amor-m.png',
+    variants: [
+      { id: 'amor-m-20', size: '20ml', price: 1.500, sku: 'AMR-20', stock: 60 },
+      { id: 'amor-m-120', size: '120ml', price: 4.250, sku: 'AMR-120', stock: 45 },
+      { id: 'amor-m-500', size: '500ml', price: 11.900, sku: 'AMR-500', stock: 30 },
+    ],
+  },
+  {
+    id: 'strength',
+    name_ar: 'سترينث',
+    name_en: 'Strength',
+    type: 'oils',
+    description_short: 'زيت عطري للأجهزة قوي',
+    description_full: 'عبير قوة من العبير والبهارات والأخشاب المدخنة مع لمسة ذهبية أرضية وكثيفة رائعة.',
+    features: ['عبير قوي', 'بهارات دافئة', 'أخشاب مدخنة', 'ثبات استثنائي'],
+    image: '/images/strength.png',
+    variants: [
+      { id: 'strength-20', size: '20ml', price: 1.750, sku: 'STR-20', stock: 50 },
+      { id: 'strength-120', size: '120ml', price: 4.750, sku: 'STR-120', stock: 35 },
+      { id: 'strength-500', size: '500ml', price: 12.900, sku: 'STR-500', stock: 22 },
+    ],
+  },
+  {
+    id: 'oud',
+    name_ar: 'عود',
+    name_en: 'Oud',
+    type: 'oils',
+    description_short: 'زيت عطري عود فاخر',
+    description_full: 'عود فاخر بنكهات خشبية شرقية شرقي مع هيل وصندل ولمسة دافئة مرهقة.',
+    features: ['عود أصيل', 'هيل شرقي', 'صندل دافئ', 'فخامة عربية'],
+    image: '/images/oud.png',
+    variants: [
+      { id: 'oud-20', size: '20ml', price: 1.950, sku: 'OUD-20', stock: 40 },
+      { id: 'oud-120', size: '120ml', price: 5.250, sku: 'OUD-120', stock: 30 },
+      { id: 'oud-500', size: '500ml', price: 13.900, sku: 'OUD-500', stock: 18 },
+    ],
+  },
+  {
+    id: 'sienna',
+    name_ar: 'سيينا',
+    name_en: 'Sienna',
+    type: 'oils',
+    description_short: 'زيت عطري فاخر',
+    description_full: 'مزيج مدهش من القوة والبهارات والفيتامينات أرابيكا مع لمسات عنبرية دافئة.',
+    features: ['قهوة أرابيكا', 'بهارات دافئة', 'عنبر فاخر', 'دفء مميز'],
+    image: '/images/sienna.png',
+    variants: [
+      { id: 'sienna-20', size: '20ml', price: 1.750, sku: 'SIN-20', stock: 50 },
+      { id: 'sienna-120', size: '120ml', price: 4.750, sku: 'SIN-120', stock: 35 },
+      { id: 'sienna-500', size: '500ml', price: 12.900, sku: 'SIN-500', stock: 22 },
+    ],
+  },
+  {
+    id: 'fresh-rain-citrus',
+    name_ar: 'مطر منعش وحمضيات',
+    name_en: 'Fresh Rain & Citrus',
+    type: 'oils',
+    description_short: 'زيت عطري حمضي منعش',
+    description_full: 'انتعاش مطري بلمسات جميلة منعشة وقوية ناعمة وملمس لمسية أنيقة منعشة.',
+    features: ['مطر منعش', 'حمضيات قوية', 'لمسات ناعمة', 'إحساس بالصفاء'],
+    image: '/images/fresh-rain-citrus.png',
+    variants: [
+      { id: 'fresh-rain-20', size: '20ml', price: 1.500, sku: 'FRC-20', stock: 60 },
+      { id: 'fresh-rain-120', size: '120ml', price: 4.250, sku: 'FRC-120', stock: 45 },
+      { id: 'fresh-rain-500', size: '500ml', price: 11.900, sku: 'FRC-500', stock: 30 },
+    ],
+  },
+  {
+    id: 'red-crystal',
+    name_ar: 'ريد كريستال',
+    name_en: 'Red Crystal',
+    type: 'oils',
+    description_short: 'زيت عطري فاخر للأجهزة',
+    description_full: 'عطر شرقي دافئ وفاخر بين الحبوب والعنبر والفخامة في تركيبة أنيقة دافئة، مخصص للجواء التذكارية.',
+    features: ['عطر شرقي', 'حبوب دافئة', 'عنبر فاخر', 'تركيبة دافئة'],
+    image: '/images/red-crystal.png',
+    variants: [
+      { id: 'red-crystal-20', size: '20ml', price: 1.950, sku: 'RCR-20', stock: 35 },
+      { id: 'red-crystal-120', size: '120ml', price: 6.900, sku: 'RCR-120', stock: 25 },
+      { id: 'red-crystal-500', size: '500ml', price: 14.900, sku: 'RCR-500', stock: 15 },
+    ],
   },
 ];
 
+export const localProducts: Product[] = PRODUCT_CATALOG.flatMap(catalog =>
+  catalog.variants.map(v => ({
+    id: v.id,
+    name_ar: `${catalog.name_ar} - ${v.size}`,
+    name_en: `${catalog.name_en} ${v.size}`,
+    type: catalog.type,
+    price: v.price,
+    shortDescription: catalog.description_short,
+    fullDescription: catalog.description_full,
+    features: catalog.features,
+    specs: {
+      'الحجم': v.size,
+      'النوع': catalog.description_short,
+      'SKU': v.sku,
+    },
+    image: catalog.image,
+    images: [catalog.image],
+    variant: v.size,
+    sku: v.sku,
+    stock_quantity: v.stock,
+    min_stock_level: 5,
+  }))
+);
+
 export const products = localProducts;
 
-// Get WhatsApp number from environment variables
 export const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '96566377312';
 export const deliveryFee = 2;
 export const whatsappLink = `https://wa.me/${whatsappNumber}`;
