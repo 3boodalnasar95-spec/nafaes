@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "echo 'Using prebuilt dist'",
+  "buildCommand": "echo done",
+  "installCommand": "echo skip",
   "outputDirectory": "dist",
   "rewrites": [
     {
