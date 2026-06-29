@@ -15,12 +15,13 @@ export default function ProductDetails() {
   const [selectedVariantId, setSelectedVariantId] = useState('');
 
   const product = products.find(p => p.id === id);
+  const isMultiSizeOil = product?.type === 'oils' && (product?.variants?.length || 0) > 1;
 
   useEffect(() => {
-    if (product?.variants?.[0]?.id) {
+    if (isMultiSizeOil && product?.variants?.[0]?.id) {
       setSelectedVariantId(product.variants[0].id);
     }
-  }, [product?.id]);
+  }, [product?.id, isMultiSizeOil]);
 
   if (!product) {
     return (
@@ -35,9 +36,9 @@ export default function ProductDetails() {
     );
   }
 
-  const selectedVariant = product.variants?.find(v => v.id === selectedVariantId) || product.variants?.[0];
+  const selectedVariant = isMultiSizeOil ? (product.variants?.find(v => v.id === selectedVariantId) || product.variants?.[0]) : product.variants?.[0];
   const selectedPrice = selectedVariant?.price ?? product.price;
-  const selectedSize = selectedVariant?.size || product.variant || '';
+  const selectedSize = isMultiSizeOil ? (selectedVariant?.size || '') : '';
 
   const whatsappMessage = `أرغب بطلب منتج ${product.name_en} - ${product.name_ar}${selectedSize ? ` - ${selectedSize}` : ''}، السعر ${formatPrice(selectedPrice)}.`;
 
@@ -88,7 +89,7 @@ export default function ProductDetails() {
                 </div>
               </div>
 
-              {product.variants && product.variants.length > 0 && (
+              {isMultiSizeOil && product.variants && product.variants.length > 0 && (
                 <div className="mb-8">
                   <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">اختر الحجم</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -156,16 +157,16 @@ export default function ProductDetails() {
 
                 <button
                   onClick={() => {
-                    const cartKey = `${product.id}::${selectedVariant?.id || 'default'}`;
-                    const sizeLabel = selectedVariant?.size || product.variant || '';
+                    const cartKey = `${product.id}::${isMultiSizeOil ? (selectedVariant?.id || 'default') : 'default'}`;
+                    const sizeLabel = isMultiSizeOil ? (selectedVariant?.size || '') : '';
                     for (let i = 0; i < quantity; i++) {
                       addToCart({
                         ...product,
                         price: selectedPrice,
-                        sku: selectedVariant?.sku || product.sku,
-                        variantId: selectedVariant?.id,
-                        variantLabel: sizeLabel,
-                        variantSize: sizeLabel,
+                        sku: isMultiSizeOil ? (selectedVariant?.sku || product.sku) : product.sku,
+                        variantId: isMultiSizeOil ? selectedVariant?.id : undefined,
+                        variantLabel: sizeLabel || undefined,
+                        variantSize: sizeLabel || undefined,
                         cartKey,
                       });
                     }
