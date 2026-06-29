@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabase';
-import { formatPrice } from '@/data/products';
+import { PRODUCT_CATALOG, formatPrice } from '@/data/products';
 import { toast } from 'sonner';
 
 // Types
@@ -77,11 +77,69 @@ export interface Product {
   min_stock_level: number;
   sku: string;
   images: string[];
+  image?: string;
   specs: Record<string, string>;
   features: string[];
   is_active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+function normalizeText(value?: string): string {
+  return (value || '').trim().toLowerCase();
+}
+
+function stripVariantSuffix(value?: string): string {
+  return normalizeText(value).replace(/\s*[-–—]?\s*\d+\s*ml$/i, '').trim();
+}
+
+function getCatalogProduct(product: Partial<Product> & { image?: string }): (typeof PRODUCT_CATALOG)[number] | undefined {
+  const slugBase = normalizeText(product.slug).replace(/-\d+$/, '');
+  if (slugBase) {
+    const bySlug = PRODUCT_CATALOG.find(item => item.id === slugBase);
+    if (bySlug) return bySlug;
+  }
+
+  const nameEnBase = stripVariantSuffix(product.name_en);
+  if (nameEnBase) {
+    const byNameEn = PRODUCT_CATALOG.find(item => normalizeText(item.name_en) === nameEnBase);
+    if (byNameEn) return byNameEn;
+  }
+
+  const nameArBase = stripVariantSuffix(product.name_ar);
+  if (nameArBase) {
+    const byNameAr = PRODUCT_CATALOG.find(item => normalizeText(item.name_ar) === nameArBase);
+    if (byNameAr) return byNameAr;
+  }
+
+  return undefined;
+}
+
+function hydrateProductImages(product: Partial<Product> & { image?: string }): string[] {
+  const existingImages = (Array.isArray(product.images) ? product.images : []).filter(Boolean);
+  if (existingImages.length > 0) {
+    return existingImages;
+  }
+
+  const catalogProduct = getCatalogProduct(product);
+  return catalogProduct ? [catalogProduct.image] : [];
+}
+
+function hydrateProduct(product: Product): Product {
+  const images = hydrateProductImages(product);
+  return {
+    ...product,
+    images,
+    // Some UI paths still read `image` directly, so keep it in sync.
+    image: images[0] || (product as Product & { image?: string }).image,
+  } as Product;
+}
+
+function prepareProductPayload(productData: Partial<Product>): Partial<Product> {
+  return {
+    ...productData,
+    images: hydrateProductImages(productData),
+  };
 }
 
 export interface Invoice {
@@ -129,7 +187,7 @@ export async function getProducts(): Promise<Product[]> {
       console.error('Error fetching products:', error);
       return [];
     }
-    return data || [];
+    return (data || []).map(hydrateProduct);
   } catch (err) {
     console.error('Exception fetching products:', err);
     return [];
@@ -145,7 +203,7 @@ export async function getProduct(id: string): Promise<Product | null> {
       .eq('id', id)
       .single();
     if (error) return null;
-    return data;
+    return data ? hydrateProduct(data) : null;
   } catch (err) {
     console.error('Exception fetching product:', err);
     return null;
@@ -159,7 +217,7 @@ export async function createProduct(productData: Partial<Product>): Promise<Prod
     const { data, error } = await supabase
       .from('products')
       .insert({ 
-        ...productData, 
+        ...prepareProductPayload(productData), 
         created_at: now, 
         updated_at: now,
         is_active: true,
@@ -168,7 +226,7 @@ export async function createProduct(productData: Partial<Product>): Promise<Prod
       .select()
       .single();
     if (error) throw error;
-    return data;
+    return data ? hydrateProduct(data) : null;
   } catch (err) {
     console.error('Exception creating product:', err);
     return null;
@@ -180,7 +238,7 @@ export async function updateProduct(id: string, updates: Partial<Product>): Prom
   try {
     const { error } = await supabase
       .from('products')
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update({ ...prepareProductPayload(updates), updated_at: new Date().toISOString() })
       .eq('id', id);
     return !error;
   } catch (err) {
