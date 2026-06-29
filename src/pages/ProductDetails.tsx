@@ -2,7 +2,7 @@
 
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, Check, MessageCircle, Minus, Plus } from 'lucide-react';
-import { products, formatPrice, whatsappLink } from '../data/products';
+import { products, formatPrice, whatsappLink, getProductTypeLabel } from '../data/products';
 import { useStore } from '../store/useStore';
 import Layout from '../components/Layout';
 import { useEffect, useState } from 'react';
@@ -69,7 +69,7 @@ export default function ProductDetails() {
                   }}
                 />
                 <div className="absolute top-4 right-4 bg-[#C9A96E] text-white text-sm font-bold px-4 py-2 rounded-full">
-                  {product.type}
+                  {getProductTypeLabel(product.type)}
                 </div>
               </div>
             </div>

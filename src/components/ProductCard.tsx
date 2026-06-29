@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ShoppingBag } from 'lucide-react';
+import { getProductTypeLabel } from '@/data/products';
 
 interface ProductCardProps {
   product: {
@@ -39,7 +40,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
         <div className="absolute top-4 right-4 bg-[#C9A96E] text-white text-xs font-bold px-3 py-1 rounded-full">
-          {product.type}
+          {getProductTypeLabel(product.type)}
         </div>
         {sizeCount > 1 && (
           <div className="absolute top-4 left-4 bg-white/90 text-[#1A1A1A] text-xs font-bold px-3 py-1 rounded-full border border-[#E8E0D5]">

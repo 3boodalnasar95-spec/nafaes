@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
-import { products as localProducts, Product } from '../data/products';
+import { products as localProducts, Product, getProductTypeLabel } from '../data/products';
 import { getProducts } from '@/lib/db-operations';
 
 export default function Products() {
@@ -13,6 +13,7 @@ export default function Products() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'price-asc' | 'price-desc' | 'name'>('name');
   const [loading, setLoading] = useState(true);
+  const availableTypes = Array.from(new Set(localProducts.map(product => product.type)));
 
   useEffect(() => {
     loadProducts();
@@ -47,7 +48,7 @@ export default function Products() {
     }
     
     if (selectedCategory !== 'all') {
-      result = result.filter(p => p.type?.toLowerCase().includes(selectedCategory.toLowerCase()));
+      result = result.filter(p => p.type === selectedCategory);
     }
     
     switch (sortBy) {
@@ -67,10 +68,10 @@ export default function Products() {
 
   const categories = [
     { id: 'all', name: 'الكل' },
-    { id: 'devices', name: 'أجهزة التعطير' },
-    { id: 'gifts', name: 'هدايا عطرية' },
-    { id: 'diffusers', name: 'معطرات الأعواد' },
+    ...availableTypes.map(type => ({ id: type, name: getProductTypeLabel(type) })),
   ];
+
+  const visibleCategories = categories.filter((category, index, items) => items.findIndex(item => item.id === category.id) === index);
 
   return (
     <Layout>
@@ -110,7 +111,7 @@ export default function Products() {
             </div>
 
             <div className="flex gap-2 mt-4 pt-4 border-t border-[#E8E0D5] overflow-x-auto">
-              {categories.map(cat => (
+              {visibleCategories.map(cat => (
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}

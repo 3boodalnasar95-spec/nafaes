@@ -75,6 +75,18 @@ export type ProductCatalog = {
   variants: ProductVariant[];
 };
 
+export const PRODUCT_TYPE_LABELS: Record<string, string> = {
+  oils: 'الزيوت العطرية',
+  devices: 'أجهزة التعطير',
+  gifts: 'الهدايا العطرية',
+  diffusers: 'معطرات الأعواد',
+};
+
+export function getProductTypeLabel(type?: string): string {
+  if (!type) return '';
+  return PRODUCT_TYPE_LABELS[type] || type;
+}
+
 export const PRODUCT_CATALOG: ProductCatalog[] = [
   {
     id: 'shangri-la',
