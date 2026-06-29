@@ -42,6 +42,7 @@ export default function OrderSummary({
             </div>
             <div className="flex-1">
               <p className="text-[#1A1A1A] font-medium text-sm">{item.product.name_ar}</p>
+              {item.product.variantLabel && <p className="text-[#C9A96E] text-xs font-medium">{item.product.variantLabel}</p>}
               <p className="text-[#6B6B6B] text-xs">الكمية: {item.quantity}</p>
               <p className="text-[#C9A96E] font-bold text-sm">{fmt(item.product.price * item.quantity)}</p>
             </div>

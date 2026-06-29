@@ -12,6 +12,10 @@ interface Product {
   specs?: Record<string, string>;
   features?: string[];
   image?: string;
+  cartKey?: string;
+  variantId?: string;
+  variantLabel?: string;
+  variantSize?: string;
 }
 
 interface CartItem {
@@ -57,36 +61,38 @@ export const useStore = create<StoreState>()(
   persist(
     (set, get) => ({
       cartItems: [],
-      
+
+      // Keep one line item per product + size.
       addToCart: (product) => {
         const { cartItems } = get();
-        const existingItem = cartItems.find((item) => item.product.id === product.id);
-        
+        const cartKey = product.cartKey || `${product.id}::${product.variantId || product.variantSize || ''}`;
+        const existingItem = cartItems.find((item) => item.product.cartKey === cartKey);
+
         if (existingItem) {
           set({
             cartItems: cartItems.map((item) =>
-              item.product.id === product.id
+              item.product.cartKey === cartKey
                 ? { ...item, quantity: item.quantity + 1 }
                 : item
             ),
           });
         } else {
-          set({ cartItems: [...cartItems, { product, quantity: 1 }] });
+          set({ cartItems: [...cartItems, { product: { ...product, cartKey }, quantity: 1 }] });
         }
       },
       
-      removeFromCart: (productId) =>
+      removeFromCart: (productKey) =>
         set((state) => ({
-          cartItems: state.cartItems.filter((item) => item.product.id !== productId),
+          cartItems: state.cartItems.filter((item) => item.product.cartKey !== productKey),
         })),
       
-      updateQuantity: (productId, quantity) => {
+      updateQuantity: (productKey, quantity) => {
         if (quantity <= 0) {
-          get().removeFromCart(productId);
+          get().removeFromCart(productKey);
         } else {
           set((state) => ({
             cartItems: state.cartItems.map((item) =>
-              item.product.id === productId ? { ...item, quantity } : item
+              item.product.cartKey === productKey ? { ...item, quantity } : item
             ),
           }));
         }

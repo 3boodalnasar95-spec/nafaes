@@ -26,21 +26,7 @@ export default function Products() {
     setLoading(true);
     const products = await getProducts();
     if (products.length > 0) {
-      // Map database products to local Product interface
-      const mappedProducts: Product[] = products.map(p => ({
-        id: p.id,
-        name_ar: p.name_ar,
-        name_en: p.name_en,
-        type: p.type || 'devices',
-        price: p.price,
-        shortDescription: p.specs?.['الوصف'] || p.features?.[0] || '',
-        fullDescription: p.features?.join(' | ') || '',
-        specs: p.specs || {},
-        features: p.features || [],
-        image: p.images?.[0] || '',
-        images: p.images || [],
-      }));
-      setDbProducts(mappedProducts);
+      setDbProducts(products);
     } else {
       setDbProducts(localProducts);
     }

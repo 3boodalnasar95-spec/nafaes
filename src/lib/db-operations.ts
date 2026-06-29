@@ -78,6 +78,12 @@ export interface Product {
   sku: string;
   images: string[];
   image?: string;
+  variant?: string;
+  variantId?: string;
+  variantLabel?: string;
+  variantSize?: string;
+  cartKey?: string;
+  variants?: Array<{ id: string; size: string; price: number; sku: string; stock: number }>;
   specs: Record<string, string>;
   features: string[];
   is_active: boolean;

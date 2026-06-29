@@ -47,7 +47,7 @@ export default function Cart() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-4">
               {cartItems.map((item) => (
-                <div key={item.product.id} className="bg-white rounded-xl border border-[#E8E0D5] p-4 flex flex-col sm:flex-row gap-4">
+                <div key={item.product.cartKey || item.product.id} className="bg-white rounded-xl border border-[#E8E0D5] p-4 flex flex-col sm:flex-row gap-4">
                   <Link to={`/product/${item.product.id}`} className="flex-shrink-0">
                     <div className="w-full sm:w-28 h-28 bg-[#F5F0E8] rounded-lg flex items-center justify-center overflow-hidden p-2">
                       <img
@@ -66,19 +66,22 @@ export default function Cart() {
                         <Link to={`/product/${item.product.id}`} className="text-[#1A1A1A] font-bold text-lg hover:text-[#C9A96E]">
                           {item.product.name_ar}
                         </Link>
+                        {item.product.variantLabel && (
+                          <p className="text-[#C9A96E] text-sm font-medium">{item.product.variantLabel}</p>
+                        )}
                         <p className="text-[#6B6B6B] text-sm">{item.product.name_en}</p>
                       </div>
-                      <button onClick={() => removeFromCart(item.product.id)} className="p-2 text-[#6B6B6B] hover:text-red-500">
+                      <button onClick={() => removeFromCart(item.product.cartKey || item.product.id)} className="p-2 text-[#6B6B6B] hover:text-red-500">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div className="flex items-center bg-[#F5F0E8] rounded-lg">
-                        <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="p-2 text-[#6B6B6B] hover:text-[#1A1A1A]">
+                        <button onClick={() => updateQuantity(item.product.cartKey || item.product.id, item.quantity - 1)} className="p-2 text-[#6B6B6B] hover:text-[#1A1A1A]">
                           <Minus className="w-4 h-4" />
                         </button>
                         <span className="w-12 text-center font-medium text-[#1A1A1A]">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)} className="p-2 text-[#6B6B6B] hover:text-[#1A1A1A]">
+                        <button onClick={() => updateQuantity(item.product.cartKey || item.product.id, item.quantity + 1)} className="p-2 text-[#6B6B6B] hover:text-[#1A1A1A]">
                           <Plus className="w-4 h-4" />
                         </button>
                       </div>

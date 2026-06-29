@@ -4,6 +4,7 @@ import jsPDF from 'jspdf';
 export interface InvoiceItem {
   nameAr: string;
   nameEn: string;
+  variantLabel?: string;
   quantity: number;
   unitPrice: number;
   totalPrice: number;
@@ -46,7 +47,7 @@ export async function downloadInvoicePDF(orderData: InvoiceData): Promise<void> 
 
   const itemsHtml = orderData.items.map((item, idx) => 
     '<tr style="background:' + (idx % 2 === 0 ? '#FFFFFF' : '#FAF8F5') + '; border-bottom:1px solid #E8E0D5;">' +
-    '<td style="padding:10px;"><strong style="color:#1A1A1A;font-size:11px;">' + item.nameAr + '</strong><br/><span style="color:#6B6B6B;font-size:9px;">' + item.nameEn + '</span></td>' +
+    '<td style="padding:10px;"><strong style="color:#1A1A1A;font-size:11px;">' + item.nameAr + '</strong>' + (item.variantLabel ? '<br/><span style="color:#C9A96E;font-size:9px;">' + item.variantLabel + '</span>' : '') + '<br/><span style="color:#6B6B6B;font-size:9px;">' + item.nameEn + '</span></td>' +
     '<td style="padding:10px;text-align:center;color:#1A1A1A;font-weight:bold;">' + item.quantity + '</td>' +
     '<td style="padding:10px;text-align:center;color:#1A1A1A;">' + fmt(item.unitPrice) + '</td>' +
     '<td style="padding:10px;text-align:left;color:#C9A96E;font-weight:bold;font-size:12px;">' + fmt(item.totalPrice) + '</td>' +

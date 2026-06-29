@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { ShoppingBag } from 'lucide-react';
-import { useStore } from '../store/useStore';
 
 interface ProductCardProps {
   product: {
@@ -19,30 +18,8 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { addToCart } = useStore();
-
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Create cart item from product
-    const cartProduct = {
-      id: product.id || product.name_en,
-      name_ar: product.name_ar,
-      name_en: product.name_en,
-      type: product.type,
-      price: product.price,
-      shortDescription: product.shortDescription || '',
-      fullDescription: product.fullDescription || '',
-      specs: product.specs || {},
-      features: product.features || [],
-      image: product.images?.[0] || product.image || '',
-    };
-    
-    addToCart(cartProduct as any);
-  };
-
   const productImage = product.images?.[0] || product.image || '';
+  const sizeCount = product.variants?.length || (product.variant ? 1 : 0);
 
   return (
     <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-[#E8E0D5]">
@@ -64,6 +41,11 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="absolute top-4 right-4 bg-[#C9A96E] text-white text-xs font-bold px-3 py-1 rounded-full">
           {product.type}
         </div>
+        {sizeCount > 1 && (
+          <div className="absolute top-4 left-4 bg-white/90 text-[#1A1A1A] text-xs font-bold px-3 py-1 rounded-full border border-[#E8E0D5]">
+            {sizeCount} أحجام
+          </div>
+        )}
       </Link>
 
       <div className="p-5">
@@ -79,17 +61,18 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         <div className="flex items-center justify-between mb-4">
           <span className="text-2xl font-bold text-[#C9A96E]">
+            ابتداءً من 
             {formatPrice(product.price)}
           </span>
         </div>
 
-        <button
-          onClick={handleAddToCart}
+        <Link
+          to={`/product/${product.id || product.name_en}`}
           className="w-full flex items-center justify-center gap-2 bg-[#1A1A1A] hover:bg-[#C9A96E] text-white text-sm font-medium py-3 px-4 rounded-xl transition-colors"
         >
           <ShoppingBag className="w-4 h-4" />
-          أضف للسلة
-        </button>
+          اختر الحجم
+        </Link>
       </div>
     </div>
   );

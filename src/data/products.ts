@@ -13,9 +13,22 @@ export interface Product {
   image?: string;
   images?: string[];
   variant?: string;
+  variantId?: string;
+  variantLabel?: string;
+  variantSize?: string;
+  cartKey?: string;
+  variants?: ProductVariant[];
   sku?: string;
   stock_quantity?: number;
   min_stock_level?: number;
+}
+
+export interface ProductVariant {
+  id: string;
+  size: string;
+  price: number;
+  sku: string;
+  stock: number;
 }
 
 export interface CartItem {
@@ -59,7 +72,7 @@ export type ProductCatalog = {
   description_full: string;
   features: string[];
   image: string;
-  variants: { id: string; size: string; price: number; sku: string; stock: number }[];
+  variants: ProductVariant[];
 };
 
 export const PRODUCT_CATALOG: ProductCatalog[] = [
@@ -231,27 +244,28 @@ export const PRODUCT_CATALOG: ProductCatalog[] = [
 ];
 
 export const localProducts: Product[] = PRODUCT_CATALOG.flatMap(catalog =>
-  catalog.variants.map(v => ({
-    id: v.id,
-    name_ar: `${catalog.name_ar} - ${v.size}`,
-    name_en: `${catalog.name_en} ${v.size}`,
+  [{
+    id: catalog.id,
+    name_ar: catalog.name_ar,
+    name_en: catalog.name_en,
     type: catalog.type,
-    price: v.price,
+    price: catalog.variants[0]?.price || 0,
     shortDescription: catalog.description_short,
     fullDescription: catalog.description_full,
     features: catalog.features,
     specs: {
-      'الحجم': v.size,
+      'الأحجام': catalog.variants.map(v => v.size).join(' / '),
       'النوع': catalog.description_short,
-      'SKU': v.sku,
+      'SKU': catalog.variants[0]?.sku || '',
     },
     image: catalog.image,
     images: [catalog.image],
-    variant: v.size,
-    sku: v.sku,
-    stock_quantity: v.stock,
+    variant: catalog.variants[0]?.size,
+    variants: catalog.variants,
+    sku: catalog.variants[0]?.sku,
+    stock_quantity: catalog.variants.reduce((sum, v) => sum + v.stock, 0),
     min_stock_level: 5,
-  }))
+  }]
 );
 
 export const products = localProducts;

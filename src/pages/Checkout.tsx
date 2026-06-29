@@ -101,9 +101,9 @@ export default function Checkout() {
 
       // Prepare items
       const items = cartItems.map(item => ({
-        product_id: item.product.id,
-        product_name_ar: item.product.name_ar,
-        product_name_en: item.product.name_en,
+        product_id: item.product.cartKey || item.product.id,
+        product_name_ar: item.product.variantLabel ? `${item.product.name_ar} - ${item.product.variantLabel}` : item.product.name_ar,
+        product_name_en: item.product.variantLabel ? `${item.product.name_en} - ${item.product.variantLabel}` : item.product.name_en,
         quantity: item.quantity,
         unit_price: item.product.price,
         total_price: item.product.price * item.quantity,
@@ -127,8 +127,9 @@ export default function Checkout() {
         notes: formData.notes.trim(),
         paymentMethod: formData.paymentMethod,
         items: cartItems.map(item => ({
-          nameAr: item.product.name_ar,
-          nameEn: item.product.name_en,
+          nameAr: item.product.variantLabel ? `${item.product.name_ar} - ${item.product.variantLabel}` : item.product.name_ar,
+          nameEn: item.product.variantLabel ? `${item.product.name_en} - ${item.product.variantLabel}` : item.product.name_en,
+          variantLabel: item.product.variantLabel,
           quantity: item.quantity,
           unitPrice: item.product.price,
           totalPrice: item.product.price * item.quantity

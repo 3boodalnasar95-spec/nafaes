@@ -11,6 +11,7 @@ export interface InvoiceData {
   items: {
     nameAr: string;
     nameEn: string;
+    variantLabel?: string;
     quantity: number;
     unitPrice: number;
     totalPrice: number;
@@ -92,8 +93,12 @@ export function generateAdminWhatsAppMessage(orderData: InvoiceData): string {
   orderData.items.forEach((item, index) => {
     const sanitizedNameAr = sanitizeInput(item.nameAr);
     const sanitizedNameEn = sanitizeInput(item.nameEn);
+    const sanitizedVariant = item.variantLabel ? sanitizeInput(item.variantLabel) : '';
     
     message += `${index + 1}. ${sanitizedNameAr}\n`;
+    if (sanitizedVariant) {
+      message += `   🔹 الحجم: ${sanitizedVariant}\n`;
+    }
     message += `   📦 ${sanitizedNameEn}\n`;
     message += `   الكمية: ${item.quantity} وحدة\n`;
     message += `   السعر: ${item.unitPrice.toFixed(3)} د.ك/وحدة\n`;

@@ -5,15 +5,22 @@ import { ArrowRight, Check, MessageCircle, Minus, Plus } from 'lucide-react';
 import { products, formatPrice, whatsappLink } from '../data/products';
 import { useStore } from '../store/useStore';
 import Layout from '../components/Layout';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useStore();
   const [quantity, setQuantity] = useState(1);
+  const [selectedVariantId, setSelectedVariantId] = useState('');
 
   const product = products.find(p => p.id === id);
+
+  useEffect(() => {
+    if (product?.variants?.[0]?.id) {
+      setSelectedVariantId(product.variants[0].id);
+    }
+  }, [product?.id]);
 
   if (!product) {
     return (
@@ -28,7 +35,11 @@ export default function ProductDetails() {
     );
   }
 
-  const whatsappMessage = `أرغب بطلب منتج ${product.name_en} - ${product.name_ar}، السعر ${formatPrice(product.price)}.`;
+  const selectedVariant = product.variants?.find(v => v.id === selectedVariantId) || product.variants?.[0];
+  const selectedPrice = selectedVariant?.price ?? product.price;
+  const selectedSize = selectedVariant?.size || product.variant || '';
+
+  const whatsappMessage = `أرغب بطلب منتج ${product.name_en} - ${product.name_ar}${selectedSize ? ` - ${selectedSize}` : ''}، السعر ${formatPrice(selectedPrice)}.`;
 
   return (
     <Layout>
@@ -73,9 +84,31 @@ export default function ProductDetails() {
               <div className="mb-8 p-6 bg-[#F5F0E8] rounded-2xl">
                 <div className="flex items-center justify-between">
                   <span className="text-[#6B6B6B]">السعر</span>
-                  <span className="text-4xl font-bold text-[#C9A96E]">{formatPrice(product.price)}</span>
+                  <span className="text-4xl font-bold text-[#C9A96E]">{formatPrice(selectedPrice)}</span>
                 </div>
               </div>
+
+              {product.variants && product.variants.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">اختر الحجم</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {product.variants.map((variant) => (
+                      <button
+                        key={variant.id}
+                        type="button"
+                        onClick={() => setSelectedVariantId(variant.id)}
+                        className={`rounded-xl border px-4 py-4 text-right transition-colors ${selectedVariant?.id === variant.id ? 'border-[#C9A96E] bg-[#C9A96E]/10' : 'border-[#E8E0D5] bg-white hover:border-[#C9A96E]'}`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-bold text-[#1A1A1A]">{variant.size}</span>
+                          <span className="text-[#C9A96E] font-bold">{formatPrice(variant.price)}</span>
+                        </div>
+                        <p className="text-xs text-[#6B6B6B] mt-2">{variant.sku}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="mb-8">
                 <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">المميزات</h3>
@@ -123,8 +156,18 @@ export default function ProductDetails() {
 
                 <button
                   onClick={() => {
+                    const cartKey = `${product.id}::${selectedVariant?.id || 'default'}`;
+                    const sizeLabel = selectedVariant?.size || product.variant || '';
                     for (let i = 0; i < quantity; i++) {
-                      addToCart(product);
+                      addToCart({
+                        ...product,
+                        price: selectedPrice,
+                        sku: selectedVariant?.sku || product.sku,
+                        variantId: selectedVariant?.id,
+                        variantLabel: sizeLabel,
+                        variantSize: sizeLabel,
+                        cartKey,
+                      });
                     }
                     navigate('/cart');
                   }}
