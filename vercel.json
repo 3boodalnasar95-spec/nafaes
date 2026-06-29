@@ -1,5 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm install --no-audit --no-fund && npm run build -- --no-cache",
+  "outputDirectory": "dist",
+  "installCommand": "npm install --legacy-peer-deps --no-audit --no-fund",
   "rewrites": [
     {
       "source": "/(.*)",
@@ -31,10 +34,6 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=0, must-revalidate"
-        },
-        {
-          "key": "Service-Worker-Allowed",
-          "value": "/"
         }
       ]
     }
