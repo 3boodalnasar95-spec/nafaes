@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f7efe4"/>
+      <stop offset="100%" stop-color="#e8c98b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1600" fill="url(#bg)"/>
+  <circle cx="915" cy="170" r="290" fill="#fff" opacity="0.45"/>
+  <text x="130" y="180" font-size="64" fill="#a47b32" font-family="Georgia, serif" font-weight="700">NAFAES</text>
+  <text x="130" y="250" font-size="36" fill="#7c6a4f" font-family="Arial, sans-serif">ESSENCE OF ELEGANCE</text>
+  <text x="110" y="460" font-size="96" fill="#111111" font-family="Arial, sans-serif" font-weight="700">أمبر سانتال</text>
+  <text x="110" y="555" font-size="58" fill="#a47b32" font-family="Georgia, serif" font-weight="700">AMBER SANTAL</text>
+  <text x="110" y="645" font-size="48" fill="#1f1f1f" font-family="Arial, sans-serif">معطر الأعواد فاخر</text>
+
+  <g transform="translate(95 770)">
+    <circle cx="70" cy="70" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <circle cx="70" cy="200" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <circle cx="70" cy="330" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <circle cx="70" cy="460" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <circle cx="70" cy="590" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <circle cx="70" cy="720" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <circle cx="70" cy="850" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <circle cx="70" cy="980" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <text x="150" y="82" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">عطر دافئ وخشبي</text>
+    <text x="150" y="212" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">يدوم أكثر من 60 يوم</text>
+    <text x="150" y="342" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">أعواد طبيعية</text>
+    <text x="150" y="472" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">زجاجة أنيقة</text>
+    <text x="150" y="602" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">مثالي للإهداء</text>
+    <text x="150" y="732" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">تغطية 20–30 م²</text>
+    <text x="150" y="862" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">هدوء تام 0 dB</text>
+    <text x="150" y="992" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">لمسة فاخرة للمكان</text>
+  </g>
+
+  <rect x="120" y="1300" width="500" height="150" rx="38" fill="#a47b32"/>
+  <text x="370" y="1388" text-anchor="middle" font-size="44" fill="#fff" font-family="Arial, sans-serif">السعر</text>
+  <text x="370" y="1450" text-anchor="middle" font-size="72" fill="#fff" font-family="Georgia, serif" font-weight="700">10.900 د.ك</text>
+
+  <g transform="translate(700 610)">
+    <rect x="110" y="180" width="60" height="620" rx="30" fill="#7b5a3b"/>
+    <rect x="190" y="150" width="68" height="660" rx="34" fill="#111111"/>
+    <rect x="270" y="180" width="52" height="620" rx="26" fill="#7b5a3b"/>
+    <rect x="350" y="120" width="220" height="760" rx="32" fill="#fff6eb" stroke="#c9a96e" stroke-width="4"/>
+    <text x="460" y="470" text-anchor="middle" font-size="38" fill="#a47b32" font-family="Georgia, serif" font-weight="700">REED</text>
+    <text x="460" y="520" text-anchor="middle" font-size="38" fill="#a47b32" font-family="Georgia, serif" font-weight="700">DIFFUSER</text>
+  </g>
+</svg>

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f6efe6"/>
+      <stop offset="100%" stop-color="#d8c49a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1600" fill="url(#bg)"/>
+  <circle cx="920" cy="210" r="280" fill="#fff" opacity="0.46"/>
+  <text x="130" y="180" font-size="64" fill="#a47b32" font-family="Georgia, serif" font-weight="700">NAFAES</text>
+  <text x="130" y="250" font-size="36" fill="#7c6a4f" font-family="Arial, sans-serif">ESSENCE OF ELEGANCE</text>
+  <text x="110" y="460" font-size="98" fill="#111111" font-family="Arial, sans-serif" font-weight="700">فورست ريزيرف</text>
+  <text x="110" y="555" font-size="56" fill="#a47b32" font-family="Georgia, serif" font-weight="700">FOREST RESERVE</text>
+  <text x="110" y="645" font-size="48" fill="#1f1f1f" font-family="Arial, sans-serif">طقم هدايا عطري فاخر</text>
+
+  <g transform="translate(95 770)">
+    <circle cx="70" cy="70" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <circle cx="70" cy="200" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <circle cx="70" cy="330" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <circle cx="70" cy="460" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <circle cx="70" cy="590" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <circle cx="70" cy="720" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <circle cx="70" cy="850" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <text x="150" y="82" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">زجاجة معطرة + شمعة</text>
+    <text x="150" y="212" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">تغليف فاخر</text>
+    <text x="150" y="342" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">مثالي للمناسبات</text>
+    <text x="150" y="472" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">رائحة خشبية دافئة</text>
+    <text x="150" y="602" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">هدية راقية</text>
+    <text x="150" y="732" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">منظومة متكاملة</text>
+    <text x="150" y="862" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">إحساس فاخر للمكان</text>
+  </g>
+
+  <rect x="120" y="1300" width="500" height="150" rx="38" fill="#a47b32"/>
+  <text x="370" y="1388" text-anchor="middle" font-size="44" fill="#fff" font-family="Arial, sans-serif">السعر</text>
+  <text x="370" y="1450" text-anchor="middle" font-size="72" fill="#fff" font-family="Georgia, serif" font-weight="700">13.900 د.ك</text>
+
+  <g transform="translate(720 620)">
+    <rect x="0" y="140" width="260" height="560" rx="34" fill="#f5e8ce" stroke="#c9a96e" stroke-width="4"/>
+    <rect x="300" y="210" width="170" height="500" rx="26" fill="#7b5a3b"/>
+    <rect x="340" y="180" width="90" height="240" rx="45" fill="#111111"/>
+    <rect x="340" y="460" width="90" height="180" rx="45" fill="#111111"/>
+    <rect x="370" y="60" width="36" height="670" rx="18" fill="#111111"/>
+    <rect x="405" y="60" width="36" height="670" rx="18" fill="#111111"/>
+    <text x="130" y="400" text-anchor="middle" font-size="42" fill="#a47b32" font-family="Georgia, serif" font-weight="700">GIFT SET</text>
+    <text x="385" y="390" text-anchor="middle" font-size="36" fill="#fff" font-family="Georgia, serif" font-weight="700">FOREST</text>
+    <text x="385" y="440" text-anchor="middle" font-size="36" fill="#fff" font-family="Georgia, serif" font-weight="700">RESERVE</text>
+  </g>
+</svg>

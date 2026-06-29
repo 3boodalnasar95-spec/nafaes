@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f6efe6"/>
+      <stop offset="100%" stop-color="#d8c49a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1600" fill="url(#bg)"/>
+  <circle cx="875" cy="160" r="340" fill="#fff" opacity="0.55"/>
+  <circle cx="915" cy="1180" r="300" fill="#fff" opacity="0.32"/>
+  <text x="130" y="180" font-size="64" fill="#a47b32" font-family="Georgia, serif" font-weight="700">NAFAES</text>
+  <text x="130" y="250" font-size="36" fill="#7c6a4f" font-family="Arial, sans-serif">ESSENCE OF ELEGANCE</text>
+  <text x="120" y="460" font-size="98" fill="#111111" font-family="Arial, sans-serif" font-weight="700">إيلان 360 نوماد</text>
+  <text x="120" y="560" font-size="62" fill="#a47b32" font-family="Georgia, serif" font-weight="700">ELAN 360 NOMAD</text>
+  <text x="120" y="650" font-size="52" fill="#1f1f1f" font-family="Arial, sans-serif">جهاز تعطير ذكي قابل للشحن</text>
+
+  <g transform="translate(85 760)">
+    <circle cx="70" cy="70" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <circle cx="70" cy="200" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <circle cx="70" cy="330" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <circle cx="70" cy="460" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <circle cx="70" cy="590" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <circle cx="70" cy="720" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <circle cx="70" cy="850" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <circle cx="70" cy="980" r="34" fill="#fff" stroke="#a47b32" stroke-width="6"/>
+    <text x="150" y="82" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">بطارية ليثيوم مدمجة</text>
+    <text x="150" y="212" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">شحن Type-C</text>
+    <text x="150" y="342" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">انتشار 360°</text>
+    <text x="150" y="472" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">سعة 120 مل</text>
+    <text x="150" y="602" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">3 مستويات للتحكم</text>
+    <text x="150" y="732" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">مؤقت 1 / 4 / 8 ساعات</text>
+    <text x="150" y="862" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">Wi‑Fi + Bluetooth</text>
+    <text x="150" y="992" font-size="38" fill="#1f1f1f" font-family="Arial, sans-serif">تغطية حتى 100 م²</text>
+  </g>
+
+  <rect x="120" y="1300" width="480" height="150" rx="38" fill="#a47b32"/>
+  <text x="360" y="1388" text-anchor="middle" font-size="44" fill="#fff" font-family="Arial, sans-serif">السعر</text>
+  <text x="360" y="1450" text-anchor="middle" font-size="72" fill="#fff" font-family="Georgia, serif" font-weight="700">49.000 د.ك</text>
+
+  <g transform="translate(640 570)">
+    <rect x="0" y="0" width="370" height="760" rx="54" fill="#0f1115"/>
+    <rect x="105" y="80" width="160" height="160" rx="80" fill="#111827" stroke="#3b82f6" stroke-width="12"/>
+    <text x="185" y="175" text-anchor="middle" font-size="48" fill="#3b82f6" font-family="Arial, sans-serif" font-weight="700">00:88</text>
+    <rect x="166" y="270" width="38" height="42" rx="19" fill="#1f2937"/>
+    <rect x="164" y="510" width="42" height="42" rx="21" fill="#84cc16"/>
+    <rect x="95" y="675" width="180" height="24" rx="12" fill="#84cc16"/>
+    <circle cx="185" cy="430" r="45" fill="#111827" stroke="#ffffff" stroke-width="6"/>
+    <text x="185" y="444" text-anchor="middle" font-size="28" fill="#fff">⏻</text>
+  </g>
+</svg>

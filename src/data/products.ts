@@ -261,7 +261,7 @@ export const PRODUCT_CATALOG: ProductCatalog[] = [
     description_short: 'جهاز تعطير ذكي قابل للشحن',
     description_full: 'جهاز تعطير محمول بتصميم فاخر، بطارية مدمجة، وتحكم ذكي يناسب المنزل والسيارة والمكتب.',
     features: ['قابل للشحن', 'تحكم ذكي', 'تصميم محمول', 'مناسب للسيارة والمكتب'],
-    image: '/images/elan-360-nomad.svg',
+    image: '/images/elan-360-nomad-v3.svg',
     variants: [
       { id: 'elan-360-nomad-standard', size: 'Standard', price: 49.000, sku: 'ELN-NOM-STD', stock: 12 },
     ],
@@ -274,7 +274,7 @@ export const PRODUCT_CATALOG: ProductCatalog[] = [
     description_short: 'جهاز تعطير كهربائي فاخر',
     description_full: 'جهاز تعطير أنيق للمساحات الداخلية مع أداء ثابت وتغطية ممتازة للروائح.',
     features: ['كهربائي', 'تغطية ممتازة', 'تشغيل ثابت', 'مظهر فاخر'],
-    image: '/images/elan-360-prime.svg',
+    image: '/images/elan-360-prime-v3.svg',
     variants: [
       { id: 'elan-360-prime-standard', size: 'Standard', price: 42.000, sku: 'ELN-PRI-STD', stock: 14 },
     ],
@@ -287,7 +287,7 @@ export const PRODUCT_CATALOG: ProductCatalog[] = [
     description_short: 'جهاز تعطير احترافي بشاشة LCD',
     description_full: 'جهاز متكامل للمساحات الراقية مع شاشة واضحة، بخاخ متوازن، وتصميم داكن فخم.',
     features: ['شاشة LCD', 'احترافي', 'تصميم داكن', 'للمساحات الراقية'],
-    image: '/images/noir-majeste.svg',
+    image: '/images/noir-majeste-v3.svg',
     variants: [
       { id: 'noir-majeste-standard', size: 'Standard', price: 59.000, sku: 'NRJ-STD', stock: 10 },
     ],
@@ -300,7 +300,7 @@ export const PRODUCT_CATALOG: ProductCatalog[] = [
     description_short: 'معطر أعواد فاخر دافئ',
     description_full: 'معطر أعواد أنيق برائحة عنبرية وخشبية تمنح المكان حضوراً راقياً وثباتاً جميلاً.',
     features: ['خشبي دافئ', 'ثبات جميل', 'لمسة فاخرة', 'للمنزل والمكتب'],
-    image: '/images/amber-santal.svg',
+    image: '/images/amber-santal-v3.svg',
     variants: [
       { id: 'amber-santal-200', size: '200ml', price: 10.900, sku: 'AMS-200', stock: 20 },
     ],
@@ -313,7 +313,7 @@ export const PRODUCT_CATALOG: ProductCatalog[] = [
     description_short: 'طقم هدايا عطري فاخر',
     description_full: 'طقم هدايا يجمع بين الدفء والأناقة مع لمسة تناسب الهدايا الرسمية والاحتفالات الخاصة.',
     features: ['طقم هدايا', 'مناسب للمناسبات', 'فخم وعملي', 'اختيار راقٍ'],
-    image: '/images/forest-reserve.svg',
+    image: '/images/forest-reserve-v3.svg',
     variants: [
       { id: 'forest-reserve-set', size: 'Set', price: 13.900, sku: 'FSR-SET', stock: 8 },
     ],

@@ -52,7 +52,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             <img
               src={productImage}
               alt={product.name_ar}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              className="w-full h-full object-contain p-5 group-hover:scale-105 transition-transform duration-500"
               onError={(e) => {
                 (e.target as HTMLImageElement).src = `https://via.placeholder.com/400x400/F5F0E8/C9A96E?text=${encodeURIComponent(product.name_en)}`;
               }}
