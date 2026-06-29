@@ -24,12 +24,21 @@ import AdminReports from "./pages/admin/AdminReports";
 import AdminSeedProducts from "./pages/admin/AdminSeedProducts";
 import AdminLogin from "./pages/admin/AdminLogin";
 import { useAuth } from "./contexts/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
-  
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      navigate('/admin/login', { replace: true });
+    }
+  }, [isAuthenticated, loading, navigate]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
@@ -37,11 +46,23 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  
+
   if (!isAuthenticated) {
-    return <Navigate to="/admin/login" replace />;
+    return (
+      <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-[#6B6B6B] mb-4">يجب تسجيل الدخول</div>
+          <button
+            onClick={() => navigate('/admin/login', { replace: true })}
+            className="bg-[#C9A96E] hover:bg-[#D4AF37] text-white px-6 py-2 rounded-lg"
+          >
+            الذهاب لصفحة تسجيل الدخول
+          </button>
+        </div>
+      </div>
+    );
   }
-  
+
   return <>{children}</>;
 }
 
