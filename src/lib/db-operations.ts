@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabase';
-import { PRODUCT_CATALOG, formatPrice } from '@/data/products';
+import { PRODUCT_CATALOG, formatPrice, localProducts } from '@/data/products';
 import { toast } from 'sonner';
 
 // Types
@@ -142,6 +142,67 @@ function prepareProductPayload(productData: Partial<Product>): Partial<Product> 
   };
 }
 
+function normalizeProductKey(value?: string): string {
+  return normalizeText(value).replace(/\s+/g, '-').replace(/-+/g, '-').trim('-');
+}
+
+function matchCatalogProduct(product: Partial<Product>): (typeof localProducts)[number] | undefined {
+  const byId = localProducts.find(item => item.id === product.id);
+  if (byId) return byId;
+
+  const bySlug = localProducts.find(item => item.id === normalizeProductKey(product.slug));
+  if (bySlug) return bySlug;
+
+  const sku = normalizeText(product.sku);
+  if (sku) {
+    const bySku = localProducts.find(item => (item.sku || '').toLowerCase() === sku);
+    if (bySku) return bySku;
+  }
+
+  const nameEnBase = stripVariantSuffix(product.name_en);
+  if (nameEnBase) {
+    const byNameEn = localProducts.find(item => stripVariantSuffix(item.name_en) === nameEnBase);
+    if (byNameEn) return byNameEn;
+  }
+
+  const nameArBase = stripVariantSuffix(product.name_ar);
+  if (nameArBase) {
+    const byNameAr = localProducts.find(item => stripVariantSuffix(item.name_ar) === nameArBase);
+    if (byNameAr) return byNameAr;
+  }
+
+  return undefined;
+}
+
+function mergeWithCatalog(product: Partial<Product>): Product | null {
+  const catalogProduct = matchCatalogProduct(product);
+  if (!catalogProduct) return null;
+
+  const images = hydrateProductImages({ ...catalogProduct, ...product } as Partial<Product>);
+  return {
+    ...catalogProduct,
+    ...product,
+    id: catalogProduct.id,
+    name_ar: product.name_ar || catalogProduct.name_ar,
+    name_en: product.name_en || catalogProduct.name_en,
+    type: product.type || catalogProduct.type,
+    price: typeof product.price === 'number' ? product.price : catalogProduct.price,
+    shortDescription: product.shortDescription || catalogProduct.shortDescription,
+    fullDescription: product.fullDescription || catalogProduct.fullDescription,
+    specs: product.specs && Object.keys(product.specs).length > 0 ? product.specs : catalogProduct.specs,
+    features: product.features && product.features.length > 0 ? product.features : catalogProduct.features,
+    image: images[0] || catalogProduct.image,
+    images,
+    variant: product.variant || catalogProduct.variant,
+    sku: product.sku || catalogProduct.sku,
+    stock_quantity: typeof product.stock_quantity === 'number' ? product.stock_quantity : catalogProduct.stock_quantity,
+    min_stock_level: typeof product.min_stock_level === 'number' ? product.min_stock_level : catalogProduct.min_stock_level,
+    is_active: product.is_active ?? true,
+    created_at: product.created_at || '',
+    updated_at: product.updated_at || '',
+  } as Product;
+}
+
 export interface Invoice {
   id: string;
   invoice_number: string;
@@ -174,8 +235,7 @@ export interface Settings {
 
 export async function getProducts(): Promise<Product[]> {
   if (!isSupabaseConfigured || !supabase) {
-    console.log('Supabase not configured, returning empty products');
-    return [];
+    return localProducts.map(product => mergeWithCatalog(product as unknown as Partial<Product>) as Product);
   }
   try {
     const { data, error } = await supabase
@@ -185,28 +245,36 @@ export async function getProducts(): Promise<Product[]> {
       .order('created_at', { ascending: true });
     if (error) {
       console.error('Error fetching products:', error);
-      return [];
+      return localProducts.map(product => mergeWithCatalog(product as unknown as Partial<Product>) as Product);
     }
-    return (data || []).map(hydrateProduct);
+    const merged = localProducts
+      .map(local => {
+        const dbMatch = (data || []).find((item: any) => matchCatalogProduct(item)?.id === local.id);
+        return mergeWithCatalog((dbMatch ? { ...local, ...dbMatch } : local) as unknown as Partial<Product>);
+      })
+      .filter((item): item is Product => !!item);
+
+    return merged.length > 0 ? merged : localProducts.map(product => mergeWithCatalog(product as unknown as Partial<Product>) as Product);
   } catch (err) {
     console.error('Exception fetching products:', err);
-    return [];
+    return localProducts.map(product => mergeWithCatalog(product as unknown as Partial<Product>) as Product);
   }
 }
 
 export async function getProduct(id: string): Promise<Product | null> {
-  if (!isSupabaseConfigured || !supabase) return null;
+  const localProduct = localProducts.find(product => product.id === id);
+  if (!isSupabaseConfigured || !supabase) return localProduct ? mergeWithCatalog(localProduct as unknown as Partial<Product>) : null;
   try {
     const { data, error } = await supabase
       .from('products')
       .select('*')
       .eq('id', id)
       .single();
-    if (error) return null;
-    return data ? hydrateProduct(data) : null;
+    if (error) return localProduct ? mergeWithCatalog(localProduct as unknown as Partial<Product>) : null;
+    return data ? mergeWithCatalog({ ...(localProduct || {}), ...data } as Partial<Product>) : localProduct ? mergeWithCatalog(localProduct as unknown as Partial<Product>) : null;
   } catch (err) {
     console.error('Exception fetching product:', err);
-    return null;
+    return localProduct ? mergeWithCatalog(localProduct as unknown as Partial<Product>) : null;
   }
 }
 
