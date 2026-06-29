@@ -17,13 +17,19 @@ export default function Index() {
   const loadProducts = async () => {
     setLoading(true);
     const products = await getProducts();
-    if (products.length > 0) {
-      setFeaturedProducts(products.slice(0, 3));
-    } else {
-      setFeaturedProducts(localProducts.slice(0, 3));
-    }
+    const source = products.length > 0 ? products : localProducts;
+    const byType = (type: string) => source.find(product => product.type === type);
+    const fallback = source.slice(0, 3);
+    setFeaturedProducts([
+      byType('devices') || fallback[0],
+      byType('diffusers') || fallback[1] || fallback[0],
+      byType('oils') || fallback[2] || fallback[0],
+    ].filter(Boolean));
     setLoading(false);
   };
+
+  const totalProducts = localProducts.length;
+  const totalFamilies = new Set(localProducts.map(product => product.type)).size;
 
   const features = [
     { icon: Star, title: 'منتجات مختارة بعناية', description: 'نختار لكم أفضل المنتجات العطرية' },
@@ -66,7 +72,7 @@ export default function Index() {
             </h1>
             
             <p className="text-[#6B6B6B] text-lg md:text-xl mb-8 leading-relaxed max-w-xl mx-auto">
-              في نفائس، نختار لكم منتجات عطرية راقية تضيف للمنزل، المكتب، الاستقبال، والهدايا لمسة من الأناقة والهدوء.
+              في نفائس، نختار لكم الزيوت العطرية وأجهزة التعطير ومعطرات الأعواد والهدايا العطرية لمسة من الأناقة والهدوء.
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -148,17 +154,17 @@ export default function Index() {
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-6">عن نفائس</h2>
             <p className="text-[#6B6B6B] text-lg leading-relaxed mb-8">
-              في نفائس، نؤمن بأن الروائح تؤثر على المزاج. لهذا نقدم لكم مجموعة مختارة من أجهزة التعطير الذكية، معطرات الأعواد، وأطقم الهدايا العطرية التي تضفي على مساحاتكم لمسة من الفخامة والأناقة.
+              في نفائس، نؤمن بأن الروائح تؤثر على المزاج. لهذا نقدم لكم مجموعة مختارة من الزيوت العطرية، أجهزة التعطير الذكية، معطرات الأعواد، وأطقم الهدايا العطرية التي تضفي على مساحاتكم لمسة من الفخامة والأناقة.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <div className="bg-white px-6 py-3 rounded-full text-[#1A1A1A]">
-                <span className="font-bold text-[#C9A96E]">5+</span> منتجات فاخرة
+                <span className="font-bold text-[#C9A96E]">{totalProducts}</span> منتج متنوع
               </div>
               <div className="bg-white px-6 py-3 rounded-full text-[#1A1A1A]">
                 <span className="font-bold text-[#C9A96E]">2</span> د.ك توصيل
               </div>
               <div className="bg-white px-6 py-3 rounded-full text-[#1A1A1A]">
-                <span className="font-bold text-[#C9A96E]">2</span> طريقة دفع
+                <span className="font-bold text-[#C9A96E]">{totalFamilies}</span> فئات رئيسية
               </div>
             </div>
           </div>

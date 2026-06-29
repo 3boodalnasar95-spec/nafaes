@@ -253,6 +253,71 @@ export const PRODUCT_CATALOG: ProductCatalog[] = [
       { id: 'red-crystal-500', size: '500ml', price: 14.900, sku: 'RCR-500', stock: 15 },
     ],
   },
+  {
+    id: 'elan-360-nomad',
+    name_ar: 'إيلان 360 نوماد',
+    name_en: 'ELAN 360 Nomad',
+    type: 'devices',
+    description_short: 'جهاز تعطير ذكي قابل للشحن',
+    description_full: 'جهاز تعطير محمول بتصميم فاخر، بطارية مدمجة، وتحكم ذكي يناسب المنزل والسيارة والمكتب.',
+    features: ['قابل للشحن', 'تحكم ذكي', 'تصميم محمول', 'مناسب للسيارة والمكتب'],
+    image: '/images/elan-360-nomad.svg',
+    variants: [
+      { id: 'elan-360-nomad-standard', size: 'Standard', price: 49.000, sku: 'ELN-NOM-STD', stock: 12 },
+    ],
+  },
+  {
+    id: 'elan-360-prime',
+    name_ar: 'إيلان 360 برايم',
+    name_en: 'ELAN 360 Prime',
+    type: 'devices',
+    description_short: 'جهاز تعطير كهربائي فاخر',
+    description_full: 'جهاز تعطير أنيق للمساحات الداخلية مع أداء ثابت وتغطية ممتازة للروائح.',
+    features: ['كهربائي', 'تغطية ممتازة', 'تشغيل ثابت', 'مظهر فاخر'],
+    image: '/images/elan-360-prime.svg',
+    variants: [
+      { id: 'elan-360-prime-standard', size: 'Standard', price: 42.000, sku: 'ELN-PRI-STD', stock: 14 },
+    ],
+  },
+  {
+    id: 'noir-majeste',
+    name_ar: 'نوار ماجستيه',
+    name_en: 'Noir Majeste',
+    type: 'devices',
+    description_short: 'جهاز تعطير احترافي بشاشة LCD',
+    description_full: 'جهاز متكامل للمساحات الراقية مع شاشة واضحة، بخاخ متوازن، وتصميم داكن فخم.',
+    features: ['شاشة LCD', 'احترافي', 'تصميم داكن', 'للمساحات الراقية'],
+    image: '/images/noir-majeste.svg',
+    variants: [
+      { id: 'noir-majeste-standard', size: 'Standard', price: 59.000, sku: 'NRJ-STD', stock: 10 },
+    ],
+  },
+  {
+    id: 'amber-santal',
+    name_ar: 'أمبر سانتال',
+    name_en: 'Amber Santal',
+    type: 'diffusers',
+    description_short: 'معطر أعواد فاخر دافئ',
+    description_full: 'معطر أعواد أنيق برائحة عنبرية وخشبية تمنح المكان حضوراً راقياً وثباتاً جميلاً.',
+    features: ['خشبي دافئ', 'ثبات جميل', 'لمسة فاخرة', 'للمنزل والمكتب'],
+    image: '/images/amber-santal.svg',
+    variants: [
+      { id: 'amber-santal-200', size: '200ml', price: 10.900, sku: 'AMS-200', stock: 20 },
+    ],
+  },
+  {
+    id: 'forest-reserve',
+    name_ar: 'فورست ريزيرف',
+    name_en: 'Forest Reserve',
+    type: 'gifts',
+    description_short: 'طقم هدايا عطري فاخر',
+    description_full: 'طقم هدايا يجمع بين الدفء والأناقة مع لمسة تناسب الهدايا الرسمية والاحتفالات الخاصة.',
+    features: ['طقم هدايا', 'مناسب للمناسبات', 'فخم وعملي', 'اختيار راقٍ'],
+    image: '/images/forest-reserve.svg',
+    variants: [
+      { id: 'forest-reserve-set', size: 'Set', price: 13.900, sku: 'FSR-SET', stock: 8 },
+    ],
+  },
 ];
 
 export const localProducts: Product[] = PRODUCT_CATALOG.flatMap(catalog =>

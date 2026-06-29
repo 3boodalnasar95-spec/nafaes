@@ -79,7 +79,7 @@ export default function Products() {
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-4">منتجاتنا</h1>
           <p className="text-[#6B6B6B] max-w-xl mx-auto">
-            اكتشف مجموعتنا المختارة من أجهزة التعطير الذكية والمعطرات الفاخرة
+            اكتشف مجموعتنا المختارة من الزيوت العطرية، أجهزة التعطير، معطرات الأعواد، والهدايا العطرية
           </p>
         </div>
       </section>
