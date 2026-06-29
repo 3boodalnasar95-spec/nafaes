@@ -1,8 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm install --no-audit --no-fund && npm run build -- --no-cache",
+  "buildCommand": "echo 'Using prebuilt dist'",
   "outputDirectory": "dist",
-  "installCommand": "npm install --legacy-peer-deps --no-audit --no-fund",
   "rewrites": [
     {
       "source": "/(.*)",

@@ -31,7 +31,7 @@ export interface AuthContextType {
 // For production: Set VITE_ADMIN_USERNAME and VITE_ADMIN_PASSWORD in your .env file
 // For development: Uses fallback credentials if env vars are not set
 const ADMIN_USERNAME = import.meta.env.VITE_ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'nafaes2024!@#';
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'nafaes2026';
 
 // Default admin user
 const DEFAULT_ADMIN_USER: AdminUser = {
@@ -52,8 +52,8 @@ const LOCKOUT_UNTIL_KEY = 'nafaes_lockout_until';
 
 // Session timeout: 30 minutes
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
-// Lockout duration: 15 minutes after 5 failed attempts
-const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
+// Lockout duration: 1 minute after 5 failed attempts (lighter)
+const LOCKOUT_DURATION_MS = 1 * 60 * 1000;
 const MAX_FAILED_ATTEMPTS = 5;
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
