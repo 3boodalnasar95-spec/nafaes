@@ -184,7 +184,7 @@ function mergeWithCatalog(product: Partial<Product>): Product | null {
   const catalogProduct = matchCatalogProduct(product);
   if (!catalogProduct) return null;
 
-  const images = hydrateProductImages({ ...catalogProduct, ...product } as Partial<Product>);
+  const images = [catalogProduct.image];
   return {
     ...catalogProduct,
     ...product,
@@ -192,7 +192,7 @@ function mergeWithCatalog(product: Partial<Product>): Product | null {
     name_ar: product.name_ar || catalogProduct.name_ar,
     name_en: product.name_en || catalogProduct.name_en,
     type: product.type || catalogProduct.type,
-    price: typeof product.price === 'number' ? product.price : catalogProduct.price,
+    price: catalogProduct.price,
     shortDescription: product.shortDescription || catalogProduct.shortDescription,
     fullDescription: product.fullDescription || catalogProduct.fullDescription,
     specs: product.specs && Object.keys(product.specs).length > 0 ? product.specs : catalogProduct.specs,
