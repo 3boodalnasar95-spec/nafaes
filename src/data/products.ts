@@ -289,7 +289,7 @@ export const PRODUCT_CATALOG: ProductCatalog[] = [
     features: ['شاشة LCD', 'احترافي', 'تصميم داكن', 'للمساحات الراقية'],
     image: '/images/noir-majeste.png',
     variants: [
-      { id: 'noir-majeste-standard', size: 'Standard', price: 59.000, sku: 'NRJ-STD', stock: 10 },
+      { id: 'noir-majeste-standard', size: 'Standard', price: 69.900, sku: 'NRJ-STD', stock: 10 },
     ],
   },
   {
