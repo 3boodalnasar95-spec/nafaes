@@ -54,6 +54,7 @@ export default function Cart() {
                       nameAr={item.product.name_ar}
                       nameEn={item.product.name_en}
                       type={item.product.type}
+                      imageSrc={item.product.images?.[0] || item.product.image}
                       variantLabel={item.product.variantLabel}
                       priceLabel={formatPrice(item.product.price)}
                       compact

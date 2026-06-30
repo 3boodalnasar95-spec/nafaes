@@ -50,6 +50,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           nameAr={product.name_ar}
           nameEn={product.name_en}
           type={product.type}
+          imageSrc={product.images?.[0] || product.image}
           variantLabel={hasMultipleSizes ? `${product.variants?.length} أحجام` : undefined}
           priceLabel={hasMultipleSizes ? `ابتداءً من ${formatPrice(product.price)}` : formatPrice(product.price)}
           compact

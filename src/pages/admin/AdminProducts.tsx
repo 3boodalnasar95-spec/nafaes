@@ -133,6 +133,7 @@ export default function AdminProducts() {
                             nameAr={product.name_ar}
                             nameEn={product.name_en}
                             type={product.type}
+                            imageSrc={product.images?.[0] || product.image}
                             priceLabel={`${product.price.toFixed(3)} د.ك`}
                             compact
                             className="w-12 min-h-[48px] rounded-lg"

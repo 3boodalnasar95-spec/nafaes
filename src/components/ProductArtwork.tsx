@@ -4,6 +4,7 @@ type ProductArtworkProps = {
   nameAr: string;
   nameEn: string;
   type: string;
+  imageSrc?: string;
   variantLabel?: string;
   priceLabel?: string;
   className?: string;
@@ -14,6 +15,7 @@ export default function ProductArtwork({
   nameAr,
   nameEn,
   type,
+  imageSrc,
   variantLabel,
   priceLabel,
   className = '',
@@ -44,7 +46,16 @@ export default function ProductArtwork({
         </div>
 
         <div className="flex-1 flex items-center justify-center gap-4 min-h-[220px]">
-          {isOil && (
+          {imageSrc ? (
+            <img
+              src={imageSrc}
+              alt={nameAr}
+              className="max-h-[100%] max-w-[100%] object-contain drop-shadow-2xl"
+              onError={(e) => {
+                (e.target as HTMLImageElement).removeAttribute('src');
+              }}
+            />
+          ) : isOil ? (
             <div className="flex items-end gap-3">
               <div className="h-32 w-12 rounded-full bg-[#1f2937] shadow-lg" />
               <div className="h-46 w-16 rounded-t-[28px] rounded-b-[18px] bg-[#1f2937] shadow-lg" />
@@ -52,17 +63,13 @@ export default function ProductArtwork({
                 <div className="absolute left-1/2 -translate-x-1/2 top-6 h-8 w-10 rounded-full bg-[#c9a96e]" />
               </div>
             </div>
-          )}
-
-          {isDevice && (
+          ) : isDevice ? (
             <div className="relative h-60 w-40 rounded-[42px] bg-[#111111] shadow-2xl border border-black/10">
               <div className="absolute left-1/2 top-8 h-12 w-24 -translate-x-1/2 rounded-2xl bg-[#1f2937]" />
               <div className="absolute left-1/2 top-24 h-16 w-16 -translate-x-1/2 rounded-full bg-[#c9a96e]/30 border border-[#c9a96e]" />
               <div className="absolute inset-x-8 bottom-8 h-3 rounded-full bg-[#84cc16]" />
             </div>
-          )}
-
-          {isDiffuser && (
+          ) : isDiffuser ? (
             <div className="relative flex items-end gap-2">
               <div className="h-40 w-16 rounded-t-[18px] rounded-b-[26px] bg-[#7b5a3b] shadow-xl" />
               <div className="h-52 w-18 rounded-t-[22px] rounded-b-[28px] bg-[#1f2937] shadow-xl" />
@@ -70,16 +77,14 @@ export default function ProductArtwork({
               <div className="h-52 w-4 rounded-full bg-[#111111]" />
               <div className="h-40 w-24 rounded-[24px] bg-[#fff6ed] border border-[#c9a96e] shadow-lg absolute right-0 bottom-0 -mr-8" />
             </div>
-          )}
-
-          {isGift && (
+          ) : isGift ? (
             <div className="relative flex items-center justify-center">
               <div className="h-44 w-52 rounded-3xl bg-[#f5e8ce] border border-[#c9a96e] shadow-xl rotate-[-8deg]" />
               <div className="absolute right-4 top-6 h-36 w-28 rounded-2xl bg-[#7b5a3b] shadow-xl" />
               <div className="absolute left-4 top-10 h-28 w-18 rounded-full bg-[#111111] shadow-xl" />
               <div className="absolute left-12 top-0 h-56 w-4 rounded-full bg-[#111111]" />
             </div>
-          )}
+          ) : null}
         </div>
 
         <div className="mt-5 rounded-2xl bg-white/85 p-4 text-right border border-white/80 shadow-sm">

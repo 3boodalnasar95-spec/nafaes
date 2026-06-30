@@ -65,6 +65,7 @@ export default function ProductDetails() {
                 nameAr={product.name_ar}
                 nameEn={product.name_en}
                 type={product.type}
+                imageSrc={product.images?.[0] || product.image}
                 variantLabel={isMultiSizeOil && selectedVariant ? selectedVariant.size : undefined}
                 priceLabel={formatPrice(selectedPrice)}
                 className="sticky top-24 min-h-[720px]"
