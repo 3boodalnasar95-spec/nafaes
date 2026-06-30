@@ -20,6 +20,7 @@ import AdminProductForm from "./pages/admin/AdminProductForm";
 import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminInventory from "./pages/admin/AdminInventory";
 import AdminInvoices from "./pages/admin/AdminInvoices";
+import AdminInvoiceForm from "./pages/admin/AdminInvoiceForm";
 import AdminAccounting from "./pages/admin/AdminAccounting";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminReports from "./pages/admin/AdminReports";
@@ -94,6 +95,8 @@ function App() {
                 <Route path="/admin/customers" element={<AdminCustomers />} />
                 <Route path="/admin/inventory" element={<AdminInventory />} />
                 <Route path="/admin/invoices" element={<AdminInvoices />} />
+                <Route path="/admin/invoices/new" element={<AdminInvoiceForm />} />
+                <Route path="/admin/orders/new" element={<AdminInvoiceForm />} />
                 <Route path="/admin/accounting" element={<AdminAccounting />} />
                 <Route path="/admin/settings" element={<AdminSettings />} />
                 <Route path="/admin/reports" element={<AdminReports />} />

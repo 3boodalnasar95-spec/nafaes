@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Check, X, MessageCircle, Download, Package, Phone, MapPin } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Search, Check, X, MessageCircle, Download, Package, Phone, MapPin, Plus } from 'lucide-react';
 import { getOrders, updateOrderStatus, formatPrice } from '@/lib/db-operations';
 import { downloadInvoicePDF } from '@/utils/pdfGenerator';
 import { toast } from 'sonner';
@@ -169,9 +170,18 @@ ${itemsList}
 
   return (
     <AdminLayout>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-[#1A1A1A]">إدارة الطلبات</h2>
-        <p className="text-[#6B6B6B]">عرض وتتبع جميع الطلبات ({orders.length})</p>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-[#1A1A1A]">إدارة الطلبات</h2>
+          <p className="text-[#6B6B6B]">عرض وتتبع جميع الطلبات ({orders.length})</p>
+        </div>
+        <Link
+          to="/admin/orders/new"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#C9A96E] px-4 py-2 text-white transition-colors hover:bg-[#D4AF37]"
+        >
+          <Plus className="h-5 w-5" />
+          إنشاء طلب
+        </Link>
       </div>
 
       {/* Status Tabs */}
