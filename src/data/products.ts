@@ -287,7 +287,7 @@ export const PRODUCT_CATALOG: ProductCatalog[] = [
     description_short: 'جهاز تعطير احترافي بشاشة LCD',
     description_full: 'جهاز متكامل للمساحات الراقية مع شاشة واضحة، بخاخ متوازن، وتصميم داكن فخم.',
     features: ['شاشة LCD', 'احترافي', 'تصميم داكن', 'للمساحات الراقية'],
-    image: '/images/noir-majeste.png',
+    image: '/images/noir-majeste-69.png',
     variants: [
       { id: 'noir-majeste-standard', size: 'Standard', price: 69.900, sku: 'NRJ-STD', stock: 10 },
     ],
