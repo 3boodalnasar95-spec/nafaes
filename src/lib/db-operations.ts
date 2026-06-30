@@ -142,10 +142,11 @@ function hydrateProduct(product: Product): Product {
 }
 
 function prepareProductPayload(productData: Partial<Product>): Partial<Product> {
-  return {
-    ...productData,
-    images: hydrateProductImages(productData),
-  };
+  const payload = { ...productData };
+  if ('images' in productData || 'image' in productData || 'slug' in productData || 'name_ar' in productData || 'name_en' in productData) {
+    payload.images = hydrateProductImages(productData);
+  }
+  return payload;
 }
 
 function normalizeProductKey(value?: string): string {
@@ -338,8 +339,26 @@ export async function deleteProduct(id: string): Promise<boolean> {
 export async function logInventoryChange(productId: string, type: 'in' | 'out' | 'adjustment', quantity: number, reason: string): Promise<boolean> {
   if (!isSupabaseConfigured || !supabase) return false;
   try {
+    const products = await getProducts();
+    const product = products.find(p => p.id === productId);
+    let dbProductId = productId;
+    let currentStock = product?.stock_quantity || 0;
+
+    if (product?.sku) {
+      const { data: dbProduct } = await supabase
+        .from('products')
+        .select('id, stock_quantity')
+        .eq('sku', product.sku)
+        .maybeSingle();
+
+      if (dbProduct) {
+        dbProductId = dbProduct.id;
+        currentStock = typeof dbProduct.stock_quantity === 'number' ? dbProduct.stock_quantity : currentStock;
+      }
+    }
+
     const { error } = await supabase.from('inventory_logs').insert({
-      product_id: productId,
+      product_id: dbProductId,
       type,
       quantity,
       reason,
@@ -347,16 +366,18 @@ export async function logInventoryChange(productId: string, type: 'in' | 'out' |
       created_at: new Date().toISOString(),
     });
     if (!error) {
-      const products = await getProducts();
-      const product = products.find(p => p.id === productId);
-      if (product) {
-        const newStock = type === 'in' 
-          ? product.stock_quantity + quantity 
-          : type === 'out' 
-            ? product.stock_quantity - quantity 
-            : quantity;
-        await updateProduct(productId, { stock_quantity: Math.max(0, newStock) });
-      }
+      const newStock = type === 'in'
+        ? currentStock + quantity
+        : type === 'out'
+          ? currentStock - quantity
+          : quantity;
+
+      const { error: updateError } = await supabase
+        .from('products')
+        .update({ stock_quantity: Math.max(0, newStock), updated_at: new Date().toISOString() })
+        .eq('id', dbProductId);
+
+      return !updateError;
     }
     return !error;
   } catch (err) {

@@ -1,8 +1,28 @@
 import { useState, useEffect } from 'react';
 import { Warehouse, AlertTriangle, ArrowUpDown, Package, Plus, Minus, TrendingUp, TrendingDown } from 'lucide-react';
+import { toast } from 'sonner';
 import AdminLayout from './AdminLayout';
 import { getProducts, logInventoryChange, getInventoryLogs, Product } from '@/lib/db-operations';
 import { formatPrice } from '@/data/products';
+
+function toNumber(value: unknown, fallback = 0): number {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function normalizeInventoryProduct(product: Product): Product {
+  const price = toNumber(product.price);
+  const stock = Math.max(0, Math.floor(toNumber(product.stock_quantity)));
+  return {
+    ...product,
+    name_ar: product.name_ar || product.name_en || 'منتج بدون اسم',
+    name_en: product.name_en || product.name_ar || '',
+    price,
+    cost_price: toNumber(product.cost_price, price * 0.5),
+    stock_quantity: stock,
+    min_stock_level: Math.max(0, Math.floor(toNumber(product.min_stock_level, 5))),
+  };
+}
 
 export default function AdminInventory() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -21,14 +41,26 @@ export default function AdminInventory() {
 
   const loadProducts = async () => {
     setLoading(true);
-    const data = await getProducts();
-    setProducts(data);
-    setLoading(false);
+    try {
+      const data = await getProducts();
+      setProducts(data.map(normalizeInventoryProduct));
+    } catch (error) {
+      console.error('Error loading inventory products:', error);
+      toast.error('تعذر تحميل المخزون');
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const loadInventoryLogs = async (productId: string) => {
-    const logs = await getInventoryLogs(productId);
-    setInventoryLogs(logs);
+    try {
+      const logs = await getInventoryLogs(productId);
+      setInventoryLogs(logs);
+    } catch (error) {
+      console.error('Error loading inventory logs:', error);
+      setInventoryLogs([]);
+    }
   };
 
   const sortedProducts = [...products].sort((a, b) => {
@@ -60,13 +92,25 @@ export default function AdminInventory() {
   const handleAdjustment = async () => {
     if (!selectedProduct || !adjustmentQty || !adjustmentReason) return;
     
-    await logInventoryChange(
+    const quantity = Math.max(0, Math.floor(Number(adjustmentQty)));
+    if (quantity <= 0) {
+      toast.error('أدخل كمية صحيحة');
+      return;
+    }
+
+    const success = await logInventoryChange(
       selectedProduct.id,
       adjustmentType,
-      parseInt(adjustmentQty),
+      quantity,
       adjustmentReason
     );
-    
+
+    if (!success) {
+      toast.error('تعذر تعديل المخزون');
+      return;
+    }
+     
+    toast.success('تم تحديث المخزون');
     setShowAdjustmentModal(false);
     setSelectedProduct(null);
     loadProducts();
@@ -184,6 +228,11 @@ export default function AdminInventory() {
 
         {loading ? (
           <div className="p-8 text-center text-[#6B6B6B]">جاري التحميل...</div>
+        ) : sortedProducts.length === 0 ? (
+          <div className="p-8 text-center text-[#6B6B6B]">
+            <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p>لا توجد منتجات في المخزون</p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
