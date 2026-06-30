@@ -268,7 +268,7 @@ export default function AdminInvoiceForm() {
                   <div key={index} className="grid gap-3 rounded-lg border border-[#E8E0D5] bg-[#FAF8F5] p-3 md:grid-cols-[1fr_150px_140px_120px_44px]">
                     <select value={item.optionId} onChange={event => handleSelectOption(index, event.target.value)} disabled={loadingProducts} className="rounded-lg border border-[#E8E0D5] bg-white px-3 py-2 focus:border-[#C9A96E] focus:outline-none">
                       <option value="">{loadingProducts ? 'جاري تحميل المنتجات...' : 'اختر المنتج'}</option>
-                      {productOptions.map(product => <option key={product.id} value={product.id}>{product.nameAr} - {formatPrice(product.price)}</option>)}
+                      {productOptions.map(product => <option key={product.id} value={product.id}>{product.nameAr}</option>)}
                     </select>
                     <input type="number" step="0.001" min="0" value={item.unitPrice} onChange={event => updateItem(index, { unitPrice: event.target.value })} className="rounded-lg border border-[#E8E0D5] bg-white px-3 py-2 text-center focus:border-[#C9A96E] focus:outline-none" placeholder="السعر" dir="ltr" />
                     <div className="flex items-center overflow-hidden rounded-lg border border-[#E8E0D5] bg-white">
