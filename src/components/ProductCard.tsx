@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ShoppingBag } from 'lucide-react';
-import { getProductTypeLabel } from '@/data/products';
 import { useStore } from '../store/useStore';
+import ProductArtwork from './ProductArtwork';
 
 interface ProductCardProps {
   product: {
@@ -23,7 +23,6 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useStore();
-  const productImage = product.images?.[0] || product.image || '';
   const hasMultipleSizes = (product.type === 'oils') && (product.variants?.length || 0) > 1;
 
   const handleQuickAdd = (e: React.MouseEvent) => {
@@ -47,28 +46,15 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-[#E8E0D5]">
       <Link to={`/product/${product.id || product.name_en}`} className="block relative overflow-hidden">
-        <div className="aspect-square bg-gradient-to-br from-[#F5F0E8] to-[#E8E0D5] flex items-center justify-center">
-          {productImage ? (
-            <img
-              src={productImage}
-              alt={product.name_ar}
-              className="w-full h-full object-contain p-5 group-hover:scale-105 transition-transform duration-500"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = `https://via.placeholder.com/400x400/F5F0E8/C9A96E?text=${encodeURIComponent(product.name_en)}`;
-              }}
-            />
-          ) : (
-            <span className="text-4xl">✨</span>
-          )}
-        </div>
-        <div className="absolute top-4 right-4 bg-[#C9A96E] text-white text-xs font-bold px-3 py-1 rounded-full">
-          {getProductTypeLabel(product.type)}
-        </div>
-        {hasMultipleSizes && (
-          <div className="absolute top-4 left-4 bg-white/90 text-[#1A1A1A] text-xs font-bold px-3 py-1 rounded-full border border-[#E8E0D5]">
-            {product.variants?.length} أحجام
-          </div>
-        )}
+        <ProductArtwork
+          nameAr={product.name_ar}
+          nameEn={product.name_en}
+          type={product.type}
+          variantLabel={hasMultipleSizes ? `${product.variants?.length} أحجام` : undefined}
+          priceLabel={hasMultipleSizes ? `ابتداءً من ${formatPrice(product.price)}` : formatPrice(product.price)}
+          compact
+          className="min-h-[430px] rounded-b-none"
+        />
       </Link>
 
       <div className="p-5">
@@ -81,13 +67,6 @@ export default function ProductCard({ product }: ProductCardProps) {
         {product.shortDescription && (
           <p className="text-[#6B6B6B] text-sm mb-4 line-clamp-2">{product.shortDescription}</p>
         )}
-
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-2xl font-bold text-[#C9A96E]">
-            {hasMultipleSizes ? 'ابتداءً من ' : ''}
-            {formatPrice(product.price)}
-          </span>
-        </div>
 
         {hasMultipleSizes ? (
           <Link

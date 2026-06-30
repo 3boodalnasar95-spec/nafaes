@@ -3,6 +3,7 @@ import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, MessageCircle } from 'luc
 import { useStore } from '../store/useStore';
 import Layout from '../components/Layout';
 import { formatPrice, deliveryFee, whatsappLink } from '../data/products';
+import ProductArtwork from '../components/ProductArtwork';
 
 export default function Cart() {
   const { cartItems, removeFromCart, updateQuantity, clearCart, cartTotal } = useStore();
@@ -49,16 +50,15 @@ export default function Cart() {
               {cartItems.map((item) => (
                 <div key={item.product.cartKey || item.product.id} className="bg-white rounded-xl border border-[#E8E0D5] p-4 flex flex-col sm:flex-row gap-4">
                   <Link to={`/product/${item.product.id}`} className="flex-shrink-0">
-                    <div className="w-full sm:w-28 h-28 bg-[#F5F0E8] rounded-lg flex items-center justify-center overflow-hidden p-2">
-                      <img
-                        src={item.product.image}
-                        alt={item.product.name_ar}
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = `https://via.placeholder.com/200x200/F5F0E8/C9A96E?text=${encodeURIComponent(item.product.name_en)}`;
-                        }}
-                      />
-                    </div>
+                    <ProductArtwork
+                      nameAr={item.product.name_ar}
+                      nameEn={item.product.name_en}
+                      type={item.product.type}
+                      variantLabel={item.product.variantLabel}
+                      priceLabel={formatPrice(item.product.price)}
+                      compact
+                      className="w-full sm:w-40 min-h-[180px] rounded-lg"
+                    />
                   </Link>
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-2">

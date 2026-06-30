@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatPrice as fmt, getAreaById, Product } from '@/data/products';
+import ProductArtwork from '@/components/ProductArtwork';
 
 interface CartItem {
   product: Product;
@@ -29,17 +30,16 @@ export default function OrderSummary({
       
       <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
         {cartItems.map((item, index) => (
-          <div key={index} className="flex gap-3 p-3 bg-[#FAF8F5] rounded-xl">
-            <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center overflow-hidden p-1">
-              <img 
-                src={item.product.images?.[0] || item.product.image} 
-                alt={item.product.name_ar} 
-                className="w-full h-full object-contain"
-                onError={(e) => { 
-                  (e.target as HTMLImageElement).src = `https://via.placeholder.com/100x100/F5F0E8/C9A96E?text=${encodeURIComponent(item.product.name_en)}`; 
-                }} 
-              />
-            </div>
+            <div key={index} className="flex gap-3 p-3 bg-[#FAF8F5] rounded-xl">
+            <ProductArtwork
+              nameAr={item.product.name_ar}
+              nameEn={item.product.name_en}
+              type={item.product.type}
+              variantLabel={item.product.variantLabel}
+              priceLabel={fmt(item.product.price)}
+              compact
+              className="w-16 min-h-[64px] rounded-lg"
+            />
             <div className="flex-1">
               <p className="text-[#1A1A1A] font-medium text-sm">{item.product.name_ar}</p>
               {item.product.variantLabel && <p className="text-[#C9A96E] text-xs font-medium">{item.product.variantLabel}</p>}

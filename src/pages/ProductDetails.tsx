@@ -2,10 +2,11 @@
 
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, Check, MessageCircle, Minus, Plus } from 'lucide-react';
-import { products, formatPrice, whatsappLink, getProductTypeLabel } from '../data/products';
+import { products, formatPrice, whatsappLink } from '../data/products';
 import { useStore } from '../store/useStore';
 import Layout from '../components/Layout';
 import { useEffect, useState } from 'react';
+import ProductArtwork from '../components/ProductArtwork';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -60,19 +61,14 @@ export default function ProductDetails() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div className="relative">
-              <div className="aspect-square bg-gradient-to-br from-[#F5F0E8] to-[#E8E0D5] rounded-3xl flex items-center justify-center p-8 sticky top-24">
-                <img
-                  src={product.image}
-                  alt={product.name_ar}
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = `https://via.placeholder.com/600x600/F5F0E8/C9A96E?text=${encodeURIComponent(product.name_en)}`;
-                  }}
-                />
-                <div className="absolute top-4 right-4 bg-[#C9A96E] text-white text-sm font-bold px-4 py-2 rounded-full">
-                  {getProductTypeLabel(product.type)}
-                </div>
-              </div>
+              <ProductArtwork
+                nameAr={product.name_ar}
+                nameEn={product.name_en}
+                type={product.type}
+                variantLabel={isMultiSizeOil && selectedVariant ? selectedVariant.size : undefined}
+                priceLabel={formatPrice(selectedPrice)}
+                className="sticky top-24 min-h-[720px]"
+              />
             </div>
 
             <div>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Plus, Search, Edit, Trash2, Package, AlertTriangle } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import { getProducts, updateProduct, Product } from '@/lib/db-operations';
+import ProductArtwork from '@/components/ProductArtwork';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -128,13 +129,14 @@ export default function AdminProducts() {
                     <tr key={product.id} className="hover:bg-[#FAF8F5] transition-colors">
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-[#F5F0E8] rounded-lg flex items-center justify-center overflow-hidden">
-                            {product.images?.[0] ? (
-                              <img src={product.images[0]} alt={product.name_ar} className="w-full h-full object-contain" />
-                            ) : (
-                              <Package className="w-6 h-6 text-[#C9A96E]" />
-                            )}
-                          </div>
+                          <ProductArtwork
+                            nameAr={product.name_ar}
+                            nameEn={product.name_en}
+                            type={product.type}
+                            priceLabel={`${product.price.toFixed(3)} د.ك`}
+                            compact
+                            className="w-12 min-h-[48px] rounded-lg"
+                          />
                           <div>
                             <p className="font-medium text-[#1A1A1A]">{product.name_ar}</p>
                             <p className="text-sm text-[#6B6B6B]">{product.name_en}</p>
