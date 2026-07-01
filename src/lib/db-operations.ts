@@ -55,6 +55,27 @@ export interface Order {
   order_items?: OrderItem[];
 }
 
+function isUuid(value?: string): boolean {
+  return !!value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+function normalizeOrderFromDb(order: any): Order {
+  return {
+    ...order,
+    governorate: order.governorate || order.metadata?.governorate || '',
+    area: order.area || order.customer_area || '',
+    area_id: order.area_id || order.metadata?.area_id || '',
+    address: order.address || order.customer_address || '',
+    payment_method: order.payment_method === 'link' ? 'link' : 'cash',
+    order_items: (order.order_items || []).map((item: any) => ({
+      ...item,
+      product_id: item.product_id || item.sku || '',
+      product_name_ar: item.product_name_ar || item.metadata?.product_name_ar || item.name || '',
+      product_name_en: item.product_name_en || item.metadata?.product_name_en || item.name || '',
+    })),
+  } as Order;
+}
+
 export interface Notification {
   id: string;
   type: 'order' | 'alert' | 'system';
@@ -406,7 +427,7 @@ export async function getInventoryLogs(productId: string): Promise<any[]> {
       .order('created_at', { ascending: false })
       .limit(20);
     if (error) return [];
-    return data || [];
+    return (data || []).map(normalizeOrderFromDb);
   } catch (err) {
     console.error('Exception fetching inventory logs:', err);
     return [];
@@ -456,7 +477,7 @@ export async function getOrder(id: string): Promise<Order | null> {
       .eq('id', id)
       .single();
     if (error) return null;
-    return data;
+    return data ? normalizeOrderFromDb(data) : null;
   } catch (err) {
     console.error('Exception fetching order:', err);
     return null;
@@ -474,6 +495,8 @@ export async function createOrder(
     notes: string; 
     payment_method: 'cash' | 'link'; 
     subtotal: number; 
+    discount_amount?: number;
+    coupon_code?: string;
     delivery_fee: number; 
     total: number;
   },
@@ -501,17 +524,23 @@ export async function createOrder(
         order_number: orderNumber,
         customer_name: orderData.customer_name,
         customer_phone: orderData.customer_phone,
-        governorate: orderData.governorate,
-        area: orderData.area,
-        area_id: orderData.area_id,
-        address: orderData.address,
+        customer_area: orderData.area,
+        customer_address: orderData.address,
         notes: orderData.notes || '',
-        payment_method: orderData.payment_method,
+        payment_method: orderData.payment_method === 'link' ? 'link' : 'cash',
+        payment_status: 'pending',
+        paid_amount: 0,
         subtotal: orderData.subtotal,
+        discount_amount: orderData.discount_amount || 0,
+        coupon_code: orderData.coupon_code || null,
         delivery_fee: orderData.delivery_fee,
         total: orderData.total,
         status: 'pending',
-        source: 'website',
+        source: 'admin',
+        metadata: {
+          governorate: orderData.governorate,
+          area_id: orderData.area_id,
+        },
         created_at: now,
         updated_at: now,
       })
@@ -526,12 +555,16 @@ export async function createOrder(
     if (items.length > 0) {
       const orderItems = items.map(item => ({
         order_id: order.id,
-        product_id: item.product_id,
-        product_name_ar: item.product_name_ar,
-        product_name_en: item.product_name_en,
+        product_id: isUuid(item.product_id) ? item.product_id : null,
+        name: item.product_name_ar || item.product_name_en,
+        sku: item.product_id,
         quantity: item.quantity,
         unit_price: item.unit_price,
         total_price: item.total_price,
+        metadata: {
+          product_name_ar: item.product_name_ar,
+          product_name_en: item.product_name_en,
+        },
         created_at: now,
       }));
       

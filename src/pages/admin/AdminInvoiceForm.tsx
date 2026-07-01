@@ -28,6 +28,26 @@ type ProductOption = {
   stock: number;
 };
 
+type InvoiceDraft = {
+  id: string;
+  name: string;
+  savedAt: string;
+  form: {
+    customer_name: string;
+    customer_phone: string;
+    governorate: string;
+    area_id: string;
+    address: string;
+    notes: string;
+    payment_method: 'cash' | 'link';
+  };
+  items: DraftItem[];
+  couponCode: string;
+  discountPercent: string;
+};
+
+const DRAFTS_KEY = 'nafaes_invoice_drafts';
+
 export default function AdminInvoiceForm() {
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
@@ -35,6 +55,8 @@ export default function AdminInvoiceForm() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [couponCode, setCouponCode] = useState('');
   const [discountPercent, setDiscountPercent] = useState('0');
+  const [drafts, setDrafts] = useState<InvoiceDraft[]>([]);
+  const [activeDraftId, setActiveDraftId] = useState('');
   const [saving, setSaving] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [form, setForm] = useState({
@@ -59,6 +81,15 @@ export default function AdminInvoiceForm() {
     return () => {
       mounted = false;
     };
+  }, []);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(DRAFTS_KEY);
+      setDrafts(saved ? JSON.parse(saved) : []);
+    } catch {
+      setDrafts([]);
+    }
   }, []);
 
   useEffect(() => {
@@ -146,6 +177,49 @@ export default function AdminInvoiceForm() {
     }
   };
 
+  const persistDrafts = (nextDrafts: InvoiceDraft[]) => {
+    setDrafts(nextDrafts);
+    localStorage.setItem(DRAFTS_KEY, JSON.stringify(nextDrafts));
+  };
+
+  const saveDraft = () => {
+    const now = new Date().toISOString();
+    const draftId = activeDraftId || `draft-${Date.now()}`;
+    const draftName = form.customer_name.trim() || `مسودة ${new Date().toLocaleString('ar-SA')}`;
+    const draft: InvoiceDraft = {
+      id: draftId,
+      name: draftName,
+      savedAt: now,
+      form,
+      items,
+      couponCode,
+      discountPercent,
+    };
+
+    const nextDrafts = [draft, ...drafts.filter(item => item.id !== draftId)].slice(0, 30);
+    persistDrafts(nextDrafts);
+    setActiveDraftId(draftId);
+    toast.success('تم حفظ الفاتورة كمسودة');
+  };
+
+  const loadDraft = (draftId: string) => {
+    setActiveDraftId(draftId);
+    const draft = drafts.find(item => item.id === draftId);
+    if (!draft) return;
+    setForm(draft.form);
+    setItems(draft.items.length > 0 ? draft.items : [{ optionId: '', quantity: 1, unitPrice: '' }]);
+    setCouponCode(draft.couponCode || '');
+    setDiscountPercent(draft.discountPercent || '0');
+    toast.success('تم تحميل المسودة');
+  };
+
+  const deleteDraft = () => {
+    if (!activeDraftId) return;
+    persistDrafts(drafts.filter(item => item.id !== activeDraftId));
+    setActiveDraftId('');
+    toast.success('تم حذف المسودة');
+  };
+
   const validate = () => {
     if (!form.customer_name.trim()) return 'اسم العميل مطلوب';
     if (!/^\d{8}$/.test(form.customer_phone.trim())) return 'رقم الهاتف يجب أن يكون 8 أرقام';
@@ -180,6 +254,8 @@ export default function AdminInvoiceForm() {
       ].filter(Boolean).join('\n'),
       payment_method: form.payment_method,
       subtotal,
+      discount_amount: discountAmount,
+      coupon_code: couponCode || undefined,
       delivery_fee: orderDeliveryFee,
       total,
     }, lineItems.map(item => ({
@@ -198,6 +274,9 @@ export default function AdminInvoiceForm() {
     }
 
     toast.success(`تم إنشاء الطلب ${result.order_number}`);
+    if (activeDraftId) {
+      persistDrafts(drafts.filter(item => item.id !== activeDraftId));
+    }
     navigate('/admin/orders');
   };
 
@@ -208,11 +287,31 @@ export default function AdminInvoiceForm() {
           <h2 className="text-2xl font-bold text-[#1A1A1A]">إنشاء طلب جديد</h2>
           <p className="text-[#6B6B6B]">أدخل بيانات العميل والمنتجات وسيتم حفظ الطلب مباشرة في النظام</p>
         </div>
-        <Link to="/admin/orders" className="inline-flex items-center gap-2 rounded-lg border border-[#E8E0D5] bg-white px-4 py-2 text-[#1A1A1A] hover:bg-[#FAF8F5]">
-          <ArrowRight className="h-4 w-4" />
-          العودة للطلبات
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={saveDraft} className="inline-flex items-center gap-2 rounded-lg bg-[#C9A96E] px-4 py-2 text-white hover:bg-[#D4AF37]">
+            <Save className="h-4 w-4" />
+            حفظ كمسودة
+          </button>
+          <Link to="/admin/orders" className="inline-flex items-center gap-2 rounded-lg border border-[#E8E0D5] bg-white px-4 py-2 text-[#1A1A1A] hover:bg-[#FAF8F5]">
+            <ArrowRight className="h-4 w-4" />
+            العودة للطلبات
+          </Link>
+        </div>
       </div>
+
+      <section className="mb-6 rounded-xl border border-[#E8E0D5] bg-white p-4">
+        <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+          <select value={activeDraftId} onChange={event => loadDraft(event.target.value)} className="rounded-lg border border-[#E8E0D5] bg-[#FAF8F5] px-4 py-3 focus:border-[#C9A96E] focus:outline-none">
+            <option value="">اختر مسودة محفوظة</option>
+            {drafts.map(draft => (
+              <option key={draft.id} value={draft.id}>{draft.name} - {new Date(draft.savedAt).toLocaleString('ar-SA')}</option>
+            ))}
+          </select>
+          <button type="button" onClick={deleteDraft} disabled={!activeDraftId} className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-red-600 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50">
+            حذف المسودة
+          </button>
+        </div>
+      </section>
 
       <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-6">
