@@ -20,6 +20,8 @@ export interface InvoiceData {
   address: string;
   notes: string;
   paymentMethod: 'cash' | 'link';
+  paymentStatus?: 'pending' | 'paid' | 'partial' | 'failed' | 'refunded';
+  paidAmount?: number;
   items: InvoiceItem[];
   subtotal: number;
   deliveryFee: number;
@@ -42,12 +44,15 @@ export async function downloadInvoicePDF(orderData: InvoiceData): Promise<void> 
   container.style.padding = '20px';
   document.body.appendChild(container);
 
-  const fmt = (price: number) => price.toFixed(3) + ' د.ك';
+  const safe = (value?: string | number | null) => value === undefined || value === null || value === '' ? '-' : String(value);
+  const fmt = (price: number) => (Number(price) || 0).toFixed(3) + ' د.ك';
   const payMethod = orderData.paymentMethod === 'cash' ? 'كاش عند الاستلام' : 'رابط دفع الكتروني';
+  const payStatus = orderData.paymentStatus === 'paid' ? 'مدفوعة' : orderData.paymentStatus === 'partial' ? 'مدفوعة جزئياً' : 'غير مدفوعة';
+  const payStatusColor = orderData.paymentStatus === 'paid' ? '#16A34A' : orderData.paymentStatus === 'partial' ? '#D97706' : '#DC2626';
 
   const itemsHtml = orderData.items.map((item, idx) => 
     '<tr style="background:' + (idx % 2 === 0 ? '#FFFFFF' : '#FAF8F5') + '; border-bottom:1px solid #E8E0D5;">' +
-    '<td style="padding:10px;"><strong style="color:#1A1A1A;font-size:11px;">' + item.nameAr + '</strong>' + (item.variantLabel ? '<br/><span style="color:#C9A96E;font-size:9px;">' + item.variantLabel + '</span>' : '') + '<br/><span style="color:#6B6B6B;font-size:9px;">' + item.nameEn + '</span></td>' +
+    '<td style="padding:10px;"><strong style="color:#1A1A1A;font-size:11px;">' + safe(item.nameAr) + '</strong>' + (item.variantLabel ? '<br/><span style="color:#C9A96E;font-size:9px;">' + item.variantLabel + '</span>' : '') + '<br/><span style="color:#6B6B6B;font-size:9px;">' + safe(item.nameEn) + '</span></td>' +
     '<td style="padding:10px;text-align:center;color:#1A1A1A;font-weight:bold;">' + item.quantity + '</td>' +
     '<td style="padding:10px;text-align:center;color:#1A1A1A;">' + fmt(item.unitPrice) + '</td>' +
     '<td style="padding:10px;text-align:left;color:#C9A96E;font-weight:bold;font-size:12px;">' + fmt(item.totalPrice) + '</td>' +
@@ -74,7 +79,8 @@ export async function downloadInvoicePDF(orderData: InvoiceData): Promise<void> 
     '<h3 style="margin:0 0 8px 0;color:#C9A96E;font-size:12px;font-weight:bold;">معلومات الفاتورة</h3>' +
     '<p style="margin:4px 0;font-size:11px;color:#1A1A1A;"><strong>رقم الفاتورة:</strong> <span style="color:#C9A96E;font-weight:bold;font-size:14px;">' + orderData.orderNumber + '</span></p>' +
     '<p style="margin:4px 0;font-size:11px;color:#1A1A1A;"><strong>التاريخ:</strong> ' + orderData.date + '</p>' +
-    '<p style="margin:4px 0;font-size:11px;color:#1A1A1A;"><strong>الحالة:</strong> <span style="background:#FFA500;color:white;padding:2px 8px;border-radius:4px;">قيد المراجعة</span></p></div>' +
+    '<p style="margin:4px 0;font-size:11px;color:#1A1A1A;"><strong>الحالة:</strong> <span style="background:#FFA500;color:white;padding:2px 8px;border-radius:4px;">قيد المراجعة</span></p>' +
+    '<p style="margin:4px 0;font-size:11px;color:#1A1A1A;"><strong>الدفع:</strong> <span style="background:' + payStatusColor + ';color:white;padding:2px 8px;border-radius:4px;">' + payStatus + '</span></p></div>' +
     '<div style="flex:1;background:#FAF8F5;padding:12px;border-radius:8px;border:2px solid #C9A96E;">' +
     '<h3 style="margin:0 0 8px 0;color:#C9A96E;font-size:12px;font-weight:bold;">طريقة الدفع</h3>' +
     '<p style="margin:4px 0;font-size:14px;color:#1A1A1A;font-weight:bold;">' + payMethod + '</p></div></div>' +
@@ -82,11 +88,11 @@ export async function downloadInvoicePDF(orderData: InvoiceData): Promise<void> 
     '<div style="background:#F5F0E8;padding:15px;border-radius:8px;margin-bottom:15px;border-right:4px solid #C9A96E;">' +
     '<h3 style="margin:0 0 10px 0;color:#C9A96E;font-size:14px;font-weight:bold;">بيانات العميل</h3>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:11px;">' +
-    '<p style="margin:3px 0;color:#1A1A1A;"><strong>الاسم:</strong> ' + orderData.customerName + '</p>' +
-    '<p style="margin:3px 0;color:#1A1A1A;"><strong>الهاتف:</strong> +965 ' + orderData.customerPhone + '</p>' +
-    '<p style="margin:3px 0;color:#1A1A1A;"><strong>المحافظة:</strong> ' + orderData.governorate + '</p>' +
-    '<p style="margin:3px 0;color:#1A1A1A;"><strong>المنطقة:</strong> ' + orderData.area + '</p></div>' +
-    '<p style="margin:6px 0 0 0;font-size:11px;color:#1A1A1A;"><strong>العنوان:</strong> ' + orderData.address + '</p>' +
+    '<p style="margin:3px 0;color:#1A1A1A;"><strong>الاسم:</strong> ' + safe(orderData.customerName) + '</p>' +
+    '<p style="margin:3px 0;color:#1A1A1A;"><strong>الهاتف:</strong> +965 ' + safe(orderData.customerPhone) + '</p>' +
+    '<p style="margin:3px 0;color:#1A1A1A;"><strong>المحافظة:</strong> ' + safe(orderData.governorate) + '</p>' +
+    '<p style="margin:3px 0;color:#1A1A1A;"><strong>المنطقة:</strong> ' + safe(orderData.area) + '</p></div>' +
+    '<p style="margin:6px 0 0 0;font-size:11px;color:#1A1A1A;"><strong>العنوان:</strong> ' + safe(orderData.address) + '</p>' +
     (orderData.notes ? '<p style="margin:4px 0 0 0;font-size:10px;color:#6B6B6B;"><strong>ملاحظات:</strong> ' + orderData.notes + '</p>' : '') + '</div>' +
 
     '<div style="margin-bottom:15px;background:white;">' +

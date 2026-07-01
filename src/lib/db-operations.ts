@@ -31,6 +31,9 @@ export interface OrderItem {
   quantity: number;
   unit_price: number;
   total_price: number;
+  name?: string;
+  sku?: string;
+  metadata?: Record<string, unknown>;
   created_at: string;
 }
 
@@ -45,7 +48,12 @@ export interface Order {
   address: string;
   notes: string;
   payment_method: 'cash' | 'link';
+  payment_status?: 'pending' | 'paid' | 'partial' | 'failed' | 'refunded';
+  paid_amount?: number;
+  paid_at?: string;
   subtotal: number;
+  discount_amount?: number;
+  coupon_code?: string;
   delivery_fee: number;
   total: number;
   status: 'pending' | 'confirmed' | 'preparing' | 'shipped' | 'delivered' | 'cancelled';
@@ -70,8 +78,8 @@ function normalizeOrderFromDb(order: any): Order {
     order_items: (order.order_items || []).map((item: any) => ({
       ...item,
       product_id: item.product_id || item.sku || '',
-      product_name_ar: item.product_name_ar || item.metadata?.product_name_ar || item.name || '',
-      product_name_en: item.product_name_en || item.metadata?.product_name_en || item.name || '',
+      product_name_ar: item.product_name_ar || item.metadata?.product_name_ar || item.name || item.sku || 'منتج غير محدد',
+      product_name_en: item.product_name_en || item.metadata?.product_name_en || item.name || item.sku || '',
     })),
   } as Order;
 }
@@ -908,5 +916,29 @@ export async function getDashboardStats(): Promise<{
       totalRevenue: 0, 
       unreadNotifications: 0 
     };
+  }
+}
+
+export async function updateOrderPaymentStatus(id: string, paymentStatus: NonNullable<Order['payment_status']>, paidAmount?: number): Promise<boolean> {
+  if (!isSupabaseConfigured || !supabase) return false;
+  try {
+    const payload: Record<string, unknown> = {
+      payment_status: paymentStatus,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (paymentStatus === 'paid') {
+      payload.paid_at = new Date().toISOString();
+      if (typeof paidAmount === 'number') payload.paid_amount = paidAmount;
+    } else {
+      payload.paid_at = null;
+      payload.paid_amount = typeof paidAmount === 'number' ? paidAmount : 0;
+    }
+
+    const { error } = await supabase.from('orders').update(payload).eq('id', id);
+    return !error;
+  } catch (err) {
+    console.error('Exception updating payment status:', err);
+    return false;
   }
 }

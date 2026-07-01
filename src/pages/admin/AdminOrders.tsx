@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Check, X, MessageCircle, Download, Package, Phone, MapPin, Plus } from 'lucide-react';
-import { getOrders, updateOrderStatus, formatPrice } from '@/lib/db-operations';
+import { getOrders, updateOrderStatus, updateOrderPaymentStatus, formatPrice } from '@/lib/db-operations';
 import { downloadInvoicePDF } from '@/utils/pdfGenerator';
 import { toast } from 'sonner';
 import AdminLayout from './AdminLayout';
@@ -28,6 +28,8 @@ interface Order {
   address: string;
   notes: string;
   payment_method: 'cash' | 'link';
+  payment_status?: 'pending' | 'paid' | 'partial' | 'failed' | 'refunded';
+  paid_amount?: number;
   subtotal: number;
   delivery_fee: number;
   total: number;
@@ -66,6 +68,16 @@ export default function AdminOrders() {
     }
   };
 
+  const handleUpdatePaymentStatus = async (order: Order, paymentStatus: NonNullable<Order['payment_status']>) => {
+    const success = await updateOrderPaymentStatus(order.id, paymentStatus, paymentStatus === 'paid' ? order.total : 0);
+    if (success) {
+      toast.success(paymentStatus === 'paid' ? 'تم تحديد الطلب كمدفوع' : 'تم تحديد الطلب كغير مدفوع');
+      loadOrders();
+    } else {
+      toast.error('تعذر تحديث حالة الدفع');
+    }
+  };
+
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
       order.order_number.includes(search) ||
@@ -89,6 +101,7 @@ export default function AdminOrders() {
   };
 
   const handleDownloadPDF = async (order: Order) => {
+    const safe = (value?: string | null) => value || '';
     const invoiceData = {
       orderNumber: order.order_number,
       date: new Date(order.created_at).toLocaleDateString('ar-SA', {
@@ -98,19 +111,21 @@ export default function AdminOrders() {
         hour: '2-digit',
         minute: '2-digit'
       }),
-      customerName: order.customer_name,
-      customerPhone: order.customer_phone,
-      governorate: order.governorate,
-      area: order.area,
-      address: order.address,
-      notes: order.notes,
+      customerName: safe(order.customer_name),
+      customerPhone: safe(order.customer_phone),
+      governorate: safe(order.governorate),
+      area: safe(order.area),
+      address: safe(order.address),
+      notes: safe(order.notes),
       paymentMethod: order.payment_method,
+      paymentStatus: order.payment_status || 'pending',
+      paidAmount: order.paid_amount || 0,
       items: (order.order_items || []).map(item => ({
-        nameAr: item.product_name_ar,
-        nameEn: item.product_name_en,
-        quantity: item.quantity,
-        unitPrice: item.unit_price,
-        totalPrice: item.total_price
+        nameAr: item.product_name_ar || (item as any).metadata?.product_name_ar || (item as any).name || (item as any).sku || 'منتج غير محدد',
+        nameEn: item.product_name_en || (item as any).metadata?.product_name_en || (item as any).name || '',
+        quantity: Number(item.quantity) || 1,
+        unitPrice: Number(item.unit_price) || 0,
+        totalPrice: Number(item.total_price) || 0
       })),
       subtotal: order.subtotal,
       deliveryFee: order.delivery_fee,
@@ -251,6 +266,9 @@ ${itemsList}
                     <span className={`px-4 py-2 rounded-full text-sm font-medium ${badge.color}`}>
                       {badge.label}
                     </span>
+                    <span className={`mt-2 inline-block px-3 py-1 rounded-full text-xs font-bold ${order.payment_status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      {order.payment_status === 'paid' ? 'مدفوع' : 'غير مدفوع'}
+                    </span>
                     <p className="text-2xl font-bold text-[#C9A96E] mt-2">{formatPrice(order.total)}</p>
                   </div>
                 </div>
@@ -313,6 +331,24 @@ ${itemsList}
                     <MessageCircle className="w-4 h-4" />
                     إرسال واتساب
                   </button>
+
+                  {order.payment_status === 'paid' ? (
+                    <button
+                      onClick={() => handleUpdatePaymentStatus(order, 'pending')}
+                      className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                      غير مدفوع
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleUpdatePaymentStatus(order, 'paid')}
+                      className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                    >
+                      <Check className="w-4 h-4" />
+                      تم الدفع
+                    </button>
+                  )}
                   
                   {order.status === 'pending' && (
                     <>

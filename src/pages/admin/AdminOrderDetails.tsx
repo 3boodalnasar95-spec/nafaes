@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowRight, Check, X, MessageCircle, Package, MapPin, Phone, User, Clock } from 'lucide-react';
 import AdminLayout from './AdminLayout';
-import { getOrder, updateOrderStatus, formatPrice } from '@/lib/db-operations';
+import { getOrder, updateOrderStatus, updateOrderPaymentStatus, formatPrice } from '@/lib/db-operations';
 
 export default function AdminOrderDetails() {
   const { id } = useParams();
@@ -23,6 +23,12 @@ export default function AdminOrderDetails() {
   const handleStatusChange = async (newStatus: string) => {
     if (!id) return;
     await updateOrderStatus(id, newStatus as any);
+    loadOrder(id);
+  };
+
+  const handlePaymentStatusChange = async (paymentStatus: 'pending' | 'paid') => {
+    if (!id || !order) return;
+    await updateOrderPaymentStatus(id, paymentStatus, paymentStatus === 'paid' ? order.total : 0);
     loadOrder(id);
   };
 
@@ -85,8 +91,11 @@ export default function AdminOrderDetails() {
               <span>{new Date(order.created_at).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
             </div>
           </div>
-          <span className={`px-4 py-2 rounded-full text-sm font-medium ${badge.color}`}>{badge.label}</span>
-        </div>
+           <span className={`px-4 py-2 rounded-full text-sm font-medium ${badge.color}`}>{badge.label}</span>
+           <span className={`px-4 py-2 rounded-full text-sm font-medium ${order.payment_status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+             {order.payment_status === 'paid' ? 'مدفوع' : 'غير مدفوع'}
+           </span>
+         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -213,6 +222,15 @@ export default function AdminOrderDetails() {
               {order.status === 'shipped' && (
                 <button onClick={() => handleStatusChange('delivered')} className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg transition-colors">
                   <Check className="w-5 h-5" /> تأكيد التوصيل
+                </button>
+              )}
+              {order.payment_status === 'paid' ? (
+                <button onClick={() => handlePaymentStatusChange('pending')} className="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-700 py-3 rounded-lg transition-colors">
+                  <X className="w-5 h-5" /> تحديد كغير مدفوع
+                </button>
+              ) : (
+                <button onClick={() => handlePaymentStatusChange('paid')} className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg transition-colors">
+                  <Check className="w-5 h-5" /> تم الدفع
                 </button>
               )}
             </div>
