@@ -20,6 +20,7 @@ export interface InvoiceData {
   address: string;
   notes: string;
   paymentMethod: 'cash' | 'link';
+  orderStatus?: string;
   paymentStatus?: 'pending' | 'paid' | 'partial' | 'failed' | 'refunded';
   paidAmount?: number;
   items: InvoiceItem[];
@@ -49,6 +50,15 @@ export async function downloadInvoicePDF(orderData: InvoiceData): Promise<void> 
   const payMethod = orderData.paymentMethod === 'cash' ? 'كاش عند الاستلام' : 'رابط دفع الكتروني';
   const payStatus = orderData.paymentStatus === 'paid' ? 'مدفوعة' : orderData.paymentStatus === 'partial' ? 'مدفوعة جزئياً' : 'غير مدفوعة';
   const payStatusColor = orderData.paymentStatus === 'paid' ? '#16A34A' : orderData.paymentStatus === 'partial' ? '#D97706' : '#DC2626';
+  const orderStatusLabels: Record<string, string> = {
+    pending: 'قيد المراجعة',
+    confirmed: 'مؤكد',
+    preparing: 'قيد التجهيز',
+    shipped: 'تم الشحن',
+    delivered: 'مكتمل',
+    cancelled: 'ملغي',
+  };
+  const orderStatus = orderStatusLabels[orderData.orderStatus || 'pending'] || safe(orderData.orderStatus) || 'قيد المراجعة';
 
   const itemsHtml = orderData.items.map((item, idx) => 
     '<tr style="background:' + (idx % 2 === 0 ? '#FFFFFF' : '#FAF8F5') + '; border-bottom:1px solid #E8E0D5;">' +
@@ -79,7 +89,7 @@ export async function downloadInvoicePDF(orderData: InvoiceData): Promise<void> 
     '<h3 style="margin:0 0 8px 0;color:#C9A96E;font-size:12px;font-weight:bold;">معلومات الفاتورة</h3>' +
     '<p style="margin:4px 0;font-size:11px;color:#1A1A1A;"><strong>رقم الفاتورة:</strong> <span style="color:#C9A96E;font-weight:bold;font-size:14px;">' + orderData.orderNumber + '</span></p>' +
     '<p style="margin:4px 0;font-size:11px;color:#1A1A1A;"><strong>التاريخ:</strong> ' + orderData.date + '</p>' +
-    '<p style="margin:4px 0;font-size:11px;color:#1A1A1A;"><strong>الحالة:</strong> <span style="background:#FFA500;color:white;padding:2px 8px;border-radius:4px;">قيد المراجعة</span></p>' +
+    '<p style="margin:4px 0;font-size:11px;color:#1A1A1A;"><strong>الحالة:</strong> <span style="background:#FFA500;color:white;padding:2px 8px;border-radius:4px;">' + orderStatus + '</span></p>' +
     '<p style="margin:4px 0;font-size:11px;color:#1A1A1A;"><strong>الدفع:</strong> <span style="background:' + payStatusColor + ';color:white;padding:2px 8px;border-radius:4px;">' + payStatus + '</span></p></div>' +
     '<div style="flex:1;background:#FAF8F5;padding:12px;border-radius:8px;border:2px solid #C9A96E;">' +
     '<h3 style="margin:0 0 8px 0;color:#C9A96E;font-size:12px;font-weight:bold;">طريقة الدفع</h3>' +

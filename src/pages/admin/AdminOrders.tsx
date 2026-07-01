@@ -102,6 +102,14 @@ export default function AdminOrders() {
 
   const handleDownloadPDF = async (order: Order) => {
     const safe = (value?: string | null) => value || '';
+    const rawOrder = order as Order & {
+      customer_area?: string;
+      customer_address?: string;
+      metadata?: { governorate?: string; area_id?: string };
+    };
+    const area = safe(order.area || rawOrder.customer_area);
+    const governorate = safe(order.governorate || rawOrder.metadata?.governorate || (area.includes(' - ') ? area.split(' - ')[0] : ''));
+    const address = safe(order.address || rawOrder.customer_address);
     const invoiceData = {
       orderNumber: order.order_number,
       date: new Date(order.created_at).toLocaleDateString('ar-SA', {
@@ -113,11 +121,12 @@ export default function AdminOrders() {
       }),
       customerName: safe(order.customer_name),
       customerPhone: safe(order.customer_phone),
-      governorate: safe(order.governorate),
-      area: safe(order.area),
-      address: safe(order.address),
+      governorate,
+      area,
+      address,
       notes: safe(order.notes),
       paymentMethod: order.payment_method,
+      orderStatus: order.status,
       paymentStatus: order.payment_status || 'pending',
       paidAmount: order.paid_amount || 0,
       items: (order.order_items || []).map(item => ({
@@ -181,6 +190,15 @@ ${itemsList}
     { key: 'confirmed', label: 'مؤكد', count: orders.filter(o => o.status === 'confirmed').length },
     { key: 'preparing', label: 'تجهيز', count: orders.filter(o => o.status === 'preparing').length },
     { key: 'delivered', label: 'مكتمل', count: orders.filter(o => o.status === 'delivered').length },
+  ];
+
+  const statusOptions: Array<{ value: Order['status']; label: string }> = [
+    { value: 'pending', label: 'قيد المراجعة' },
+    { value: 'confirmed', label: 'مؤكد' },
+    { value: 'preparing', label: 'قيد التجهيز' },
+    { value: 'shipped', label: 'تم الشحن' },
+    { value: 'delivered', label: 'مكتمل' },
+    { value: 'cancelled', label: 'ملغي' },
   ];
 
   return (
@@ -349,6 +367,16 @@ ${itemsList}
                       تم الدفع
                     </button>
                   )}
+
+                  <select
+                    value={order.status}
+                    onChange={(event) => handleUpdateStatus(order.id, event.target.value as Order['status'])}
+                    className="px-4 py-2 bg-white border border-[#E8E0D5] rounded-lg text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E]"
+                  >
+                    {statusOptions.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
                   
                   {order.status === 'pending' && (
                     <>

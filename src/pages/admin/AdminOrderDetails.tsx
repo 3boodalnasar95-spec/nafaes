@@ -74,6 +74,14 @@ export default function AdminOrderDetails() {
   const statusLabels: Record<string, string> = {
     pending: 'معلق', confirmed: 'تأكيد', preparing: 'تجهيز', shipped: 'شحن', delivered: 'توصيل',
   };
+  const statusOptions = [
+    { value: 'pending', label: 'قيد المراجعة' },
+    { value: 'confirmed', label: 'مؤكد' },
+    { value: 'preparing', label: 'قيد التجهيز' },
+    { value: 'shipped', label: 'تم الشحن' },
+    { value: 'delivered', label: 'مكتمل' },
+    { value: 'cancelled', label: 'ملغي' },
+  ];
   const currentStatusIndex = statusFlow.indexOf(order.status);
 
   return (
@@ -92,9 +100,16 @@ export default function AdminOrderDetails() {
             </div>
           </div>
            <span className={`px-4 py-2 rounded-full text-sm font-medium ${badge.color}`}>{badge.label}</span>
-           <span className={`px-4 py-2 rounded-full text-sm font-medium ${order.payment_status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+          <span className={`px-4 py-2 rounded-full text-sm font-medium ${order.payment_status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
              {order.payment_status === 'paid' ? 'مدفوع' : 'غير مدفوع'}
            </span>
+          <select
+            value={order.status}
+            onChange={(event) => handleStatusChange(event.target.value)}
+            className="px-4 py-2 bg-white border border-[#E8E0D5] rounded-lg text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E]"
+          >
+            {statusOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+          </select>
          </div>
       </div>
 

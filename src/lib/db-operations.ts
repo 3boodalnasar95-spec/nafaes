@@ -68,10 +68,14 @@ function isUuid(value?: string): boolean {
 }
 
 function normalizeOrderFromDb(order: any): Order {
+  const customerArea = order.area || order.customer_area || '';
+  const inferredGovernorate = !order.metadata?.governorate && typeof customerArea === 'string' && customerArea.includes(' - ')
+    ? customerArea.split(' - ')[0]
+    : '';
   return {
     ...order,
-    governorate: order.governorate || order.metadata?.governorate || '',
-    area: order.area || order.customer_area || '',
+    governorate: order.governorate || order.metadata?.governorate || inferredGovernorate,
+    area: customerArea,
     area_id: order.area_id || order.metadata?.area_id || '',
     address: order.address || order.customer_address || '',
     payment_method: order.payment_method === 'link' ? 'link' : 'cash',
