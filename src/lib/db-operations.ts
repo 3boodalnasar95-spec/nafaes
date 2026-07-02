@@ -246,9 +246,17 @@ function mergeWithCatalog(product: Partial<Product>): Product | null {
 export interface Invoice {
   id: string;
   invoice_number: string;
+  order_id?: string;
   customer_id?: string;
+  customer_name?: string;
+  order_number?: string;
+  subtotal?: number;
+  discount_amount?: number;
+  delivery_fee?: number;
   total: number;
   status: string;
+  payment_status?: 'pending' | 'paid';
+  metadata?: Record<string, unknown>;
   created_at: string;
 }
 
@@ -564,8 +572,7 @@ export async function createOrder(
       return { success: false, error: orderError.message };
     }
     
-    if (items.length > 0) {
-      const orderItems = items.map(item => ({
+    const orderItems = items.map(item => ({
         order_id: order.id,
         product_id: isUuid(item.product_id) ? item.product_id : null,
         name: item.product_name_ar || item.product_name_en,
@@ -578,8 +585,10 @@ export async function createOrder(
           product_name_en: item.product_name_en,
         },
         created_at: now,
-      }));
-      
+    }));
+    
+    if (orderItems.length > 0) {
+       
       const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
       if (itemsError) {
         console.error('Error creating order items:', itemsError);
@@ -594,6 +603,8 @@ export async function createOrder(
       order_id: order.id,
       read: false,
     });
+
+    await createInvoiceForOrder(normalizeOrderFromDb({ ...order, order_items: orderItems }));
     
     console.log('✅ Order created successfully:', order.id);
     return { success: true, order_number: orderNumber };
@@ -611,6 +622,12 @@ export async function updateOrderStatus(id: string, status: Order['status']): Pr
       .from('orders')
       .update({ status, updated_at: new Date().toISOString() })
       .eq('id', id);
+    if (!error && status === 'cancelled') {
+      await supabase
+        .from('invoices')
+        .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+        .eq('order_id', id);
+    }
     return !error;
   } catch (err) {
     console.error('Exception updating order:', err);
@@ -674,15 +691,108 @@ export async function getCustomerStats(customerId: string): Promise<{
 
 // ==================== INVOICES ====================
 
+function parseInvoiceSerial(invoiceNumber?: string): number {
+  const match = invoiceNumber?.match(/(\d+)$/);
+  return match ? Number(match[1]) || 0 : 0;
+}
+
+function formatInvoiceNumber(serial: number, date = new Date()): string {
+  return `INV-${date.getFullYear()}-${serial.toString().padStart(6, '0')}`;
+}
+
+async function getNextInvoiceSerial(): Promise<number> {
+  if (!supabase) return 1;
+
+  const { data } = await supabase
+    .from('invoices')
+    .select('invoice_number, serial_number')
+    .order('serial_number', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  const latest = data?.[0] as { invoice_number?: string; serial_number?: number } | undefined;
+  return Math.max(Number(latest?.serial_number) || 0, parseInvoiceSerial(latest?.invoice_number)) + 1;
+}
+
+async function createInvoiceForOrder(order: Order): Promise<Invoice | null> {
+  if (!isSupabaseConfigured || !supabase) return null;
+
+  const { data: existing } = await supabase
+    .from('invoices')
+    .select('*')
+    .eq('order_id', order.id)
+    .maybeSingle();
+
+  if (existing) return existing as Invoice;
+
+  const serial = await getNextInvoiceSerial();
+  const createdAt = order.created_at || new Date().toISOString();
+  const invoiceNumber = formatInvoiceNumber(serial, new Date(createdAt));
+  const paymentStatus = order.payment_status === 'paid' ? 'paid' : 'pending';
+
+  const { data, error } = await supabase
+    .from('invoices')
+    .insert({
+      invoice_number: invoiceNumber,
+      order_id: order.id,
+      customer_id: (order as Order & { customer_id?: string }).customer_id || null,
+      type: 'invoice',
+      serial_number: serial,
+      subtotal: order.subtotal || 0,
+      tax_amount: 0,
+      discount_amount: order.discount_amount || 0,
+      delivery_fee: order.delivery_fee || 0,
+      total: order.total || 0,
+      status: paymentStatus === 'paid' ? 'paid' : 'sent',
+      payment_status: paymentStatus,
+      paid_at: paymentStatus === 'paid' ? order.paid_at || new Date().toISOString() : null,
+      notes: order.notes || '',
+      terms: 'شكراً لتعاملكم مع نفائس',
+      metadata: {
+        order_number: order.order_number,
+        customer_name: order.customer_name,
+        customer_phone: order.customer_phone,
+        area: order.area,
+        address: order.address,
+      },
+      created_at: createdAt,
+      updated_at: new Date().toISOString(),
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating invoice:', error);
+    return null;
+  }
+
+  return data as Invoice;
+}
+
+async function ensureInvoicesForOrders(): Promise<void> {
+  if (!isSupabaseConfigured || !supabase) return;
+
+  const orders = await getOrders();
+  for (const order of [...orders].reverse()) {
+    await createInvoiceForOrder(order);
+  }
+}
+
 export async function getInvoices(): Promise<Invoice[]> {
   if (!isSupabaseConfigured || !supabase) return [];
   try {
+    await ensureInvoicesForOrders();
     const { data, error } = await supabase
       .from('invoices')
       .select('*')
+      .order('serial_number', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false });
     if (error) return [];
-    return data || [];
+    return (data || []).map((invoice: any) => ({
+      ...invoice,
+      customer_name: invoice.metadata?.customer_name || '',
+      order_number: invoice.metadata?.order_number || '',
+    }));
   } catch (err) {
     console.error('Exception fetching invoices:', err);
     return [];
@@ -940,6 +1050,17 @@ export async function updateOrderPaymentStatus(id: string, paymentStatus: NonNul
     }
 
     const { error } = await supabase.from('orders').update(payload).eq('id', id);
+    if (!error) {
+      await supabase
+        .from('invoices')
+        .update({
+          payment_status: paymentStatus === 'paid' ? 'paid' : 'pending',
+          status: paymentStatus === 'paid' ? 'paid' : 'sent',
+          paid_at: paymentStatus === 'paid' ? payload.paid_at : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('order_id', id);
+    }
     return !error;
   } catch (err) {
     console.error('Exception updating payment status:', err);

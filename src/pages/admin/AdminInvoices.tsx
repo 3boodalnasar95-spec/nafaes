@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Receipt, Eye, Download, Search, Plus, Printer } from 'lucide-react';
+import { Receipt, Eye, Download, Search, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 import AdminLayout from './AdminLayout';
-import { getInvoices, Invoice } from '@/lib/db-operations';
+import { getInvoices, getOrder, Invoice } from '@/lib/db-operations';
+import { downloadInvoicePDF } from '@/utils/pdfGenerator';
 
 export default function AdminInvoices() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -20,10 +22,52 @@ export default function AdminInvoices() {
     setLoading(false);
   };
 
-  const filteredInvoices = invoices.filter(inv => 
-    inv.invoice_number?.toLowerCase().includes(search.toLowerCase()) ||
-    inv.customer_id?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredInvoices = invoices.filter(inv => {
+    const query = search.toLowerCase();
+    return inv.invoice_number?.toLowerCase().includes(query) ||
+      inv.order_number?.toLowerCase().includes(query) ||
+      inv.customer_name?.toLowerCase().includes(query) ||
+      inv.customer_id?.toLowerCase().includes(query);
+  });
+
+  const handleDownloadPDF = async (invoice: Invoice) => {
+    if (!invoice.order_id) {
+      toast.error('لا يوجد طلب مرتبط بهذه الفاتورة');
+      return;
+    }
+
+    const order = await getOrder(invoice.order_id);
+    if (!order) {
+      toast.error('تعذر تحميل بيانات الطلب');
+      return;
+    }
+
+    await downloadInvoicePDF({
+      orderNumber: invoice.invoice_number,
+      date: new Date(invoice.created_at || order.created_at).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      customerName: order.customer_name || '',
+      customerPhone: order.customer_phone || '',
+      governorate: order.governorate || '',
+      area: order.area || '',
+      address: order.address || '',
+      notes: order.notes || '',
+      paymentMethod: order.payment_method,
+      orderStatus: order.status,
+      paymentStatus: order.payment_status || 'pending',
+      paidAmount: order.paid_amount || 0,
+      items: (order.order_items || []).map(item => ({
+        nameAr: item.product_name_ar || item.name || 'منتج غير محدد',
+        nameEn: item.product_name_en || item.name || '',
+        quantity: Number(item.quantity) || 1,
+        unitPrice: Number(item.unit_price) || 0,
+        totalPrice: Number(item.total_price) || 0,
+      })),
+      subtotal: order.subtotal || 0,
+      deliveryFee: order.delivery_fee || 0,
+      total: order.total || 0,
+    });
+    toast.success('تم تحميل الفاتورة');
+  };
 
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { label: string; color: string }> = {
@@ -43,7 +87,7 @@ export default function AdminInvoices() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold text-[#1A1A1A]">الفواتير</h2>
-            <p className="text-[#6B6B6B]">إدارة وطباعة الفواتير</p>
+            <p className="text-[#6B6B6B]">نظام فواتير تسلسلي مرتبط بالطلبات</p>
           </div>
           <Link
             to="/admin/invoices/new"
@@ -61,7 +105,7 @@ export default function AdminInvoices() {
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B6B6B]" />
           <input
             type="text"
-            placeholder="ابحث برقم الفاتورة أو رقم العميل..."
+            placeholder="ابحث برقم الفاتورة أو رقم الطلب أو اسم العميل..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pr-10 pl-4 py-2 bg-[#FAF8F5] border border-[#E8E0D5] rounded-lg text-[#1A1A1A] focus:outline-none focus:border-[#C9A96E]"
@@ -84,9 +128,11 @@ export default function AdminInvoices() {
               <thead className="bg-[#F5F0E8]">
                 <tr>
                   <th className="text-right px-4 py-3 text-sm font-medium text-[#1A1A1A]">رقم الفاتورة</th>
-                  <th className="text-right px-4 py-3 text-sm font-medium text-[#1A1A1A]">رقم العميل</th>
+                  <th className="text-right px-4 py-3 text-sm font-medium text-[#1A1A1A]">الطلب</th>
+                  <th className="text-right px-4 py-3 text-sm font-medium text-[#1A1A1A]">العميل</th>
                   <th className="text-center px-4 py-3 text-sm font-medium text-[#1A1A1A]">تاريخ الإنشاء</th>
                   <th className="text-center px-4 py-3 text-sm font-medium text-[#1A1A1A]">الحالة</th>
+                  <th className="text-center px-4 py-3 text-sm font-medium text-[#1A1A1A]">الدفع</th>
                   <th className="text-left px-4 py-3 text-sm font-medium text-[#1A1A1A]">الإجمالي</th>
                   <th className="text-center px-4 py-3 text-sm font-medium text-[#1A1A1A]">إجراءات</th>
                 </tr>
@@ -98,7 +144,10 @@ export default function AdminInvoices() {
                     <tr key={invoice.id} className="hover:bg-[#FAF8F5] transition-colors">
                       <td className="px-4 py-4 font-mono text-[#C9A96E] font-bold">{invoice.invoice_number}</td>
                       <td className="px-4 py-4">
-                        <p className="text-[#1A1A1A]">{invoice.customer_id || 'غير محدد'}</p>
+                        <p className="text-[#1A1A1A] font-medium">{invoice.order_number || 'غير محدد'}</p>
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="text-[#1A1A1A]">{invoice.customer_name || invoice.customer_id || 'غير محدد'}</p>
                       </td>
                       <td className="text-center px-4 py-4 text-[#6B6B6B]">{invoice.created_at?.split('T')[0]}</td>
                       <td className="text-center px-4 py-4">
@@ -106,19 +155,21 @@ export default function AdminInvoices() {
                           {badge.label}
                         </span>
                       </td>
+                      <td className="text-center px-4 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${invoice.payment_status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {invoice.payment_status === 'paid' ? 'مدفوعة' : 'غير مدفوعة'}
+                        </span>
+                      </td>
                       <td className="text-left px-4 py-4 text-[#C9A96E] font-bold">{invoice.total.toFixed(3)} د.ك</td>
                       <td className="text-center px-4 py-4">
                         <div className="flex items-center justify-center gap-2">
-                          <Link
-                            to={`/admin/invoices/${invoice.id}`}
+                          {invoice.order_id && <Link
+                            to={`/admin/orders/${invoice.order_id}`}
                             className="p-2 text-[#6B6B6B] hover:text-[#C9A96E] transition-colors"
                           >
                             <Eye className="w-4 h-4" />
-                          </Link>
-                          <button className="p-2 text-[#6B6B6B] hover:text-[#C9A96E] transition-colors">
-                            <Printer className="w-4 h-4" />
-                          </button>
-                          <button className="p-2 text-[#6B6B6B] hover:text-[#C9A96E] transition-colors">
+                          </Link>}
+                          <button onClick={() => handleDownloadPDF(invoice)} className="p-2 text-[#6B6B6B] hover:text-[#C9A96E] transition-colors">
                             <Download className="w-4 h-4" />
                           </button>
                         </div>
